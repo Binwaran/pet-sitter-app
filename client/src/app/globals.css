@@ -2,15 +2,31 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --primary-orange-color-600:#E44A0C; 
+  --primary-orange-color-500:#FF7037;
+  --primary-orange-color-400:#FF986F;
+  --primary-orange-color-300:#FFB899;
+  --primary-orange-color-200:#FFD5C2;
+  --primary-orange-color-100:#FFF1EC;
+  --primary-gray-color-500:#3A3B46; 
+  --primary-gray-color-400:#5B5D6F;
+  --primary-gray-color-300:#7B7E8F;
+  --primary-gray-color-200:#AEB1C3;
+  --primary-gray-color-100:#DCDFED;
+  --secondary-yellow-color-100:#FFCA62;
+  --secondary-yellow-color-50:#FFF5EC;
+  --secondary-blue-color-100:#76D0FC;
+  --secondary-blue-color-50:#ECFBFF;
+  --secondary-green-color-100:#1CCD83;
+  --secondary-green-color-50:#E7FDF4;
+  --secondary-pink-color-100:#FA8AC0;
+  --secondary-pink-color-50:#FFF0F1;
+  --secondary-red-color:#EA1010;
+
+
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+
 
 @media (prefers-color-scheme: dark) {
   :root {
@@ -22,5 +38,5 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Satoshi', sans-serif;
 }
