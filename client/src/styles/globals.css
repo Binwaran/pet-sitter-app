@@ -1,0 +1,30 @@
+@import url("https://fonts.cdnfonts.com/css/satoshi");
+@import "tailwindcss";
+
+*{
+  font-family: "Satoshi", sans-serif;
+}
+
+:root {
+  --background: #ffffff;
+  --primary-orange-color-600: #e44a0c;
+  --primary-orange-color-500: #ff7037;
+  --primary-orange-color-400: #ff986f;
+  --primary-orange-color-300: #ffb899;
+  --primary-orange-color-200: #ffd5c2;
+  --primary-orange-color-100: #fff1ec;
+  --primary-gray-color-500: #3a3b46;
+  --primary-gray-color-400: #5b5d6f;
+  --primary-gray-color-300: #7b7e8f;
+  --primary-gray-color-200: #aeb1c3;
+  --primary-gray-color-100: #dcdfed;
+  --secondary-yellow-color-100: #ffca62;
+  --secondary-yellow-color-50: #fff5ec;
+  --secondary-blue-color-100: #76d0fc;
+  --secondary-blue-color-50: #ecfbff;
+  --secondary-green-color-100: #1ccd83;
+  --secondary-green-color-50: #e7fdf4;
+  --secondary-pink-color-100: #fa8ac0;
+  --secondary-pink-color-50: #fff0f1;
+  --secondary-red-color: #ea1010;
+}
