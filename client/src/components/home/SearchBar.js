@@ -10,7 +10,7 @@ const SearchBar = () => {
   const [experience, setExperience] = useState("");
 
   return (
-    <div className="w-full max-w-[1064px] px-4 py-4 lg:px-0">
+    <div className="w-full max-w-[1064px] px-4 pb-4 lg:px-0">
       <div className="bg-[#F6F6F9] md:px-6 px-4 w-full flex flex-col sm:flex-row sm:items-center sm:h-[72px] text-[var(--primary-gray-color-500)] rounded-t-3xl">
         <div className="text-[var(--primary-gray-color-500)] font-bold pt-4 pb-2 pr-3 sm:pt-0 sm:pb-0 w-[100px]">
           Pet Type:
@@ -18,7 +18,8 @@ const SearchBar = () => {
         <Checkbox />
       </div>
 
-      <div className="flex-col lg:flex-row gap-6 bg-ps-white w-full lg:h-[72px] flex lg:px-6 px-4 py-4 text-[var(--primary-gray-color-500)] font-bold rounded-b-3xl justify-between">
+      <div className="flex-col lg:flex-row gap-6 bg-white w-full lg:h-[72px] flex lg:px-6 px-4 py-4 text-[var(--primary-gray-color-500)] font-bold rounded-b-3xl justify-between"
+      style={{ boxShadow: "4px 4px 24px 0px #0000000A" }}>
         <div className="flex flex-col lg:flex-row lg:items-center">
           <p className="lg:pr-6 pb-3">Rating:</p>
           <RatingStars />
@@ -28,6 +29,8 @@ const SearchBar = () => {
           <p className="pb-3 lg:pb-0">Experience:</p>
           <div className="relative w-full">
             <select
+              name="experience"
+              id="experience"
               value={experience}
               onChange={(e) => {
                 setExperience(e.target.value);
@@ -42,8 +45,8 @@ const SearchBar = () => {
               <option value="5%2B Years">5+ Years</option>
             </select>
             {/* custom dropdown arrow */}
-            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#7B7E8F]">
-              ▾
+            <span className="text-xs pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#9AA1B9]">
+            ⏷
             </span>
           </div>
         </div>

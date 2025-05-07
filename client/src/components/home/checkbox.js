@@ -22,13 +22,13 @@ export default function Checkbox() {
   return (
     <div className="w-full flex flex-col sm:flex-row sm:items-center">
       <span className="w-full max-w-[328px]">
-        <div className="cursor-pointer sm:space-x-3">
+        <div className="cursor-pointer sm:space-x-3 space-x-1 flex justify-around sm:justify-start flex-wrap">
           <input
             id="dog"
             type="checkbox"
             value="Dog"
             onChange={handlePetSelect}
-            className="[--chkfg:white] border border-[var(--primary-gray-color-100)] hover:border-[var(--primary-orange-color-300)] focus:border-[var(--primary-orange-color-300)]"
+            className="border border-[var(--primary-gray-color-100)] hover:border-[var(--primary-orange-color-300)] focus:border-[var(--primary-orange-color-300)]"
           />
           <label htmlFor="dog" className="text-[16px] font-medium">
             Dog
@@ -38,7 +38,7 @@ export default function Checkbox() {
             type="checkbox"
             value="Cat"
             onChange={handlePetSelect}
-            className="[--chkfg:white] border border-[var(--primary-gray-color-100)] hover:border-[var(--primary-orange-color-300)] focus:border-[var(--primary-orange-color-300)]"
+            className="border border-[var(--primary-gray-color-100)] hover:border-[var(--primary-orange-color-300)] focus:border-[var(--primary-orange-color-300)]"
           />
           <label htmlFor="cat" className="text-[16px] font-medium">
             Cat
@@ -48,7 +48,7 @@ export default function Checkbox() {
             type="checkbox"
             value="Bird"
             onChange={handlePetSelect}
-            className="[--chkfg:white] border border-[var(--primary-gray-color-100)] hover:border-[var(--primary-orange-color-300)] focus:border-[var(--primary-orange-color-300)]"
+            className="border border-[var(--primary-gray-color-100)] hover:border-[var(--primary-orange-color-300)] focus:border-[var(--primary-orange-color-300)]"
           />
           <label htmlFor="bird" className="text-[16px] font-medium">
             Bird
@@ -58,7 +58,7 @@ export default function Checkbox() {
             type="checkbox"
             value="Rabbit"
             onChange={handlePetSelect}
-            className=" [--chkfg:white] border border-[var(--primary-gray-color-100)] hover:border-[var(--primary-orange-color-300)] focus:border-[var(--primary-orange-color-300)]"
+            className=" border border-[var(--primary-gray-color-100)] hover:border-[var(--primary-orange-color-300)] focus:border-[var(--primary-orange-color-300)]"
           />
           <label
             htmlFor="rabbit"

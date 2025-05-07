@@ -18,7 +18,7 @@ export default function RatingStars() {
               setSelectedRating(num);
               setFilteredRating(num);
             }}
-            className={`flex px-2 py-1 items-center justify-center gap-1 border rounded-lg text-[16px] ${
+            className={`flex px-2 py-1 items-center justify-center font-medium gap-1 border rounded-lg text-[16px] ${
               selectedRating === num
                 ? "border-[var(--primary-orange-color-500)] text-[var(--primary-orange-color-500)]"
                 : "border-[var(--primary-gray-color-100)] text-[var(--primary-gray-color-300)]"
