@@ -1,103 +1,258 @@
+import SearchBar from "../components/home/SearchBar";
 import Image from "next/image";
+import Link from "next/link";
+import { ButtonOrangeLight, ButtonOrange } from "@/components/buttons/OrangeButtons";
+import elementhome1 from "/public/assets/home/element-home-1.svg";
+import elementhome2 from "/public/assets/home/element-home-2.svg";
+import elementhome3 from "/public/assets/home/element-home-3.svg";
+import elementhome4 from "/public/assets/home/element-home-4.svg";
+import elementhome5 from "/public/assets/home/element-home-5.svg";
+import elementhome6 from "/public/assets/home/element-home-6.svg";
+import starbulletblue from "/public/assets/home/star-bullet-blue.svg";
+import starbulletpink from "/public/assets/home/star-bullet-pink.svg";
+import starbulletgreen from "/public/assets/home/star-bullet-green.svg";
+import starbulletyellow from "/public/assets/home/star-bullet-yellow.svg";
+import connect from "/public/assets/home/connect.svg";
+import calling from "/public/assets/home/calling.svg";
+import better from "/public/assets/home/better.svg";
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <section className="w-full flex-col items-center pt-20">
+      <header className="max-w-[1440px] mx-auto w-full md:flex flex-col items-center justify-center md:h-[441px] h-[565] gap-5 relative">
+        <div>
+          <p className="lg:text-[5.5rem] sm:text-[68px] text-[56px] lg:leading-[96px] md:leading-[62px] leading-[66px] font-[900] text-center">
+            Pet Sitter
+            <span className="text-[var(--primary-orange-color-500)]">,</span>
+            <br /> Perfect
+            <span className="text-[var(--secondary-blue-color-100)]">,</span>
+            <br /> For Your Pet
+            <span className="text-[var(--secondary-yellow-color-100)]">.</span>
+          </p>
+          <p className="text-[var(--primary-gray-color-300)] md:text-h3 text-h4 text-center pt-8 font-bold">
+            Find your perfect pet sitter with us.
+          </p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        <div className="flex gap-4 mt-[50px] md:mt-0 relative h-[255px] md:h-auto overflow-hidden md:w-full md:justify-between md:absolute md:left-0 md:pt-0 pt-[50px] -z-10">
+          <div className=" w-[255px] lg:w-[428px] aspect-square absolute right-[calc(50%+8px)] top-0 md:static">
+            <Image
+              src={elementhome1}
+              alt="element-home-1"
+              sizes="100%"
+              width={428}
+              className="object-cover"
+            />
+          </div>
+          <div className="w-[255px] lg:w-[428px] aspect-square absolute left-[calc(50%+8px)] top-0 md:static">
+            <Image
+              src={elementhome2}
+              alt="element-home-2"
+              sizes="100%"
+              width={428}
+              className="object-cover"
+            />
+          </div>
+        </div>
+      </header>
+
+      {/* SearchBar */}
+      <div className="w-full lg:my-16 h-auto flex justify-center">
+        <SearchBar />
+      </div>
+
+      {/* content */}
+      <div className="w-full max-w-[1440px] flex-col mx-auto lg:p-20 md:px-8 px-4 md:py-10 bg-white z-10">
+        <p className="w-full lg:text-[36px] text-[24px] text-center lg:mb-[120px] mb-10 font-bold">
+          {'"Your Pets, Our Priority: Perfect Care, Anytime, Anywhere."'}
+        </p>
+        <div className="max-w-[1064px] w-full mx-auto md:flex-row flex flex-col gap-6 md:justify-between mb-[120px]">
+          <div className="flex-col md:w-[504px] px-4 md:px-0">
+            <div className="flex md:pb-[55px] pb-6 h-auto">
+              <Image
+                src={starbulletblue}
+                alt="star"
+                width={24}
+                className="self-start"
+              />
+              <div className="pl-3">
+                <p className="md:text-[24px] text-[20px] font-bold pb-3">
+                  Boarding
+                </p>
+                <p className="md:text-[18px] text-[16px] font-medium text-[var(--primary-gray-color-400)] text-wrap">
+                  Your pets stay overnight in your sitter’s home. They’ll be
+                  treated like part of the family in a comfortable environment.
+                </p>
+              </div>
+            </div>
+            <div className="flex md:pb-[55px] pb-6">
+              <Image
+                src={starbulletpink}
+                width={24}
+                alt="star"
+                className="self-start"
+              />
+              <div className="pl-3">
+                <p className="md:text-[24px] text-[20px] font-bold pb-3">
+                  House Sitting
+                </p>
+                <p className="md:text-[18px] text-[16px] font-medium text-[var(--primary-gray-color-400)]">
+                  Your sitter takes care of your pets and your home. Your pets
+                  will get all the attention they need without leaving home.
+                </p>
+              </div>
+            </div>
+            <div className="flex md:pb-[55px] pb-6">
+              <Image
+                src={starbulletgreen}
+                alt="star"
+                width={24}
+                className="self-start"
+              />
+              <div className="pl-3">
+                <p className="md:text-[24px] text-[20px] font-bold pb-3">
+                  Dog Walking
+                </p>
+                <p className="md:text-[18px] text-[16px] font-medium text-[var(--primary-gray-color-400)]">
+                  Your dog gets a walk around your neighborhood. Perfect for
+                  busy days and dogs with extra energy to burn.
+                </p>
+              </div>
+            </div>
+            <div className="flex lg:pb-0 pb-10">
+              <Image
+                src={starbulletyellow}
+                alt="star"
+                width={24}
+                className="self-start"
+              />
+              <div className="pl-3">
+                <p className="md:text-[24px] text-[20px] font-bold pb-3">
+                  Drop-In Visits
+                </p>
+                <p className="md:text-[18px] text-[16px] font-medium text-[var(--primary-gray-color-400)]">
+                  Your sitter drops by your home to play with your pets, offer
+                  food, and give potty breaks or clean the litter box.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-center">
+            <Image src={elementhome3} alt="element-home" width={455} />
+          </div>
+        </div>
+
+        <div className="w-full max-w-[1280px] flex flex-wrap gap-4 gap-y-10 justify-center">
+          <div className="w-[416px] flex-col">
+            <div className="w-full flex justify-center pb-[46px]">
+              <Image
+                src={connect}
+                alt="Connect With Sitters"
+                width={268}
+                height={268}
+              />
+            </div>
+            <div className="px-6 text-center">
+              <p className="text-[24px] pb-3 font-bold">
+                <span className="text-[var(--secondary-green-color-100)]">
+                  Connect
+                </span>{" "}
+                 With Sitters
+              </p>
+              <p className="font-medium text-[18px] text-[var(--primary-gray-color-400)]">
+                Find a verified and reviewed sitter who’ll keep your pets
+                company and give time.
+              </p>
+            </div>
+          </div>
+          <div className="w-[416px] flex-col">
+            <div className="flex justify-center pb-[46px]">
+              <Image
+                src={calling}
+                alt="Connect With Sitters"
+                width={268}
+                height={268}
+              />
+            </div>
+            <div className="px-6 text-center">
+              <p className="text-[24px] pb-3 font-bold">
+                <span className="text-[var(--secondary-blue-color-100)]">
+                  Better
+                </span>{" "}
+                 For Your Pets
+              </p>
+              <p className="font-medium text-[18px] text-[var(--primary-gray-color-400)]">
+                Pets stay happy at home with a sitter who gives them loving care
+                and companionship.
+              </p>
+            </div>
+          </div>
+          <div className="w-[416px] flex-col">
+            <div className="flex justify-center pb-[46px]">
+              <Image
+                src={better}
+                alt="Connect With Sitters"
+                width={268}
+                height={268}
+              />
+            </div>
+            <div className="px-6 text-center">
+              <p className="text-[24px] pb-3 font-bold">
+                <span className="text-[var(--primary-orange-color-500)]">
+                  Calling
+                </span>{" "}
+                 All Pets
+              </p>
+              <p className="font-medium text-[18px] text-[var(--primary-gray-color-400)]">
+                Stay for free with adorable animals in unique homes around the
+                world.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Find A Pet Sitter */}
+      <div className="w-full max-w-[1440px] mx-auto md:p-20 -z-10">
+        <div className="w-full h-[448px] bg-[var(--secondary-yellow-color-50)] md:rounded-2xl relative flex justify-center items-center">
+          <div className="absolute md:bottom-0 md:left-0 -z-0 md:w-[337px] md:-translate-x-0 w-[248px] bottom-0 left-0 -translate-x-5">
           <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+              src={elementhome4}
+              alt="element-home"
+              width={337}
+              className="rounded-l-2xl"
+            />
+          </div>
+          <div className="absolute -z-0 md:w-[327px] w-[200px] top-0 right-0 sm:flex hidden">
           <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+              src={elementhome5}
+              alt="element-home"
+              width={327}
+              className="rounded-2xl"
+            />
+          </div>
+          <div className="absolute -z-0 w-[188px] top-0 right-0 sm:hidden">
+            <Image
+              src={elementhome6}
+              alt="element-home"
+              width={327}
+              className="rounded-2xl"
+            />
+          </div>
+          <div className="w-[457px] text-center z-10 md:p-0 p-4 md:pt-0 pt-16">
+            <p className="md:text-[56px] text-[36px] font-bold pb-10">
+              Perfect Pet Sitter For Your Pet
+            </p>
+            <span className="md:flex-row flex flex-col px-9 justify-between items-center w-full sm:h-[72px] gap-4">
+            <Link href={"/register/sitter"} className="max-md:w-full">
+                <ButtonOrangeLight text="Become A Pet Sitter" width="w-full" />
+              </Link>
+              <Link href={"/sitters"} className="max-md:w-full">
+                <ButtonOrange text="Register" width="w-full" />
+              </Link>
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
