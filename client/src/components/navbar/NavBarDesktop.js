@@ -4,7 +4,7 @@ import Link from "next/link";
 import sitterlogo from "/public/assets/sitter-logo.svg";
 import bell from "/public/assets/navbar/bell.svg";
 import message from "/public/assets/navbar/message.svg";
-import avatar from "/public/assets/avatar.jpg";
+import avatar from "/public/assets/avatar.png";
 import iconUser from "/public/assets/icon=user.png";
 import iconPet from "/public/assets/icon=pet.png";
 import iconHistory from "/public/assets/icon=list-ul.png";

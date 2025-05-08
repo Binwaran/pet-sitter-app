@@ -1,46 +1,66 @@
-import { useState } from "react";
-import Image from "next/image";
-import sitterlogo from "/public/assets/sitter-logo.svg";
-// import bell from "/public/assets/navbar/bell.svg";
-// import message from "/public/assets/navbar/message.svg";
-// import menu from "/public/assets/navbar/menu.svg";
-import Link from "next/link";
+"use client";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import NavBarMobile from "./navbar/NavBarMobile";
+import NavBarDesktop from "./navbar/NavBarDesktop";
 
 const NavBar = () => {
-  const [open, setOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(null);
+  const [hasNewMessage, setHasNewMessage] = useState(false);
+  const [hasNewNotification, setHasNewNotification] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const router = useRouter();
+
+  const toggleDropdown = () => setIsDropdownOpen((v) => !v);
+  const toggleMobileMenu = () => setMobileOpen((v) => !v);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setIsLoggedIn(false);
+    router.push("/login");
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsLoggedIn(!!token);
+  }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    fetch("/api/unread-messages")
+      .then((res) => res.json())
+      .then((data) => setHasNewMessage(data.unread > 0))
+      .catch((err) => console.error("message error", err));
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    fetch("/api/unread-notifications")
+      .then((res) => res.json())
+      .then((data) => setHasNewNotification(data.unread > 0))
+      .catch((err) => console.error("notification error", err));
+  }, [isLoggedIn]);
 
   return (
-    <nav className="w-full flex justify-center py-5 px-5 lg:px-0 relative z-50">
-      {/* desktop */}
-      <section className="max-w-[1440px] min-w-0 w-full sm:flex sm:justify-between sm:items-center lg:px-20 flex">
-        <div className="flex items-center justify-center gap-10 sm:justify-between w-full flex-wrap">
-          <Link href={"/"}>
-            <Image src={sitterlogo} alt="sitter-logo" width={131} />
-          </Link>
-          <div className="flex md:gap-4 gap-2 items-center">
-            <Link
-              href="/register/sitter"
-              className="py-2 px-2 sm:py-4 sm:px-6 text-[18px] font-bold max-sm:w-full text-center"
-              onClick={() => setOpen(false)}
-            >
-              Register
-            </Link>
-            <Link
-              href="/login"
-              className="py-2 px-2 sm:py-4 sm:px-6 text-[18px] font-bold max-sm:w-full text-center"
-              onClick={() => setOpen(false)}
-            >
-              Login
-            </Link>
-            <Link href={"/sitters"} className="max-sm:w-full">
-              <button className="hidden sm:flex items-center justify-center min-w-[140px] px-4 py-2 bg-[var(--primary-orange-color-500)] text-white text-sm sm:text-base font-bold rounded-full tracking-wide w-full sm:w-auto">
-                Find A Pet Sitter
-              </button>
-            </Link>
-          </div>
-        </div>
-      </section>
-    </nav>
+    <>
+      <NavBarMobile
+        isLoggedIn={isLoggedIn}
+        hasNewMessage={hasNewMessage}
+        hasNewNotification={hasNewNotification}
+        open={mobileOpen}
+        toggleMobileMenu={toggleMobileMenu}
+        handleLogout={handleLogout}
+      />
+      <NavBarDesktop
+        isLoggedIn={isLoggedIn}
+        hasNewMessage={hasNewMessage}
+        hasNewNotification={hasNewNotification}
+        isDropdownOpen={isDropdownOpen}
+        toggleDropdown={toggleDropdown}
+        handleLogout={handleLogout}
+      />
+    </>
   );
 };
 

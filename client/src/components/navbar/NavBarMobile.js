@@ -89,17 +89,22 @@ const NavBarMobile = ({
           <div className="flex gap-2 items-center">
             <Link
               href="/register/sitter"
-              className="py-4 px-2 text-[18px] font-bold"
+              className="py-4 px-6 text-[18px] font-bold"
               onClick={() => toggleMobileMenu(false)}
             >
               Register
             </Link>
             <Link
               href="/login"
-              className="py-4 px-2 text-[18px] font-bold"
+              className="py-4 px-6 text-[18px] font-bold"
               onClick={() => toggleMobileMenu(false)}
             >
               Login
+            </Link>
+            <Link href="/sitters">
+              <button className="items-center justify-center w-[168px] h-[48px] bg-[var(--primary-orange-color-500)] text-white text-[16px] font-bold rounded-full tracking-wide">
+                Find A Pet Sitter
+              </button>
             </Link>
           </div>
         )}
