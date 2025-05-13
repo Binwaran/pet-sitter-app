@@ -249,7 +249,7 @@ export default function Home() {
               <Link href="/register/sitter" className="w-full md:w-auto">
                 <ButtonOrangeLight text="Register" width="w-full md:w-auto" />
               </Link>
-              <Link href="/sitters" className="w-full md:w-auto">
+              <Link href="/pet-sitters" className="w-full md:w-auto">
                 <ButtonOrange
                   text="Find A Pet Sitter"
                   width="w-full md:w-auto"

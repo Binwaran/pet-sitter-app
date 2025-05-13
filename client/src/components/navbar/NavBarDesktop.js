@@ -91,7 +91,7 @@ const NavBarDesktop = ({
             </div>
 
             {/* CTA */}
-            <Link href="/sitters">
+            <Link href="/pet-sitters">
               <button className="items-center justify-center w-[168px] h-[48px] bg-[var(--primary-orange-color-500)] text-white text-[16px] font-bold rounded-full tracking-wide">
                 Find A Pet Sitter
               </button>
@@ -105,7 +105,7 @@ const NavBarDesktop = ({
             <Link href="/login" className="py-4 px-4 text-[18px] font-bold">
               Login
             </Link>
-            <Link href="/sitters">
+            <Link href="/pet-sitters">
               <button className="items-center justify-center w-[168px] h-[48px] bg-[var(--primary-orange-color-500)] text-white text-[16px] font-bold rounded-full tracking-wide">
                 Find A Pet Sitter
               </button>
