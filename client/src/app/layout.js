@@ -14,10 +14,17 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
+<<<<<<< Updated upstream
         <ClerkProvider>
           {!noLayoutRoutes.includes(pathname) && <NavBar />}
           <main>{children}</main>
           {!noLayoutRoutes.includes(pathname) && <Footer />}
+=======
+      <ClerkProvider>
+        {!noLayoutRoutes.includes(pathname) && <NavBar />}
+        <main>{children}</main>
+        {!noLayoutRoutes.includes(pathname) && <Footer />}
+>>>>>>> Stashed changes
         </ClerkProvider>
       </body>
     </html>
