@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation"; // นำเข้า useRouter
+import { useRouter } from "next/navigation";
 import InputField from "@/components/register/InputField.js"; 
 import { validateEmail, validatePhone, validatePassword } from "@/components/InputVerification";
 
 const RegisterPage = () => {
-  const router = useRouter(); // สร้าง instance ของ router
+  const router = useRouter();
   const [formData, setFormData] = useState({
     email: "",
     phone: "",
@@ -72,7 +72,7 @@ const RegisterPage = () => {
         if (response.ok) {
           alert("Registration successful!");
           console.log("User saved:", data.user);
-          router.push("/login"); // Redirect ไปยังหน้า Login
+          router.push("/login");
         } else {
           setErrors({ ...errors, general: data.error });
         }
