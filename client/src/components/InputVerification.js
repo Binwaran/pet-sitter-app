@@ -1,25 +1,24 @@
-// filepath: client/src/components/InputVerification.js
 import React, { useState } from "react";
+
+export const validateEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+export const validatePhone = (phone) => {
+  const phoneRegex = /^0\d{9}$/;
+  return phoneRegex.test(phone);
+};
+
+export const validatePassword = (password) => {
+  return password.length > 8;
+};
 
 const InputVerification = () => {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
-
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const validatePhone = (phone) => {
-    const phoneRegex = /^0\d{9}$/;
-    return phoneRegex.test(phone);
-  };
-
-  const validatePassword = (password) => {
-    return password.length > 8;
-  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -41,7 +40,6 @@ const InputVerification = () => {
 
     if (Object.keys(newErrors).length === 0) {
       alert("Form submitted successfully!");
-      // Add logic to handle form submission
     }
   };
 
