@@ -45,12 +45,12 @@ const NavBar = () => {
   return (
     <>
       <NavBarMobile
-      isLoggedIn={true}
-      hasNewMessage={false}
-      hasNewNotification={false}
-      open={false}
-      toggleMobileMenu={() => {}}
-      handleLogout={() => {}}
+      isLoggedIn={isLoggedIn}
+      hasNewMessage={hasNewMessage}
+      hasNewNotification={hasNewNotification}
+      open={mobileOpen}
+      toggleMobileMenu={toggleMobileMenu}
+      handleLogout={handleLogout}
         className="block sm:hidden md:hidden lg:hidden" 
       />
       <NavBarDesktop
