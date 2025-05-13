@@ -1,14 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import sitterlogo from "/public/assets/sitter-logo.svg";
-import bell from "/public/assets/navbar/bell.svg";
-import message from "/public/assets/navbar/message.svg";
-import avatar from "/public/assets/avatar.png";
-import iconUser from "/public/assets/icon=user.png";
-import iconPet from "/public/assets/icon=pet.png";
-import iconHistory from "/public/assets/icon=list-ul.png";
-import iconLogout from "/public/assets/icon=logout.png";
+
 
 const NavBarDesktop = ({
   isLoggedIn,
@@ -22,7 +15,7 @@ const NavBarDesktop = ({
     <nav className="w-full flex justify-between items-center py-5 px-5 lg:px-0 relative z-50">
       <section className="max-w-[1440px] mx-auto min-w-0 w-full sm:flex sm:justify-between sm:items-center lg:px-20 hidden">
         <Link href="/">
-          <Image src={sitterlogo} alt="sitter-logo" width={131} />
+          <Image src="/assets/sitter-logo.svg" alt="sitter-logo" width={131} height={131} />
         </Link>
 
         {isLoggedIn ? (
@@ -30,7 +23,7 @@ const NavBarDesktop = ({
             {/* Notifications */}
             <Link href="/notifications">
               <div className="relative p-2 rounded-full bg-gray-100">
-                <Image src={bell} alt="bell" width={20} />
+                <Image src="/assets/navbar/bell.svg" alt="bell" width={20} />
                 {hasNewNotification && (
                   <span className="absolute top-0 right-0 w-2 h-2 bg-orange-500 rounded-full" />
                 )}
@@ -40,7 +33,7 @@ const NavBarDesktop = ({
             {/* Messages */}
             <Link href="/messages">
               <div className="relative p-2 rounded-full bg-gray-100">
-                <Image src={message} alt="message" width={20} />
+                <Image src="/assets/navbar/message.svg" alt="message" width={20} />
                 {hasNewMessage && (
                   <span className="absolute top-0 right-0 w-2 h-2 bg-orange-500 rounded-full" />
                 )}
@@ -50,7 +43,7 @@ const NavBarDesktop = ({
             {/* Profile Dropdown */}
             <div className="relative">
               <Image
-                src={avatar}
+                src="/assets/avatar.png"
                 alt="Profile"
                 width={40}
                 height={40}
@@ -61,19 +54,19 @@ const NavBarDesktop = ({
                 <div className="absolute right-0 mt-2 w-36 bg-white rounded shadow-lg p-2 z-50">
                   <Link href="/profile" className="block py-2 px-4 hover:bg-gray-100">
                     <div className="flex items-center gap-2">
-                      <Image src={iconUser} alt="Profile" width={16} height={16} />
+                      <Image src="/assets/icon=user.png" alt="Profile" width={16} height={16} />
                       <span>Profile</span>
                     </div>
                   </Link>
                   <Link href="/your-pet" className="block py-2 px-4 hover:bg-gray-100">
                     <div className="flex items-center gap-2">
-                      <Image src={iconPet} alt="Your Pet" width={16} height={16} />
+                      <Image src="/assets/icon=pet.png" alt="Your Pet" width={16} height={16} />
                       <span>Your Pet</span>
                     </div>
                   </Link>
                   <Link href="/history" className="block py-2 px-4 hover:bg-gray-100">
                     <div className="flex items-center gap-2">
-                      <Image src={iconHistory} alt="History" width={16} height={16} />
+                      <Image src="/assets/icon=list-ul.png" alt="History" width={16} height={16} />
                       <span>History</span>
                     </div>
                   </Link>
@@ -82,7 +75,7 @@ const NavBarDesktop = ({
                     className="block w-full text-left py-2 px-4 hover:bg-gray-100"
                   >
                     <div className="flex items-center gap-2">
-                      <Image src={iconLogout} alt="Logout" width={16} height={16} />
+                      <Image src="/assets/icon=logout.png" alt="Logout" width={16} height={16} />
                       <span>Logout</span>
                     </div>
                   </button>

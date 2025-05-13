@@ -1,10 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import sitterlogo from "/public/assets/sitter-logo.svg";
-import bell from "/public/assets/navbar/bell.svg";
-import message from "/public/assets/navbar/message.svg";
-import menu from "/public/assets/navbar/menu.svg";
+
 
 
 const NavBarMobile = ({
@@ -20,14 +17,14 @@ const NavBarMobile = ({
     <nav className="w-full flex justify-between items-center pt-5 pb-0 px-5 lg:px-0 relative z-50">
       <section className="sm:hidden flex justify-between items-center w-full relative">
         <Link href="/">
-          <Image src={sitterlogo} alt="sitter-logo" width={80} />
+          <Image src="/assets/sitter-logo.svg" alt="sitter-logo" width={80} height={80} />
         </Link>
 
         {isLoggedIn ? (
           <div className="flex gap-6 items-center">
             {/* Notifications */}
             <div className="relative">
-              <Image src={bell} alt="bell" width={24} />
+              <Image src="/assets/navbar/bell.svg" alt="bell" width={24} height={24}/>
               {hasNewNotification && (
                 <span className="absolute top-0 right-0 w-2 h-2 bg-orange-500 rounded-full" />
               )}
@@ -36,7 +33,7 @@ const NavBarMobile = ({
             {/* Messages */}
             <div className="relative">
               <Link href="/messages">
-                <Image src={message} alt="message" width={24} className="mr-1" />
+                <Image src="/assets/navbar/message.svg" alt="message" width={24} height={24} className="mr-1" />
               </Link>
               {hasNewMessage && (
                 <span className="absolute top-0 right-0 w-2 h-2 bg-orange-500 rounded-full" />
@@ -51,7 +48,7 @@ const NavBarMobile = ({
                 aria-label="Toggle menu"
                 type="button"
               >
-                <Image src={menu} alt="menu" width={24} height={24} style={{ width: 'auto', height: 'auto', objectFit: 'contain' }} 
+                <Image src="/assets/navbar/menu.svg" alt="menu" width={24} height={24} style={{ width: 'auto', height: 'auto', objectFit: 'contain' }} 
 />
               </button>
 
