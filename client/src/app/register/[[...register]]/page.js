@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import InputField from "@/components/register/InputField.js"; 
 import { validateEmail, validatePhone, validatePassword } from "@/components/InputVerification";
+import Link from "next/link";
 
 const RegisterPage = () => {
   const router = useRouter();
@@ -127,7 +128,7 @@ const RegisterPage = () => {
         {errors.general && <p style={styles.error}>{errors.general}</p>}
       </form>
       <p style={styles.footerText}>
-        Already have an account? <a href="/login" style={styles.link}>Login</a>
+        Already have an account? <Link href="/login" style={styles.link}>Login</Link>
       </p>
     </div>
   );

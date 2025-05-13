@@ -2,6 +2,7 @@
 "use client";
 import { useState } from "react";
 import { useSignIn } from "@clerk/nextjs";
+import Link from "next/link";
 
 import AuthIllustrations from "@/components/Auth/AuthIllustrations";
 import AuthHeader from "@/components/Auth/AuthHeader";
@@ -58,10 +59,10 @@ export default function CustomLogin() {
           <SocialLoginButtons />
 
           <p className="text-center text-sm text-gray-600">
-            Don’t have any account? {" "}
-            <a href="/register" className="text-orange-500 hover:underline">
+            Don’t have any account?{" "}
+            <Link href="/register" className="text-orange-500 hover:underline">
               Register
-            </a>
+            </Link>
           </p>
         </div>
       </div>
