@@ -23,7 +23,7 @@ const NavBarDesktop = ({
             {/* Notifications */}
             <Link href="/notifications">
               <div className="relative p-2 rounded-full bg-gray-100">
-                <Image src="/assets/navbar/bell.svg" alt="bell" width={20} />
+                <Image src="/assets/navbar/bell.svg" alt="bell" width={20} height={20} />
                 {hasNewNotification && (
                   <span className="absolute top-0 right-0 w-2 h-2 bg-orange-500 rounded-full" />
                 )}
@@ -33,7 +33,7 @@ const NavBarDesktop = ({
             {/* Messages */}
             <Link href="/messages">
               <div className="relative p-2 rounded-full bg-gray-100">
-                <Image src="/assets/navbar/message.svg" alt="message" width={20} />
+                <Image src="/assets/navbar/message.svg" alt="message" width={20} height={20} />
                 {hasNewMessage && (
                   <span className="absolute top-0 right-0 w-2 h-2 bg-orange-500 rounded-full" />
                 )}
