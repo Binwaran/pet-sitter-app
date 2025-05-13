@@ -45,12 +45,13 @@ const NavBar = () => {
   return (
     <>
       <NavBarMobile
-        isLoggedIn={isLoggedIn}
-        hasNewMessage={hasNewMessage}
-        hasNewNotification={hasNewNotification}
-        open={mobileOpen}
-        toggleMobileMenu={toggleMobileMenu}
-        handleLogout={handleLogout}
+      isLoggedIn={true}
+      hasNewMessage={false}
+      hasNewNotification={false}
+      open={false}
+      toggleMobileMenu={() => {}}
+      handleLogout={() => {}}
+        className="block sm:hidden md:hidden lg:hidden" 
       />
       <NavBarDesktop
         isLoggedIn={isLoggedIn}
@@ -59,9 +60,10 @@ const NavBar = () => {
         isDropdownOpen={isDropdownOpen}
         toggleDropdown={toggleDropdown}
         handleLogout={handleLogout}
+        className="hidden sm:hidden md:hidden lg:block" 
       />
     </>
-  );
-};
+  )
+}  
 
 export default NavBar;

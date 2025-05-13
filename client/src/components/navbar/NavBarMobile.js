@@ -6,6 +6,7 @@ import bell from "/public/assets/navbar/bell.svg";
 import message from "/public/assets/navbar/message.svg";
 import menu from "/public/assets/navbar/menu.svg";
 
+
 const NavBarMobile = ({
   isLoggedIn,
   hasNewMessage,
@@ -15,7 +16,8 @@ const NavBarMobile = ({
   handleLogout,
 }) => {
   return (
-    <nav className="w-full flex justify-between items-center py-5 px-5 lg:px-0 relative z-50">
+   
+    <nav className="w-full flex justify-between items-center pt-5 pb-0 px-5 lg:px-0 relative z-50">
       <section className="sm:hidden flex justify-between items-center w-full relative">
         <Link href="/">
           <Image src={sitterlogo} alt="sitter-logo" width={80} />
@@ -49,7 +51,8 @@ const NavBarMobile = ({
                 aria-label="Toggle menu"
                 type="button"
               >
-                <Image src={menu} alt="menu" width={24} height={24} />
+                <Image src={menu} alt="menu" width={24} height={24} style={{ width: 'auto', height: 'auto', objectFit: 'contain' }} 
+/>
               </button>
 
               {open && (
