@@ -98,7 +98,7 @@ const NavBarMobile = ({
               Register
             </Link>
             <Link
-              href="/login"
+              href="/login/sitter"
               className="py-4 px-2 text-[18px] font-bold"
               onClick={() => toggleMobileMenu(false)}
             >

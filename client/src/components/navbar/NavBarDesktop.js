@@ -102,7 +102,7 @@ const NavBarDesktop = ({
             <Link href="/register/sitter" className="py-4 px-2 text-[18px] font-bold">
               Register
             </Link>
-            <Link href="/login" className="py-4 px-4 text-[18px] font-bold">
+            <Link href="/login/sitter" className="py-4 px-4 text-[18px] font-bold">
               Login
             </Link>
             <Link href="/pet-sitters">
