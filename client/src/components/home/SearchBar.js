@@ -52,7 +52,7 @@ const SearchBar = () => {
         </div>
 
         <button
-          onClick={() => router.push("/sitters")}
+          onClick={() => router.push("/pet-sitters")}
           className="w-full md:w-[80%] lg:w-[120px] bg-[var(--primary-orange-color-500)] text-white text-[16px] font-bold rounded-full tracking-wide h-[48px] self-center"
         >
           Search
