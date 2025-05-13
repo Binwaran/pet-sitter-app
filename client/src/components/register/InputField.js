@@ -15,4 +15,6 @@ const InputField = React.memo(({ label, name, type, value, onChange, error, styl
   </div>
 ));
 
+InputField.displayName = "InputField";
+
 export default InputField;
