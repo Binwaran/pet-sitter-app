@@ -28,3 +28,24 @@
   --secondary-pink-color-50: #fff0f1;
   --secondary-red-color: #ea1010;
 }
+
+.input {
+  @apply w-full h-[48px] px-4 py-2 border rounded-lg text-[16px] text-[#101828] focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)];
+}
+
+.badge {
+  @apply px-3 py-1 bg-[#FEF3ED] text-[#FEA267] rounded-full text-xs font-medium;
+}
+
+.hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Webkit */
+}
+
+nav:hover {
+  overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
+}

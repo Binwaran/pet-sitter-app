@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation";
 
 export default function RootLayout({ children }) {
   const pathname = usePathname();
-  const noLayoutRoutes = ["/login", "/register"];
+  const noLayoutRoutes = ["/login", "/register", "/pet-sitters/profile"];
 
   return (
     <html lang="en">
