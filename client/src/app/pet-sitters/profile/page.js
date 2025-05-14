@@ -112,7 +112,7 @@ export default function PetSitterProfilePage() {
                       width={16}
                       height={16}
                     />
-                    Your request has not been approved: '{adminSuggestion}'
+                    <p>Your request has not been approved: {`'${adminSuggestion}'`}</p>
                   </div>
                 )}
 
