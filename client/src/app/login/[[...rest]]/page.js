@@ -59,7 +59,7 @@ export default function CustomLogin() {
           <SocialLoginButtons />
 
           <p className="text-center text-sm text-gray-600">
-            Don’t have any account?{" "}
+            Don&apos;t have any account?{" "}
             <Link href="/register" className="text-orange-500 hover:underline">
               Register
             </Link>
