@@ -68,9 +68,11 @@ const SitterCard = ({ sitter }) => {
 
         {/* Tags */}
         <div className="mt-2 flex gap-2 flex-wrap">
-          {sitter.petTypes.map((type) => (
-            <Tag key={type} type={type} />
-          ))}
+          <div className="mt-2 flex gap-2 flex-wrap">
+            {(sitter.pet_type || []).map((type) => (
+              <Tag key={type} type={type} />
+            ))}
+          </div>
         </div>
       </div>
     </div>

@@ -9,20 +9,33 @@ const SearchBar = () => {
   const router = useRouter();
   const [experience, setExperience] = useState("");
 
+  const [petType, setPetType] = useState([]);
+  const [rating, setRating] = useState(null);
+
+  const handlePetTypeChange = (type) => {
+    setPetType((prev) =>
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+    );
+  };
+
+  const handleRatingChange = (value) => {
+    setRating(value);
+  };
+
   return (
     <div className="w-full max-w-[1064px] px-4 pb-4 lg:px-0">
       <div className="bg-[#F6F6F9] md:px-6 px-4 w-full flex flex-col sm:flex-row sm:items-center sm:h-[72px] text-[var(--primary-gray-color-500)] rounded-t-3xl">
         <div className="text-[var(--primary-gray-color-500)] font-bold pt-4 pb-2 pr-3 sm:pt-0 sm:pb-0 w-[100px]">
           Pet Type:
         </div>
-        <Checkbox />
+        <Checkbox onChange={handlePetTypeChange} selected={petType} />
       </div>
 
       <div className="flex-col lg:flex-row gap-6 bg-white w-full lg:h-[72px] flex lg:px-6 px-4 py-4 text-[var(--primary-gray-color-500)] font-bold rounded-b-3xl justify-between"
       style={{ boxShadow: "4px 4px 24px 0px #0000000A" }}>
         <div className="flex flex-col lg:flex-row lg:items-center">
           <p className="lg:pr-6 pb-3">Rating:</p>
-          <RatingStars />
+          <RatingStars onChange={handleRatingChange} selected={rating} />
         </div>
 
         <div className="w-full lg:w-auto flex flex-col lg:flex-row lg:items-center lg:gap-3">
@@ -52,7 +65,14 @@ const SearchBar = () => {
         </div>
 
         <button
-          onClick={() => router.push("/pet-sitters")}
+          onClick={() => {
+            const query = new URLSearchParams();
+            if (petType.length > 0) 
+              query.set("pets", petType.join(","));
+            if (rating) query.set("rating", rating);
+            if (experience) query.set("experience", experience);
+            router.push(`/pet-sitters?${query.toString()}`);
+          }}
           className="w-full md:w-[80%] lg:w-[120px] bg-[var(--primary-orange-color-500)] text-white text-[16px] font-bold rounded-full tracking-wide h-[48px] self-center"
         >
           Search
