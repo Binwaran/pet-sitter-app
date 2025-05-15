@@ -20,8 +20,8 @@ export default function Checkbox() {
   }
 
   return (
-    <div className="w-full flex flex-col sm:flex-row sm:items-center">
-      <span className="w-full max-w-[328px]">
+    <div className="w-full flex flex-col pb-2 sm:pb-0 sm:flex-row sm:items-center">
+      <span className="w-full max-w-[230px] sm:max-w-[600px]">
         <div className="cursor-pointer sm:space-x-3 space-x-1 flex justify-around sm:justify-start flex-wrap">
           <input
             id="dog"
@@ -65,6 +65,36 @@ export default function Checkbox() {
             className="text-[16px] font-medium"
           >
             Rabbit
+          </label>
+          <input
+            id="dog"
+            type="checkbox"
+            value="Dog"
+            onChange={handlePetSelect}
+            className="border border-[var(--primary-gray-color-100)] hover:border-[var(--primary-orange-color-300)] focus:border-[var(--primary-orange-color-300)]"
+          />
+          <label htmlFor="dog" className="text-[16px] font-medium">
+            Mouse
+          </label>
+          <input
+            id="dog"
+            type="checkbox"
+            value="Dog"
+            onChange={handlePetSelect}
+            className="border border-[var(--primary-gray-color-100)] hover:border-[var(--primary-orange-color-300)] focus:border-[var(--primary-orange-color-300)]"
+          />
+          <label htmlFor="dog" className="text-[16px] font-medium">
+            turtle
+          </label>
+          <input
+            id="dog"
+            type="checkbox"
+            value="Dog"
+            onChange={handlePetSelect}
+            className="border border-[var(--primary-gray-color-100)] hover:border-[var(--primary-orange-color-300)] focus:border-[var(--primary-orange-color-300)]"
+          />
+          <label htmlFor="dog" className="text-[16px] font-medium">
+            Snake
           </label>
         </div>
       </span>

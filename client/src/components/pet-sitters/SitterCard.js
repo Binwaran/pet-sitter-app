@@ -47,7 +47,7 @@ const SitterCard = ({ sitter }) => {
 
             {/* ชื่อร้านและชื่อผู้ให้บริการ */}
             <div>
-              <h2 className="text-base font-semibold text-gray-800">ชื่อร้านจ้าาา</h2>
+              <h2 className="text-base font-semibold text-gray-800">{sitter.trade_name || 'ไม่มีชื่อร้าน'}</h2>
               <p className="text-sm text-gray-500">By {sitter.name}</p>
             </div>
           </div>
