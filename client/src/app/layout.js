@@ -9,7 +9,15 @@ import { ClerkProvider } from "@clerk/nextjs";
 
 export default function RootLayout({ children }) {
   const pathname = usePathname();
-  const noLayoutRoutes = ["/login", "/register", "/pet-sitters/profile"];
+  const noLayoutRoutes = [
+    "/login",
+    "/register",
+    "/pet-sitters/profile",
+    "/pet-sitters/booking",
+    "/pet-sitters/calendar",
+    "/pet-sitters/payout",
+    "/pet-sitters/booking/[id]",
+  ];
 
   return (
     <html lang="en">

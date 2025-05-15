@@ -6,8 +6,8 @@ import tab from "/public/assets/profile/tab.svg";
 import calendar from "/public/assets/profile/calendar.svg";
 import card from "/public/assets/profile/card.svg";
 import logout from "/public/assets/profile/logout.svg";
-import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef } from "react";
+import { usePathname, useRouter } from "next/navigation";
 
 const menu = [
   {
@@ -33,12 +33,13 @@ const menu = [
 ];
 
 export default function Sidebar({ className = "" }) {
-  const [selected, setSelected] = useState(menu[0].value);
   const router = useRouter();
+  const pathname = usePathname();
   const navRef = useRef(null);
 
+  const selected = menu.find(item => pathname?.includes(item.value))?.value;
+
   const handleMenuClick = (value) => {
-    setSelected(value);
     router.push(`/pet-sitters/${value}`);
   };
 
@@ -68,13 +69,18 @@ export default function Sidebar({ className = "" }) {
     `}
     >
       <div className="flex flex-col w-full h-full">
-        <div className="hidden md:flex w-full px-6 mb-6">
+        <div className="hidden md:flex w-full px-6 mb-6 mt-6">
+          <button
+            type="button"
+            onClick={() => router.push("/")}
+          >
           <Image
             src={sitterlogo}
             alt="sitter-logo"
             width={106}
             className="mt-1"
           />
+          </button>
         </div>
         <nav
           ref={navRef}
@@ -90,18 +96,18 @@ export default function Sidebar({ className = "" }) {
           style={{ maxWidth: "100vw" }}
         >
           {menu.map((item) => (
-            <button
-              key={item.value}
-              type="button"
-              onClick={() => handleMenuClick(item.value)}
-              className={`flex flex-row items-center px-6 py-3 text-left transition whitespace-nowrap
-              ${
-                selected === item.value
-                  ? "bg-[#FEF3ED] text-[#FEA267] font-semibold"
-                  : "hover:bg-[#F9FAFB]"
-              }
-              md:w-full
-            `}
+    <button
+      key={item.value}
+      type="button"
+      onClick={() => handleMenuClick(item.value)}
+      className={`flex flex-row items-center px-6 py-3 text-left transition whitespace-nowrap
+        ${
+          selected === item.value
+            ? "bg-[#FEF3ED] text-[#FEA267] font-semibold"
+            : "hover:bg-[#F9FAFB]"
+        }
+        md:w-full
+      `}
             >
               <Image
                 src={item.icon}
@@ -130,7 +136,7 @@ export default function Sidebar({ className = "" }) {
           type="button"
           onClick={() => {
             localStorage.removeItem("accessToken");
-            router.push("/");
+            router.push("/login/sitter");
           }}
           className="hidden md:flex items-center px-6 py-3 text-left hover:bg-[#F9FAFB] rounded-lg transition whitespace-nowrap mt-auto w-full"
         >
