@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import districts from "../../app/data/districts.json";
 
 const DistrictDropdown = ({
+  id,
   provinceCode,
   value,
   onChange,
@@ -32,14 +33,20 @@ const DistrictDropdown = ({
 
   return (
     <div ref={dropdownRef} className="relative w-full">
-      <div
-        tabIndex={0}
-        role="button"
-        onClick={() => setIsOpen((prev) => !prev)}
-        className={`flex items-center justify-between px-4 py-3 border border-[#DCDFED] rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] ${
-          !provinceCode ? "opacity-50 pointer-events-none" : ""
-        } ${className}`}
-      >
+      <button
+      id={id}
+      type="button"
+      tabIndex={0}
+      role="combobox"
+      aria-haspopup="listbox"
+      aria-expanded={isOpen}
+      aria-labelledby={id ? `${id}-label` : undefined}
+      onClick={() => setIsOpen((prev) => !prev)}
+      className={`w-full flex items-center justify-between px-4 py-3 border border-[#DCDFED] rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] ${
+        !provinceCode ? "opacity-50 pointer-events-none" : ""
+      } ${className}`}
+      disabled={!provinceCode}
+    >
         <span
           className={selectedDistrict ? "text-[#344054]" : "text-[#7B7E8F]"}
         >
@@ -48,7 +55,7 @@ const DistrictDropdown = ({
             : "Select District"}
         </span>
         <span className="text-xs text-[#9AA1B9]">⏷</span>
-      </div>
+      </button>
       {isOpen && provinceCode && (
         <ul className="absolute z-10 mt-2 w-full bg-white border border-[#EAECF0] rounded-lg shadow-md max-h-[280px] overflow-auto">
           {filteredDistricts.length === 0 && (

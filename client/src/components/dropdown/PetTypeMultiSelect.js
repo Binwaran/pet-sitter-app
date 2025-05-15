@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 const options = ["Cat", "Dog", "Bird", "Rabbit"];
 
 export default function PetTypeMultiSelect({
+  id,
   value = [],
   onChange,
   className = "",
@@ -32,8 +33,13 @@ export default function PetTypeMultiSelect({
 
   return (
     <div className={`relative ${className}`} ref={ref}>
-      <div
-        className="min-h-[40px] sm:min-h-[48px] border border-[#DCDFED] rounded-lg px-2 py-2 flex flex-wrap items-center cursor-pointer bg-white"
+      <button
+        type="button"
+        id={id}
+        role="listbox"
+        tabIndex={0}
+        aria-labelledby={id ? `${id}-label` : undefined}
+        className="w-full min-h-[40px] sm:min-h-[48px] border border-[#DCDFED] rounded-lg px-2 py-2 flex flex-wrap items-center cursor-pointer bg-white"
         onClick={() => setOpen((o) => !o)}
       >
         {value.length === 0 && (
@@ -58,7 +64,7 @@ export default function PetTypeMultiSelect({
           </span>
         ))}
         <span className="ml-auto text-[#9AA1B9] text-xs">⏷</span>
-      </div>
+      </button>
       {open && (
         <ul className="absolute z-10 mt-1 w-full bg-white border border-[#EAECF0] rounded-lg shadow-md">
           {options.map((option) => (

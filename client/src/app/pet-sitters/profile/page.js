@@ -150,6 +150,7 @@ export default function PetSitterProfilePage() {
                               type="text"
                               id="full_name"
                               name="full_name"
+                              autoComplete="name"
                               className={`input border-[#DCDFED] ${
                                 touched.full_name && errors.full_name
                                   ? "pr-10 border-red-500"
@@ -211,12 +212,15 @@ export default function PetSitterProfilePage() {
                         </div>
                         {/* Phone Number */}
                         <div className="flex flex-col">
-                          <label className="pb-1 text-[16px] font-medium">
+                          <label htmlFor="phone_number" className="pb-1 text-[16px] font-medium">
                             Phone Number*
                           </label>
                           <div className="relative">
                             <Field
+                              type="number"
+                              id="phone_number"
                               name="phone_number"
+                              autoComplete="tel"
                               className={`input border-[#DCDFED] ${
                                 touched.phone_number && errors.phone_number
                                   ? "pr-10 border-red-500"
@@ -242,12 +246,15 @@ export default function PetSitterProfilePage() {
                         </div>
                         {/* Email */}
                         <div className="flex flex-col">
-                          <label className="pb-1 text-[16px] font-medium">
+                          <label htmlFor="email" className="pb-1 text-[16px] font-medium">
                             Email*
                           </label>
                           <div className="relative">
                             <Field
+                              type="email"
+                              id="email"
                               name="email"
+                              autoComplete="email"
                               className={`input border-[#DCDFED] ${
                                 touched.email && errors.email
                                   ? "pr-10 border-red-500"
@@ -274,11 +281,13 @@ export default function PetSitterProfilePage() {
                       </div>
                       {/* Introduction */}
                       <div className="flex flex-col">
-                        <label className="pb-1 text-[16px] font-medium">
+                        <label htmlFor="introduction" className="pb-1 text-[16px] font-medium">
                           Introduction (Describe about yourself as pet sitter)
                         </label>
                         <div className="relative">
                           <Field
+                            type="text"
+                            id="introduction"
                             as="textarea"
                             name="introduction"
                             className={`w-full min-h-[120px] border border-[#DCDFED] rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] ${
@@ -313,11 +322,13 @@ export default function PetSitterProfilePage() {
                       Pet Sitter
                     </h2>
                     <div className="flex flex-col gap-4">
-                      <label className="pb-1 text-[16px] font-medium">
+                      <label htmlFor="trade_name" className="pb-1 text-[16px] font-medium">
                         Pet sitter name (Trade Name)*
                       </label>
                       <div className="relative">
                         <Field
+                          type="text"
+                          id="trade_name"
                           name="trade_name"
                           className={`input border-[#DCDFED] ${
                             touched.trade_name && errors.trade_name
@@ -342,11 +353,13 @@ export default function PetSitterProfilePage() {
                         </div>
                       )}
                       <div className="flex flex-col">
-                        <label className="pb-1 text-[16px] font-medium">
+                        <label id="pet_types-label" htmlFor="pet_types" className="pb-1 text-[16px] font-medium">
                           Pet type*
                         </label>
                         <div className="relative">
                           <PetTypeMultiSelect
+                            id="pet_types"
+                            name="pet_types"
                             value={values.pet_types}
                             onChange={(val) => setFieldValue("pet_types", val)}
                             className={
@@ -373,12 +386,14 @@ export default function PetSitterProfilePage() {
                         )}
                       </div>
                       <div>
-                        <label className="pb-1 text-[16px] font-medium">
+                        <label htmlFor="services" className="pb-1 text-[16px] font-medium">
                           Services (Describe all of your service for pet
                           sitting)
                         </label>
                         <div className="relative">
                           <Field
+                            type="text"
+                            id="services"
                             as="textarea"
                             name="services"
                             className={`w-full min-h-[120px] border border-[#DCDFED] rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] ${
@@ -405,11 +420,13 @@ export default function PetSitterProfilePage() {
                         )}
                       </div>
                       <div>
-                        <label className="pb-1 text-[16px] font-medium">
+                        <label htmlFor="place_description" className="pb-1 text-[16px] font-medium">
                           My Place (Describe you place)
                         </label>
                         <div className="relative">
                           <Field
+                            type="text"
+                            id="place_description"
                             as="textarea"
                             name="place_description"
                             className={`w-full min-h-[120px] border border-[#DCDFED] rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] ${
@@ -483,10 +500,13 @@ const AddressSection = () => {
         Address
       </h2>
       <div className="flex flex-col mb-6">
-        <label className="pb-1 text-[16px] font-medium">Address Detail*</label>
+        <label htmlFor="address_detail" className="pb-1 text-[16px] font-medium">Address Detail*</label>
         <div className="relative">
           <Field
+            type="text"
+            id="address_detail"
             name="address_detail"
+            autoComplete="street-address"
             className={`input border-[#DCDFED] ${
               touched.address_detail && errors.address_detail
                 ? "pr-10 border-red-500"
@@ -511,9 +531,11 @@ const AddressSection = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         {/* Province */}
         <div className="flex flex-col">
-          <label className="pb-1 text-[16px] font-medium">Province*</label>
+          <label id="province-label" htmlFor="province" className="pb-1 text-[16px] font-medium">Province*</label>
           <div className="relative">
             <ProvinceDropdown
+              id="province"
+              name="province"
               value={values.province}
               onChange={(value) => {
                 setFieldValue("province", value);
@@ -544,9 +566,11 @@ const AddressSection = () => {
         </div>
         {/* District */}
         <div className="flex flex-col">
-          <label className="pb-1 text-[16px] font-medium">District*</label>
+          <label id="district-label" htmlFor="district" className="pb-1 text-[16px] font-medium">District*</label>
           <div className="relative">
             <DistrictDropdown
+              id="district"
+              name="district"
               provinceCode={values.province}
               value={values.district}
               onChange={(value) => {
@@ -577,9 +601,11 @@ const AddressSection = () => {
         </div>
         {/* Subdistrict */}
         <div className="flex flex-col">
-          <label className="pb-1 text-[16px] font-medium">Subdistrict*</label>
+          <label id="sub_district-label" htmlFor="sub_district" className="pb-1 text-[16px] font-medium">Subdistrict*</label>
           <div className="relative">
             <SubdistrictDropdown
+              id="sub_district"
+              name="sub_district"
               districtCode={values.district}
               value={values.sub_district}
               onChange={(value) => {
@@ -609,10 +635,13 @@ const AddressSection = () => {
         </div>
         {/* Post Code */}
         <div className="flex flex-col">
-          <label className="pb-1 text-[16px] font-medium">Post Code*</label>
+          <label htmlFor="post_code" className="pb-1 text-[16px] font-medium">Post Code*</label>
           <div className="relative">
             <Field
+              type="number"
+              id="post_code"
               name="post_code"
+              autoComplete="postal-code"
               className={`input border-[#DCDFED] ${
                 touched.post_code && errors.post_code
                   ? "pr-10 border-red-500"

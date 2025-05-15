@@ -35,7 +35,7 @@ const bankOptions = [
   },
 ];
 
-const BankDropdown = () => {
+const BankDropdown = ({ id }) => {
   const [bank, setBank] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -59,6 +59,7 @@ const BankDropdown = () => {
   return (
     <div ref={dropdownRef} className="relative w-full">
       <div
+        id={id}
         tabIndex={0}
         role="button"
         onClick={() => setIsOpen(!isOpen)}
