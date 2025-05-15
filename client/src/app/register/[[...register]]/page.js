@@ -2,9 +2,10 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import InputField from "@/components/register/InputField.js"; 
+import InputField from "@/components/register/InputField.js";
 import { validateEmail, validatePhone, validatePassword } from "@/components/InputVerification";
 import Link from "next/link";
+import AuthIllustrations from "@/components/Auth/AuthIllustrations"; // เพิ่มถ้ามีไฟล์นี้
 
 const RegisterPage = () => {
   const router = useRouter();
@@ -72,13 +73,11 @@ const RegisterPage = () => {
 
         if (response.ok) {
           alert("Registration successful!");
-          console.log("User saved:", data.user);
           router.push("/login");
         } else {
           setErrors({ ...errors, general: data.error });
         }
       } catch (error) {
-        console.error("Error during registration:", error);
         setErrors({ ...errors, general: "An unexpected error occurred." });
       }
     }
@@ -90,110 +89,60 @@ const RegisterPage = () => {
   };
 
   return (
-    <div style={styles.container}>
-      <h1 style={styles.title}>Join Us!</h1>
-      <p style={styles.subtitle}>Find your perfect pet sitter with us</p>
-      <form onSubmit={handleSubmit} style={styles.form}>
-        <InputField
-          label="Email"
-          name="email"
-          type="email"
-          value={formData.email}
-          onChange={handleChange}
-          error={errors.email}
-          styles={styles} 
-        />
-        <InputField
-          label="Phone"
-          name="phone"
-          type="text"
-          value={formData.phone}
-          onChange={handleChange}
-          error={errors.phone}
-          styles={styles} 
-        />
-        <InputField
-          label="Password"
-          name="password"
-          type="password"
-          value={formData.password}
-          onChange={handleChange}
-          error={errors.password}
-          styles={styles} 
-        />
-        <div id="clerk-captcha" style={{ marginTop: "20px" }}></div>
-        <button type="submit" style={styles.button}>
-          Register
-        </button>
-        {errors.general && <p style={styles.error}>{errors.general}</p>}
-      </form>
-      <p style={styles.footerText}>
-        Already have an account? <Link href="/login" style={styles.link}>Login</Link>
-      </p>
+    <div className="flex flex-col md:flex-row min-h-screen relative bg-white">
+      {/* ถ้ามี AuthIllustrations ให้ใส่เหมือนหน้า Login */}
+      <AuthIllustrations />
+      <div className="z-10 flex flex-1 justify-center items-start p-6 md:p-16 mt-10 md:mt-24">
+        <div className="w-full max-w-md space-y-6">
+          <h1 className="text-3xl font-bold text-center mb-2">Join Us!</h1>
+          <p className="text-center text-gray-600 mb-6">Find your perfect pet sitter with us</p>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <InputField
+              label="Email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              error={errors.email}
+              placeholder="email@company.com"
+            />
+            <InputField
+              label="Phone"
+              name="phone"
+              type="text"
+              value={formData.phone}
+              onChange={handleChange}
+              error={errors.phone}
+              placeholder="Your phone number"
+            />
+            <InputField
+              label="Password"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
+              error={errors.password}
+              placeholder="Create your password"
+            />
+            <div id="clerk-captcha" className="mt-5"></div>
+            <button
+              type="submit"
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-full transition font-semibold"
+            >
+              Register
+            </button>
+            {errors.general && <p className="text-red-500 text-sm mt-2">{errors.general}</p>}
+          </form>
+          <p className="text-center text-sm text-gray-600">
+            Already have an account?{" "}
+            <Link href="/login" className="text-orange-500 hover:underline">
+              Login
+            </Link>
+          </p>
+        </div>
+      </div>
     </div>
   );
-};
-
-const styles = {
-  container: {
-    maxWidth: "400px",
-    margin: "0 auto",
-    textAlign: "center",
-    fontFamily: "'Arial', sans-serif",
-    padding: "20px",
-  },
-  title: {
-    fontSize: "2rem",
-    fontWeight: "bold",
-    marginBottom: "10px",
-  },
-  subtitle: {
-    fontSize: "1rem",
-    color: "#666",
-    marginBottom: "20px",
-  },
-  form: {
-    marginBottom: "20px",
-  },
-  inputGroup: {
-    marginBottom: "15px",
-    textAlign: "left",
-  },
-  label: {
-    display: "block",
-    fontSize: "0.875rem",
-    color: "#333",
-    marginBottom: "5px",
-  },
-  input: {
-    width: "100%",
-    padding: "10px",
-    fontSize: "1rem",
-    border: "1px solid #ccc",
-    borderRadius: "5px",
-  },
-  error: {
-    color: "red",
-    fontSize: "0.875rem",
-    marginTop: "5px",
-  },
-  button: {
-    backgroundColor: "#FF6B35",
-    color: "white",
-    padding: "10px 20px",
-    border: "none",
-    borderRadius: "5px",
-    cursor: "pointer",
-    fontSize: "1rem",
-  },
-  footerText: {
-    fontSize: "0.875rem",
-    color: "#666",
-  },
-  link: {
-    color: "#FF6B35",
-    textDecoration: "none",
-  },
 };
 
 export default RegisterPage;
