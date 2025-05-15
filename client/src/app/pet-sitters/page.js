@@ -35,14 +35,14 @@ const PetSitterListPage = () => {
   const handleSearch = useCallback(async ({keyword, petTypes, rating, experience}) => {
     console.log("📍 FETCHING FROM TABLE: pet_sitter")
 
-    let query = supabase.from('pet_sitter').select('*')
+    let query = supabase.from('pet_sitter').select('*, users (profile_image_url, name)')
   
     if (keyword) {
     query = query.ilike('trade_name', `%${keyword}%`)
   }
 
   if (rating && !isNaN(rating)) {
-    query = query.eq('rating', parseInt(rating))
+    query = query.gte('average_rating', parseInt(rating))
   }
 
   if (experience) {
@@ -67,16 +67,17 @@ const PetSitterListPage = () => {
     }
 
     const filtered = data.filter((sitter) => {
-      const matchesKeyword = filters.keyword
-        ? sitter.trade_name?.toLowerCase().includes(filters.keyword.toLowerCase())
+      const matchesKeyword = keyword
+        ? sitter.trade_name?.toLowerCase().includes(keyword.toLowerCase())
         : true
 
-      const matchesPetTypes = filters.petTypes.length > 0
-        ? filters.petTypes.some((type) => sitter.pet_type?.includes(type))
+      const safePetTypes = Array.isArray(petTypes) ? petTypes : []
+      const matchesPetTypes = safePetTypes.length > 0
+        ? safePetTypes.some((type) => sitter.pet_type?.includes(type))
         : true
 
-      const matchesRating = filters.rating
-        ? sitter.rating === parseInt(filters.rating)
+      const matchesRating = rating
+        ? sitter.average_rating >= parseInt(rating)
         : true
 
       return matchesKeyword && matchesPetTypes && matchesRating
@@ -88,7 +89,9 @@ const PetSitterListPage = () => {
 
   useEffect(() => {
   const loadInitialData = async () => {
-    const { data, error } = await supabase.from('pet_sitter').select('*')
+    const { data, error } = await supabase
+      .from('pet_sitter')
+      .select('*, users (profile_image_url, name)')
     if (error) {
       console.error('Error loading data:', error)
       return
@@ -123,9 +126,8 @@ const PetSitterListPage = () => {
         rating,
         experience
       })
-      handleSearch({keyword, petTypes, rating, experience})
     }
-  }, [handleSearch, searchParams])
+  }, [searchParams])
 
 
   const handleChange = (e) => {
@@ -181,7 +183,7 @@ const PetSitterListPage = () => {
             filters={filters}
             onChange={handleChange}
             onCheckbox={handleCheckbox}
-            onSearch={handleSearch}
+            onSearch={() => handleSearch(filters)}
             onClear={handleClear}
           />
         </div>

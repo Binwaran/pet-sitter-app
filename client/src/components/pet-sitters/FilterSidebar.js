@@ -100,7 +100,7 @@ const FilterSidebar = ({ filters, onChange, onCheckbox, onSearch, onClear }) => 
           Clear
         </button>
         <button
-          onClick={onSearch}
+          onClick={() => onSearch()}
           className="flex-1 p-2 rounded-md bg-orange-400 text-white hover:bg-orange-500"
         >
           Search
