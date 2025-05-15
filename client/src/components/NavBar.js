@@ -17,8 +17,9 @@ const NavBar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    alert("Logout successful");
     setIsLoggedIn(false);
-    router.push("/login");
+    router.push("/");
   };
 
   useEffect(() => {

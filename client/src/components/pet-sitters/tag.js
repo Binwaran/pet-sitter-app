@@ -1,9 +1,7 @@
 'use client';
-import { useRouter } from 'next/navigation';
 import { typeColorMap } from '@/utils/typeColorMap';
 
 const Tag = ({ type }) => {
-  const router = useRouter();
   const { bg, text, border } = typeColorMap[type.toLowerCase()] || typeColorMap.default;
 
   const handleClick = (e) => {

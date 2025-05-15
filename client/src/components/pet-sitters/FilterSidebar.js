@@ -42,7 +42,7 @@ const FilterSidebar = ({ filters, onChange, onCheckbox, onSearch, onClear }) => 
               <input
                 type="checkbox"
                 value={type}
-                checked={filters.petTypes.includes(type)}
+                checked={Array.isArray(filters.pet_type) && filters.pet_type.includes(type)}
                 onChange={onCheckbox}
               />
               {type}
