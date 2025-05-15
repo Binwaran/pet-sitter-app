@@ -13,7 +13,7 @@ const NavBarMobile = ({
 }) => {
   return (
    
-    <nav className="w-full flex justify-between items-center pt-5 pb-0 px-5 lg:px-0 relative z-50">
+    <nav className="w-full flex justify-between items-center pb-0 px-5 lg:px-0 relative z-50">
       <section className="sm:hidden flex justify-between items-center w-full relative">
         <Link href="/">
           <Image src="/assets/sitter-logo.svg" alt="sitter-logo" width={80} height={80} />
