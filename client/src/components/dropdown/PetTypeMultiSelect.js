@@ -42,7 +42,7 @@ export default function PetTypeMultiSelect({
         {value.map((v) => (
           <span
             key={v}
-            className="flex items-center w-[63px] h-[32px] leading-[24px] bg-[#FFF1EC] text-[#E44A0C] rounded-full px-4 py-2 text-[14px] font-medium mr-2"
+            className="flex items-center justify-center w-auto h-[32px] leading-[24px] bg-[#FFF1EC] text-[#E44A0C] rounded-full px-2 md:px-4 py-2 text-[14px] font-medium mr-0 md:mr-1 lg:mr-2"
           >
             {v}
             <button

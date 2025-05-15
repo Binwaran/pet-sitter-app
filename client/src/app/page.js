@@ -82,7 +82,7 @@ export default function Home() {
                   Boarding
                 </p>
                 <p className="md:text-[18px] text-[16px] font-medium text-[var(--primary-gray-color-400)] text-wrap">
-                  Your pets stay overnight in your sitter’s home. They’ll be
+                  Your pets stay overnight in your sitter&apos;s home. They&apos;ll be
                   treated like part of the family in a comfortable environment.
                 </p>
               </div>
@@ -162,7 +162,7 @@ export default function Home() {
                 With Sitters
               </p>
               <p className="font-medium text-[18px] text-[var(--primary-gray-color-400)]">
-                Find a verified and reviewed sitter who’ll keep your pets
+                Find a verified and reviewed sitter who&apos;ll keep your pets
                 company and give time.
               </p>
             </div>

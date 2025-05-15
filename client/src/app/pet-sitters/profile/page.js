@@ -33,383 +33,261 @@ export default function PetSitterProfilePage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F9FAFB]">
-    <div className="flex md:flex-row flex-col min-w-0">
-      {/* Sidebar: row on mobile, column on desktop */}
-      <Sidebar className="hidden md:flex" />
-      <div className="flex-1 flex flex-col">
-        <Topbar />
+      <div className="flex md:flex-row flex-col min-w-0">
         {/* Sidebar: row on mobile, column on desktop */}
-        <Sidebar className="flex flex-row md:hidden sticky top-0 z-10 bg-white" />
-      {/* Main content */}
-      <main className="flex-1 flex flex-col items-center w-full px-2 sm:px-4 md:px-8 py-6">
-          <Formik
-            initialValues={{
-              full_name: "",
-              experience: "",
-              phone_number: "",
-              email: "",
-              introduction: "",
-              trade_name: "",
-              services: "",
-              place_description: "",
-              account_number: "",
-              address_detail: "",
-              district: "",
-              sub_district: "",
-              province: "",
-              post_code: "",
-              profile_image: null,
-              gallery: [],
-              pet_types: [],
-            }}
-            validationSchema={profileSchema}
-            onSubmit={handleSubmit}
-          >
-            {({ values, setFieldValue, errors, touched }) => (
-              <Form className="w-full max-w-[1200px] flex flex-col gap-8 px-2 sm:px-4 md:px-8">
-                {/* Title */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <div className="flex items-center gap-4">
-                    <h1 className="text-[24px] font-semibold text-[#22223B]">
-                      Pet Sitter Profile
-                    </h1>
-                    {/* Status Dot & Text */}
-                    {sitterStatus === "approved" && (
-                      <span className="text-[16px] text-[#1CCD83] font-medium flex items-center gap-2">
-                        <span className="inline-block w-2 h-2 rounded-full bg-[#1CCD83]" />
-                        Approved
-                      </span>
-                    )}
-                    {sitterStatus === "waiting" && (
-                      <span className="text-[16px] text-[#E48BFF] font-medium flex items-center gap-2">
-                        <span className="inline-block w-2 h-2 rounded-full bg-[#E48BFF]" />
-                        Waiting for approve
-                      </span>
-                    )}
-                    {sitterStatus === "rejected" && (
-                      <span className="text-[16px] text-[#FF4D4F] font-medium flex items-center gap-2">
-                        <span className="inline-block w-2 h-2 rounded-full bg-[#FF4D4F]" />
-                        Rejected
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    type="submit"
-                    className="bg-[#FF6B00] text-white px-6 py-2 rounded-full font-semibold"
-                  >
-                    {sitterStatus === null || sitterStatus === "rejected"
-                      ? "Request for approval"
-                      : "Update"}
-                  </button>
-                </div>
-
-                {/* Admin Suggestion (เฉพาะ rejected) */}
-                {sitterStatus === "rejected" && (
-                  <div className="bg-[#E9EAF6] text-[#FF4D4F] px-6 py-3 rounded-lg mt-4 flex items-center gap-2">
-                    <Image
-                      src={exclamationcircle}
-                      alt="exclamationcircle"
-                      width={16}
-                      height={16}
-                    />
-                    <p>Your request has not been approved: {`'${adminSuggestion}'`}</p>
-                  </div>
-                )}
-
-                {/* Basic Information */}
-                <section className="bg-white rounded-2xl px-4 sm:px-6 md:px-10 py-6 sm:py-8 shadow-sm mb-8">
-                  <h2 className="text-[#AEB1C3] font-semibold text-[18px] sm:text-[20px] mb-4 sm:mb-6">
-                    Basic Information
-                  </h2>
-                  <div className="flex flex-col gap-6 sm:gap-8">
-                    {/* Profile Image */}
-                    <div className="flex flex-col items-start">
-                      <p className="mb-4 text-[16px] font-medium">
-                        Profile Image
-                      </p>
-                      <ImageUpload
-                        value={values.profile_image}
-                        onChange={(file) =>
-                          setFieldValue("profile_image", file)
-                        }
-                        error={touched.profile_image && errors.profile_image}
-                      />
-                    </div>
-                    {/* Form Fields */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                      {/* Full Name */}
-                      <div className="flex flex-col">
-                        <label className="pb-1 text-[16px] font-medium">
-                          Your full name*
-                        </label>
-                        <div className="relative">
-                          <Field
-                            name="full_name"
-                            className={`input border-[#DCDFED] ${
-                              touched.full_name && errors.full_name
-                                ? "pr-10 border-red-500"
-                                : ""
-                            }`}
-                          />
-                          {touched.full_name && errors.full_name && (
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2">
-                              <Image
-                                src={exclamationcircle}
-                                alt="error"
-                                width={13}
-                                height={13}
-                              />
-                            </span>
-                          )}
-                        </div>
-                        {touched.full_name && errors.full_name && (
-                          <div className="text-red-500 text-xs">
-                            {errors.full_name}
-                          </div>
-                        )}
-                      </div>
-                      {/* Experience */}
-                      <div className="flex flex-col">
-                        <label className="pb-1 text-[16px] font-medium">
-                          Experience*
-                        </label>
-                        <div className="relative">
-                          <ExperienceDropdown
-                            value={values.experience}
-                            onChange={(value) =>
-                              setFieldValue("experience", value)
-                            }
-                            className={`input border-[#DCDFED] ${
-                              touched.experience && errors.experience
-                                ? "pr-10 border-red-500"
-                                : ""
-                            }`}
-                          />
-                          {touched.experience && errors.experience && (
-                            <span className="absolute right-8 top-1/2 -translate-y-1/2">
-                              <Image
-                                src={exclamationcircle}
-                                alt="error"
-                                width={13}
-                                height={13}
-                              />
-                            </span>
-                          )}
-                        </div>
-                        {touched.experience && errors.experience && (
-                          <div className="text-red-500 text-xs">
-                            {errors.experience}
-                          </div>
-                        )}
-                      </div>
-                      {/* Phone Number */}
-                      <div className="flex flex-col">
-                        <label className="pb-1 text-[16px] font-medium">
-                          Phone Number*
-                        </label>
-                        <div className="relative">
-                          <Field
-                            name="phone_number"
-                            className={`input border-[#DCDFED] ${
-                              touched.phone_number && errors.phone_number
-                                ? "pr-10 border-red-500"
-                                : ""
-                            }`}
-                          />
-                          {touched.phone_number && errors.phone_number && (
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2">
-                              <Image
-                                src={exclamationcircle}
-                                alt="error"
-                                width={13}
-                                height={13}
-                              />
-                            </span>
-                          )}
-                        </div>
-                        {touched.phone_number && errors.phone_number && (
-                          <div className="text-red-500 text-xs">
-                            {errors.phone_number}
-                          </div>
-                        )}
-                      </div>
-                      {/* Email */}
-                      <div className="flex flex-col">
-                        <label className="pb-1 text-[16px] font-medium">
-                          Email*
-                        </label>
-                        <div className="relative">
-                          <Field
-                            name="email"
-                            className={`input border-[#DCDFED] ${
-                              touched.email && errors.email
-                                ? "pr-10 border-red-500"
-                                : ""
-                            }`}
-                          />
-                          {touched.email && errors.email && (
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2">
-                              <Image
-                                src={exclamationcircle}
-                                alt="error"
-                                width={13}
-                                height={13}
-                              />
-                            </span>
-                          )}
-                        </div>
-                        {touched.email && errors.email && (
-                          <div className="text-red-500 text-xs">
-                            {errors.email}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    {/* Introduction */}
-                    <div className="flex flex-col">
-                      <label className="pb-1 text-[16px] font-medium">
-                        Introduction (Describe about yourself as pet sitter)
-                      </label>
-                      <div className="relative">
-                        <Field
-                          as="textarea"
-                          name="introduction"
-                          className={`w-full min-h-[120px] border border-[#DCDFED] rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] ${
-                            touched.introduction && errors.introduction
-                              ? "pr-10 border-red-500"
-                              : ""
-                          }`}
-                        />
-                        {touched.introduction && errors.introduction && (
-                          <span className="absolute right-3 top-3">
-                            <Image
-                              src={exclamationcircle}
-                              alt="error"
-                              width={13}
-                              height={13}
-                            />
-                          </span>
-                        )}
-                      </div>
-                      {touched.introduction && errors.introduction && (
-                        <div className="text-red-500 text-xs">
-                          {errors.introduction}
-                        </div>
+        <Sidebar className="hidden md:flex" />
+        <div className="flex-1 flex flex-col">
+          <Topbar />
+          {/* Sidebar: row on mobile, column on desktop */}
+          <Sidebar className="flex flex-row md:hidden sticky top-0 z-10 bg-white" />
+          {/* Main content */}
+          <main className="flex-1 flex flex-col items-center w-full px-2 sm:px-4 md:px-8 py-6">
+            <Formik
+              initialValues={{
+                full_name: "",
+                experience: "",
+                phone_number: "",
+                email: "",
+                introduction: "",
+                trade_name: "",
+                services: "",
+                place_description: "",
+                account_number: "",
+                address_detail: "",
+                district: "",
+                sub_district: "",
+                province: "",
+                post_code: "",
+                profile_image: null,
+                gallery: [],
+                pet_types: [],
+              }}
+              validationSchema={profileSchema}
+              onSubmit={handleSubmit}
+            >
+              {({ values, setFieldValue, errors, touched }) => (
+                <Form className="w-full max-w-[1200px] flex flex-col gap-8 px-2 sm:px-4 md:px-8">
+                  {/* Title */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="flex items-center gap-4">
+                      <h1 className="text-[24px] font-semibold text-[#22223B]">
+                        Pet Sitter Profile
+                      </h1>
+                      {/* Status Dot & Text */}
+                      {sitterStatus === "approved" && (
+                        <span className="text-[16px] text-[#1CCD83] font-medium flex items-center gap-2">
+                          <span className="inline-block w-2 h-2 rounded-full bg-[#1CCD83]" />
+                          Approved
+                        </span>
                       )}
-                    </div>
-                  </div>
-                </section>
-
-                {/* Pet Sitter Info */}
-                <section className="bg-white rounded-2xl px-4 sm:px-6 md:px-10 py-6 sm:py-8 shadow-sm mb-8">
-                  <h2 className="text-[#AEB1C3] font-semibold text-[18px] sm:text-[20px] mb-4 sm:mb-6">
-                    Pet Sitter
-                  </h2>
-                  <div className="flex flex-col gap-4">
-                    <label className="pb-1 text-[16px] font-medium">
-                      Pet sitter name (Trade Name)*
-                    </label>
-                    <div className="relative">
-                      <Field
-                        name="trade_name"
-                        className={`input border-[#DCDFED] mb-2 ${
-                          touched.trade_name && errors.trade_name
-                            ? "pr-10 border-red-500"
-                            : ""
-                        }`}
-                      />
-                      {touched.trade_name && errors.trade_name && (
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2">
-                          <Image
-                            src={exclamationcircle}
-                            alt="error"
-                            width={13}
-                            height={13}
-                          />
+                      {sitterStatus === "waiting" && (
+                        <span className="text-[16px] text-[#E48BFF] font-medium flex items-center gap-2">
+                          <span className="inline-block w-2 h-2 rounded-full bg-[#E48BFF]" />
+                          Waiting for approve
+                        </span>
+                      )}
+                      {sitterStatus === "rejected" && (
+                        <span className="text-[16px] text-[#FF4D4F] font-medium flex items-center gap-2">
+                          <span className="inline-block w-2 h-2 rounded-full bg-[#FF4D4F]" />
+                          Rejected
                         </span>
                       )}
                     </div>
-                    {touched.trade_name && errors.trade_name && (
-                      <div className="text-red-500 text-xs">
-                        {errors.trade_name}
-                      </div>
-                    )}
-                    <div className="mb-2">
-                      <label className="pb-1 text-[16px] font-medium">
-                        Pet type*
-                      </label>
-                      <PetTypeMultiSelect
-                        value={values.pet_types}
-                        onChange={(val) => setFieldValue("pet_types", val)}
-                        className={
-                          touched.pet_types && errors.pet_types
-                            ? "border-red-500"
-                            : ""
-                        }
+                    <button
+                      type="submit"
+                      className="bg-[#FF6B00] text-white px-6 py-2 rounded-full font-semibold"
+                    >
+                      {sitterStatus === null || sitterStatus === "rejected"
+                        ? "Request for approval"
+                        : "Update"}
+                    </button>
+                  </div>
+
+                  {/* Admin Suggestion (เฉพาะ rejected) */}
+                  {sitterStatus === "rejected" && (
+                    <div className="bg-[#E9EAF6] text-[#FF4D4F] px-6 py-3 rounded-lg mt-4 flex items-center gap-2">
+                      <Image
+                        src={exclamationcircle}
+                        alt="exclamationcircle"
+                        width={16}
+                        height={16}
                       />
-                      {touched.pet_types && errors.pet_types && (
-                        <div className="flex items-center mt-1">
-                          <Image
-                            src={exclamationcircle}
-                            alt="error"
-                            width={13}
-                            height={13}
-                            className="mr-1"
-                          />
-                          <span className="text-red-500 text-xs">
-                            {errors.pet_types}
-                          </span>
-                        </div>
-                      )}
+                      <p>
+                        Your request has not been approved:{" "}
+                        {`'${adminSuggestion}'`}
+                      </p>
                     </div>
-                    <div>
-                      <label className="pb-1 text-[16px] font-medium">
-                        Services (Describe all of your service for pet sitting)
-                      </label>
-                      <div className="relative">
-                        <Field
-                          as="textarea"
-                          name="services"
-                          className={`w-full min-h-[120px] border border-[#DCDFED] rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] ${
-                            touched.services && errors.services
-                              ? "pr-10 border-red-500"
-                              : ""
-                          }`}
+                  )}
+
+                  {/* Basic Information */}
+                  <section className="bg-white rounded-2xl px-4 sm:px-6 md:px-10 py-6 sm:py-8 shadow-sm mb-8">
+                    <h2 className="text-[#AEB1C3] font-semibold text-[18px] sm:text-[20px] mb-4 sm:mb-6">
+                      Basic Information
+                    </h2>
+                    <div className="flex flex-col gap-6 sm:gap-8">
+                      {/* Profile Image */}
+                      <div className="flex flex-col items-start">
+                        <p className="mb-4 text-[16px] font-medium">
+                          Profile Image
+                        </p>
+                        <ImageUpload
+                          value={values.profile_image}
+                          onChange={(file) =>
+                            setFieldValue("profile_image", file)
+                          }
+                          error={touched.profile_image && errors.profile_image}
                         />
-                        {touched.services && errors.services && (
-                          <span className="absolute right-3 top-3">
-                            <Image
-                              src={exclamationcircle}
-                              alt="error"
-                              width={13}
-                              height={13}
-                            />
-                          </span>
-                        )}
                       </div>
-                      {touched.services && errors.services && (
-                        <div className="text-red-500 text-xs">
-                          {errors.services}
+                      {/* Form Fields */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                        {/* Full Name */}
+                        <div className="flex flex-col">
+                          <label htmlFor="full_name" className="pb-1 text-[16px] font-medium">
+                            Your full name*
+                          </label>
+                          <div className="relative">
+                            <Field
+                              type="text"
+                              id="full_name"
+                              name="full_name"
+                              className={`input border-[#DCDFED] ${
+                                touched.full_name && errors.full_name
+                                  ? "pr-10 border-red-500"
+                                  : ""
+                              }`}
+                            />
+                            {touched.full_name && errors.full_name && (
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                                <Image
+                                  src={exclamationcircle}
+                                  alt="error"
+                                  width={13}
+                                  height={13}
+                                />
+                              </span>
+                            )}
+                          </div>
+                          {touched.full_name && errors.full_name && (
+                            <div className="text-red-500 text-xs">
+                              {errors.full_name}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                    <div>
-                      <label className="pb-1 text-[16px] font-medium">
-                        My Place (Describe you place)
-                      </label>
-                      <div className="relative">
-                        <Field
-                          as="textarea"
-                          name="place_description"
-                          className={`w-full min-h-[120px] border border-[#DCDFED] rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] ${
-                            touched.place_description &&
-                            errors.place_description
-                              ? "pr-10 border-red-500"
-                              : ""
-                          }`}
-                        />
-                        {touched.place_description &&
-                          errors.place_description && (
+                        {/* Experience */}
+                        <div className="flex flex-col">
+                          <label htmlFor="experience" className="pb-1 text-[16px] font-medium">
+                            Experience*
+                          </label>
+                          <div className="relative">
+                            <ExperienceDropdown
+                              id="experience"
+                              name="experience"
+                              value={values.experience}
+                              onChange={(value) =>
+                                setFieldValue("experience", value)
+                              }
+                              className={`input border-[#DCDFED] ${
+                                touched.experience && errors.experience
+                                  ? "pr-10 border-red-500"
+                                  : ""
+                              }`}
+                            />
+                            {touched.experience && errors.experience && (
+                              <span className="absolute right-8 top-1/2 -translate-y-1/2">
+                                <Image
+                                  src={exclamationcircle}
+                                  alt="error"
+                                  width={13}
+                                  height={13}
+                                />
+                              </span>
+                            )}
+                          </div>
+                          {touched.experience && errors.experience && (
+                            <div className="text-red-500 text-xs">
+                              {errors.experience}
+                            </div>
+                          )}
+                        </div>
+                        {/* Phone Number */}
+                        <div className="flex flex-col">
+                          <label className="pb-1 text-[16px] font-medium">
+                            Phone Number*
+                          </label>
+                          <div className="relative">
+                            <Field
+                              name="phone_number"
+                              className={`input border-[#DCDFED] ${
+                                touched.phone_number && errors.phone_number
+                                  ? "pr-10 border-red-500"
+                                  : ""
+                              }`}
+                            />
+                            {touched.phone_number && errors.phone_number && (
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                                <Image
+                                  src={exclamationcircle}
+                                  alt="error"
+                                  width={13}
+                                  height={13}
+                                />
+                              </span>
+                            )}
+                          </div>
+                          {touched.phone_number && errors.phone_number && (
+                            <div className="text-red-500 text-xs">
+                              {errors.phone_number}
+                            </div>
+                          )}
+                        </div>
+                        {/* Email */}
+                        <div className="flex flex-col">
+                          <label className="pb-1 text-[16px] font-medium">
+                            Email*
+                          </label>
+                          <div className="relative">
+                            <Field
+                              name="email"
+                              className={`input border-[#DCDFED] ${
+                                touched.email && errors.email
+                                  ? "pr-10 border-red-500"
+                                  : ""
+                              }`}
+                            />
+                            {touched.email && errors.email && (
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                                <Image
+                                  src={exclamationcircle}
+                                  alt="error"
+                                  width={13}
+                                  height={13}
+                                />
+                              </span>
+                            )}
+                          </div>
+                          {touched.email && errors.email && (
+                            <div className="text-red-500 text-xs">
+                              {errors.email}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {/* Introduction */}
+                      <div className="flex flex-col">
+                        <label className="pb-1 text-[16px] font-medium">
+                          Introduction (Describe about yourself as pet sitter)
+                        </label>
+                        <div className="relative">
+                          <Field
+                            as="textarea"
+                            name="introduction"
+                            className={`w-full min-h-[120px] border border-[#DCDFED] rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] ${
+                              touched.introduction && errors.introduction
+                                ? "pr-10 border-red-500"
+                                : ""
+                            }`}
+                          />
+                          {touched.introduction && errors.introduction && (
                             <span className="absolute right-3 top-3">
                               <Image
                                 src={exclamationcircle}
@@ -419,33 +297,166 @@ export default function PetSitterProfilePage() {
                               />
                             </span>
                           )}
-                      </div>
-                      {touched.place_description &&
-                        errors.place_description && (
+                        </div>
+                        {touched.introduction && errors.introduction && (
                           <div className="text-red-500 text-xs">
-                            {errors.place_description}
+                            {errors.introduction}
                           </div>
                         )}
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[16px] mb-2 font-medium">
-                        Image Gallery (Maximum 10 images)
-                      </p>
-                      <GalleryUpload
-                        value={values.gallery}
-                        onChange={(files) => setFieldValue("gallery", files)}
-                        error={touched.gallery && errors.gallery}
-                      />
-                    </div>
-                  </div>
-                </section>
+                  </section>
 
-                {/* Address */}
-                <AddressSection />
-              </Form>
-            )}
-          </Formik>
-        </main>
+                  {/* Pet Sitter Info */}
+                  <section className="bg-white rounded-2xl px-4 sm:px-6 md:px-10 py-6 sm:py-8 shadow-sm mb-8">
+                    <h2 className="text-[#AEB1C3] font-semibold text-[18px] sm:text-[20px] mb-4 sm:mb-6">
+                      Pet Sitter
+                    </h2>
+                    <div className="flex flex-col gap-4">
+                      <label className="pb-1 text-[16px] font-medium">
+                        Pet sitter name (Trade Name)*
+                      </label>
+                      <div className="relative">
+                        <Field
+                          name="trade_name"
+                          className={`input border-[#DCDFED] ${
+                            touched.trade_name && errors.trade_name
+                              ? "pr-10 border-red-500"
+                              : ""
+                          }`}
+                        />
+                        {touched.trade_name && errors.trade_name && (
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                            <Image
+                              src={exclamationcircle}
+                              alt="error"
+                              width={13}
+                              height={13}
+                            />
+                          </span>
+                        )}
+                      </div>
+                      {touched.trade_name && errors.trade_name && (
+                        <div className="text-red-500 text-xs">
+                          {errors.trade_name}
+                        </div>
+                      )}
+                      <div className="flex flex-col">
+                        <label className="pb-1 text-[16px] font-medium">
+                          Pet type*
+                        </label>
+                        <div className="relative">
+                          <PetTypeMultiSelect
+                            value={values.pet_types}
+                            onChange={(val) => setFieldValue("pet_types", val)}
+                            className={
+                              touched.pet_types && errors.pet_types
+                                ? "border-red-500"
+                                : ""
+                            }
+                          />
+                          {touched.pet_types && errors.pet_types && (
+                            <span className="absolute right-6 top-1/2 -translate-y-1/2">
+                              <Image
+                                src={exclamationcircle}
+                                alt="error"
+                                width={13}
+                                height={13}
+                              />
+                            </span>
+                          )}
+                        </div>
+                        {touched.pet_types && errors.pet_types && (
+                          <div className="text-red-500 text-xs">
+                            {errors.pet_types}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <label className="pb-1 text-[16px] font-medium">
+                          Services (Describe all of your service for pet
+                          sitting)
+                        </label>
+                        <div className="relative">
+                          <Field
+                            as="textarea"
+                            name="services"
+                            className={`w-full min-h-[120px] border border-[#DCDFED] rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] ${
+                              touched.services && errors.services
+                                ? "pr-10 border-red-500"
+                                : ""
+                            }`}
+                          />
+                          {touched.services && errors.services && (
+                            <span className="absolute right-3 top-3">
+                              <Image
+                                src={exclamationcircle}
+                                alt="error"
+                                width={13}
+                                height={13}
+                              />
+                            </span>
+                          )}
+                        </div>
+                        {touched.services && errors.services && (
+                          <div className="text-red-500 text-xs">
+                            {errors.services}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <label className="pb-1 text-[16px] font-medium">
+                          My Place (Describe you place)
+                        </label>
+                        <div className="relative">
+                          <Field
+                            as="textarea"
+                            name="place_description"
+                            className={`w-full min-h-[120px] border border-[#DCDFED] rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] ${
+                              touched.place_description &&
+                              errors.place_description
+                                ? "pr-10 border-red-500"
+                                : ""
+                            }`}
+                          />
+                          {touched.place_description &&
+                            errors.place_description && (
+                              <span className="absolute right-3 top-3">
+                                <Image
+                                  src={exclamationcircle}
+                                  alt="error"
+                                  width={13}
+                                  height={13}
+                                />
+                              </span>
+                            )}
+                        </div>
+                        {touched.place_description &&
+                          errors.place_description && (
+                            <div className="text-red-500 text-xs">
+                              {errors.place_description}
+                            </div>
+                          )}
+                      </div>
+                      <div>
+                        <p className="text-[16px] mb-2 font-medium">
+                          Image Gallery (Maximum 10 images)
+                        </p>
+                        <GalleryUpload
+                          value={values.gallery}
+                          onChange={(files) => setFieldValue("gallery", files)}
+                          error={touched.gallery && errors.gallery}
+                        />
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Address */}
+                  <AddressSection />
+                </Form>
+              )}
+            </Formik>
+          </main>
         </div>
       </div>
     </div>
@@ -468,7 +479,9 @@ const AddressSection = () => {
 
   return (
     <section className="bg-white rounded-2xl px-4 sm:px-6 md:px-10 py-6 sm:py-8 shadow-sm mb-8">
-      <h2 className="text-[#AEB1C3] font-semibold text-[18px] sm:text-[20px] mb-4 sm:mb-6">Address</h2>
+      <h2 className="text-[#AEB1C3] font-semibold text-[18px] sm:text-[20px] mb-4 sm:mb-6">
+        Address
+      </h2>
       <div className="flex flex-col mb-6">
         <label className="pb-1 text-[16px] font-medium">Address Detail*</label>
         <div className="relative">
