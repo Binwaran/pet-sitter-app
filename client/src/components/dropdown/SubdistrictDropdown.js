@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import subdistricts from "../../app/data/subdistricts.json";
 
 const SubdistrictDropdown = ({
+  id,
   districtCode,
   value,
   onChange,
@@ -32,14 +33,20 @@ const SubdistrictDropdown = ({
 
   return (
     <div ref={dropdownRef} className="relative w-full">
-      <div
-        tabIndex={0}
-        role="button"
-        onClick={() => setIsOpen((prev) => !prev)}
-        className={`flex items-center justify-between px-4 py-3 border border-[#DCDFED] rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] ${
-          !districtCode ? "opacity-50 pointer-events-none" : ""
-        } ${className}`}
-      >
+      <button
+      id={id}
+      type="button"
+      tabIndex={0}
+      role="combobox"
+      aria-haspopup="listbox"
+      aria-expanded={isOpen}
+      aria-labelledby={id ? `${id}-label` : undefined}
+      onClick={() => setIsOpen((prev) => !prev)}
+      className={`w-full flex items-center justify-between px-4 py-3 border border-[#DCDFED] rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] ${
+        !districtCode ? "opacity-50 pointer-events-none" : ""
+      } ${className}`}
+      disabled={!districtCode}
+    >
         <span
           className={selectedSubdistrict ? "text-[#344054]" : "text-[#7B7E8F]"}
         >
@@ -48,7 +55,7 @@ const SubdistrictDropdown = ({
             : "Select Subdistrict"}
         </span>
         <span className="text-xs text-[#9AA1B9]">⏷</span>
-      </div>
+      </button>
       {isOpen && districtCode && (
         <ul className="absolute z-10 mt-2 w-full bg-white border border-[#EAECF0] rounded-lg shadow-md max-h-[280px] overflow-auto">
           {filteredSubdistricts.length === 0 && (

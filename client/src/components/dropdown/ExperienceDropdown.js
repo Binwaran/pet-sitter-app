@@ -8,7 +8,7 @@ const experienceOptions = [
   { label: "5+ Years", value: "5+" },
 ];
 
-const ExperienceDropdown = ({ value, onChange, className = "" }) => {
+const ExperienceDropdown = ({ id, value, onChange, className = "" }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -30,6 +30,7 @@ const ExperienceDropdown = ({ value, onChange, className = "" }) => {
   return (
     <div className="relative w-full" ref={dropdownRef}>
       <button
+        id={id}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full min-w-[144px] flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] text-left ${className}`}

@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import provinces from "../../app/data/provinces.json";
 
-const ProvinceDropdown = ({ value, onChange, className = "" }) => {
+const ProvinceDropdown = ({ id, value, onChange, className = "" }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -23,12 +23,17 @@ const ProvinceDropdown = ({ value, onChange, className = "" }) => {
 
   return (
     <div ref={dropdownRef} className="relative w-full">
-      <div
-        tabIndex={0}
-        role="button"
-        onClick={() => setIsOpen((prev) => !prev)}
-        className={`flex items-center justify-between px-4 py-3 border rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] ${className}`}
-      >
+      <button
+      id={id}
+      type="button"
+      tabIndex={0}
+      role="combobox"
+      aria-haspopup="listbox"
+      aria-expanded={isOpen}
+      aria-labelledby={id ? `${id}-label` : undefined}
+      onClick={() => setIsOpen((prev) => !prev)}
+      className={`w-full flex items-center justify-between px-4 py-3 border rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] ${className}`}
+    >
         <span
           className={selectedProvince ? "text-[#344054]" : "text-[#7B7E8F]"}
         >
@@ -37,7 +42,7 @@ const ProvinceDropdown = ({ value, onChange, className = "" }) => {
             : "Select Province"}
         </span>
         <span className="text-xs text-[#9AA1B9]">⏷</span>
-      </div>
+      </button>
       {isOpen && (
         <ul className="absolute z-10 mt-2 w-full bg-white border border-[#EAECF0] rounded-lg shadow-md max-h-[280px] overflow-auto">
           {provinces.map((province) => (
