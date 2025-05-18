@@ -65,8 +65,8 @@ const SitterCard = ({ pet_sitter }) => {
 
             {/* ชื่อร้านและผู้ให้บริการ */}
             <div>
-              <h2 className="text-base font-semibold text-gray-800">{pet_sitter.trade_name || 'ชื่อร้านยังไม่ระบุ'}</h2>
-              <p className="text-sm text-gray-500">By {pet_sitter?.users?.name || 'ไม่ระบุชื่อ'}</p>
+              <h2 className="text-base font-semibold text-gray-800">{sitter.trade_name || 'ไม่มีชื่อร้าน'}</h2>
+              <p className="text-sm text-gray-500">By {sitter.name}</p>
             </div>
           </div>
         </div>
@@ -80,13 +80,11 @@ const SitterCard = ({ pet_sitter }) => {
         )}
 
         {/* Tags */}
-        {Array.isArray(pet_sitter.pet_type) && pet_sitter.pet_type.length > 0 && (
-          <div className="mt-2 flex gap-2 flex-wrap">
-            {pet_sitter.pet_type.map((type) => (
-              <Tag key={type} type={type} />
-            ))}
-          </div>
-        )}
+        <div className="mt-2 flex gap-2 flex-wrap">
+          {sitter.petTypes.map((type) => (
+            <Tag key={type} type={type} />
+          ))}
+        </div>
       </div>
     </div>
   )
