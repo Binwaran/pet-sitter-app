@@ -1,6 +1,6 @@
 import React from "react";
 
-const InputField = React.memo(({ label, name, type, value, onChange, error, placeholder }) => (
+const InputFieldComponent = ({ label, name, type, value, onChange, error, placeholder }) => (
   <div>
     <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
     <input
@@ -15,6 +15,7 @@ const InputField = React.memo(({ label, name, type, value, onChange, error, plac
     />
     {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
   </div>
-));
+);
+const InputField = React.memo(InputFieldComponent);
 
 export default InputField;
