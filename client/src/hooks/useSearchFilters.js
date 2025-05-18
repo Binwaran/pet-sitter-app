@@ -64,15 +64,13 @@ export const useSearchFilters = () => {
 
       const hasParams = keyword || petTypes.length > 0 || rating || experience
 
-      if (hasParams) {
-        const appliedFilters = { keyword, petTypes, rating, experience }
-        setFilters(appliedFilters)
-        fetchData(appliedFilters)
-      }
-    }
-  }, [fetchData])
+      const appliedFilters = { keyword, petTypes, rating, experience }
+      setFilters(appliedFilters)
+      fetchData(appliedFilters)
+  }
+}, [fetchData])
 
-    const handleChange = (e) => {
+  const handleChange = (e) => {
     const { name, value } = e.target
     setFilters((prev) => ({
         ...prev,
