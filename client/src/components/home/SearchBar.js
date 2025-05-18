@@ -24,13 +24,12 @@ const SearchBar = () => {
   }
 
   return (
-    <div className="bg-white p-4 rounded-2xl shadow-md">
+    <div className="flex flex-wrap items-center gap-4 w-full max-w-6xl mx-auto p-4rounded-lg ">
       <FilterFields
         filters={filters}
         onChange={handleChange}
         onCheckbox={handleCheckbox}
         onSearch={handleSubmit}
-        onClear={clearFilters}
         variant="searchbar"
       />
     </div>

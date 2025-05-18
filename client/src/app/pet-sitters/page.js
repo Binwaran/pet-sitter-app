@@ -63,7 +63,7 @@ const PetSitterListPage = () => {
   return (
     <>
       <main className="flex flex-col md:flex-row min-h-screen px-4 md:px-20 py-5 gap-5 md:gap-10 bg-gray-50 justify-center">
-        <div className="hidden md:block w-1/4">
+        <div className="block w-full md:w-1/4">
           <FilterSidebar
             filters={filters}
             onChange={handleChange}
