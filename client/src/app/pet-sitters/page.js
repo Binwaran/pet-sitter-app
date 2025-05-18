@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
 import FilterSidebar from '@/components/pet-sitters/FilterSidebar'
 import PetSitterList from '@/components/pet-sitters/PetSitterList'
 import Pagination from '@/components/pet-sitters/Pagination'
@@ -25,23 +24,24 @@ const PetSitterListPage = () => {
     currentPage * itemsPerPage
   )
   const totalPages = Math.ceil(results.length / itemsPerPage)
-  const searchParams = useSearchParams()
+
 
   useEffect(() => {
-  const keyword = searchParams.get('keyword') || '';
-  const petTypes = searchParams.get('pet')?.split(",") || [];
-  const rating = searchParams.get('rating') || '';
-  const experience = searchParams.get('experience') || '';
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search)
+      const keyword = searchParams.get('keyword') || '';
+      const petTypes = searchParams.get('pet')?.split(",") || [];
+      const rating = searchParams.get('rating') || '';
+      const experience = searchParams.get('experience') || '';
 
-  const hasParams = keyword || petTypes.length > 0 || rating || experience;
+      const hasParams = keyword || petTypes.length > 0 || rating || experience;
 
   if (hasParams) {
     const newFilters = { keyword, petTypes, rating, experience };
     setFilters(newFilters);
     fetchData(newFilters);
   }
-}, [searchParams.toString()]);
-
+ }}, []);
 
   const handleChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value })
