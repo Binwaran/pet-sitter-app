@@ -1,10 +1,8 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/utils/supabase'
 
 export const useSearchFilters = () => {
-  const searchParams = useSearchParams()
 
   const [filters, setFilters] = useState({
     keyword: '',
@@ -57,19 +55,22 @@ export const useSearchFilters = () => {
   }, [])
 
   useEffect(() => {
-    const keyword = searchParams.get('keyword') || ''
-    const petTypes = searchParams.get('pet')?.split(',') || []
-    const rating = searchParams.get('rating') || ''
-    const experience = searchParams.get('experience') || ''
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search)
+      const keyword = searchParams.get('keyword') || ''
+      const petTypes = searchParams.get('pet')?.split(',') || []
+      const rating = searchParams.get('rating') || ''
+      const experience = searchParams.get('experience') || ''
 
-    const hasParams = keyword || petTypes.length > 0 || rating || experience
+      const hasParams = keyword || petTypes.length > 0 || rating || experience
 
-    const appliedFilters = { keyword, petTypes, rating, experience }
-
-    setFilters(appliedFilters)
-
-    fetchData(appliedFilters)
-    }, [searchParams, fetchData])
+      if (hasParams) {
+        const appliedFilters = { keyword, petTypes, rating, experience }
+        setFilters(appliedFilters)
+        fetchData(appliedFilters)
+      }
+    }
+  }, [fetchData])
 
     const handleChange = (e) => {
     const { name, value } = e.target
