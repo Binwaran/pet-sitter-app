@@ -1,19 +1,23 @@
-// PetSitterList.jsx
-import SitterCard from './SitterCard';
-import Pagination from './Pagination';
+import SitterCard from './SitterCard'
 
-const PetSitterList = ({ sitters }) => {
-  if (!sitters || !Array.isArray(sitters) || sitters.length === 0) {
-  return <p className="text-gray-500">ไม่พบข้อมูลพี่เลี้ยงสัตว์</p>
-}
+const PetSitterList = ({ pet_sitter, onSelectSitter }) => {
+  if (!pet_sitter || pet_sitter.length === 0) {
+    return <p className="text-gray-500">ไม่พบข้อมูลพี่เลี้ยงสัตว์</p>
+  }
 
   return (
-    <div className="grid grid-cols-1 gap-4">
-      {sitters.map((sitter) => (
-        <SitterCard key={sitter.uuid || sitter.id || Math.random()} sitter={sitter} />
+    <div className="flex flex-col gap-4">
+      {pet_sitter.map((sitter) => (
+        <div
+          key={sitter.user_id}
+          onClick={() => onSelectSitter(sitter)}
+          className="cursor-pointer"
+        >
+          <SitterCard pet_sitter={sitter} />
+        </div>
       ))}
     </div>
-  );
-};
+  )
+}
 
-export default PetSitterList;
+export default PetSitterList

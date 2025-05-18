@@ -1,6 +1,7 @@
 'use client'
-import { useSearchParams} from 'next/navigation'
+
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import FilterSidebar from '@/components/pet-sitters/FilterSidebar'
 import PetSitterList from '@/components/pet-sitters/PetSitterList'
 import Pagination from '@/components/pet-sitters/Pagination'
@@ -24,7 +25,6 @@ const PetSitterListPage = () => {
     currentPage * itemsPerPage
   )
   const totalPages = Math.ceil(results.length / itemsPerPage)
-
   const searchParams = useSearchParams()
 
   useEffect(() => {
@@ -63,7 +63,7 @@ const PetSitterListPage = () => {
   return (
     <>
       <main className="flex flex-col md:flex-row min-h-screen px-4 md:px-20 py-5 gap-5 md:gap-10 bg-gray-50 justify-center">
-        <div className="block w-full md:w-1/4">
+        <div className="hidden md:block w-1/4">
           <FilterSidebar
             filters={filters}
             onChange={handleChange}
@@ -73,7 +73,7 @@ const PetSitterListPage = () => {
           />
         </div>
         <div className="w-full md:w-3/4">
-          <PetSitterList sitters={paginatedResults} />
+          <PetSitterList pet_sitter={paginatedResults} />
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
@@ -81,6 +81,7 @@ const PetSitterListPage = () => {
             />
         </div>
       </main>
+
     </>
   )
 }
