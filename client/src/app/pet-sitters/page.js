@@ -5,6 +5,7 @@ import FilterSidebar from '@/components/pet-sitters/FilterSidebar'
 import PetSitterList from '@/components/pet-sitters/PetSitterList'
 import Pagination from '@/components/pet-sitters/Pagination'
 import { useSearchFilters } from '@/hooks/useSearchFilters'
+import SearchHeader from '@/components/pet-sitters/SearchHeader'
 
 const PetSitterListPage = () => {
   const {
@@ -61,7 +62,10 @@ const PetSitterListPage = () => {
   }
 
   return (
-    <>
+    <> 
+      <div className="้!hidden md:flex justify-center items-center bg-gray-50 py-4">
+            <SearchHeader />
+      </div>
       <main className="flex flex-col md:flex-row min-h-screen px-4 md:px-20 py-5 gap-5 md:gap-10 bg-gray-50 justify-center">
         <div className="block md:sticky md:top-28 md:self-start md:w-1/4">
           <FilterSidebar
@@ -71,15 +75,20 @@ const PetSitterListPage = () => {
             onSearch={() => fetchData(filters)}
             onClear={clearFilters}
           />
+          {/* Mobile Only: SearchHeader */}
+          <div className="block md:hidden mt-4">
+            <SearchHeader />
+          </div>
         </div>
-        <div className="w-full md:w-3/4">
-          <PetSitterList pet_sitter={paginatedResults} />
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-            />
-        </div>
+          
+          <div className="w-full md:w-3/4">
+            <PetSitterList pet_sitter={paginatedResults} />
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+          </div>
       </main>
 
     </>
