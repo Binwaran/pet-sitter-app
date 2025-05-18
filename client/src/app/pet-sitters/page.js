@@ -63,7 +63,7 @@ const PetSitterListPage = () => {
 
   return (
     <> 
-      <div className="้!hidden md:flex justify-center items-center bg-gray-50 py-4">
+      <div className="hidden md:flex justify-center items-center bg-gray-50 py-4">
             <SearchHeader />
       </div>
       <main className="flex flex-col md:flex-row min-h-screen px-4 md:px-20 py-5 gap-5 md:gap-10 bg-gray-50 justify-center">
