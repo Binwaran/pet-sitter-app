@@ -82,6 +82,10 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+![Screenshot 2025-05-13 214708](https://github.com/user-attachments/assets/e77a799f-fc61-44df-83f2-2defdc006292)
+
+
+
 
 ## 👨‍👩‍👧 Team Members
 
