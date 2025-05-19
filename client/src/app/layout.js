@@ -17,6 +17,14 @@ export default function RootLayout({ children }) {
     "/pet-sitters/calendar",
     "/pet-sitters/payout",
     "/pet-sitters/booking/[id]",
+    "/pet-sitters/profile/[id]",
+    "/pet-sitters/calendar/[id]",
+    "/pet-sitters/payout/[id]",
+    "/admin",
+    "/admin/pet-sitters",
+    "/admin/pet-sitters/[id]",
+    "/admin/report",
+    "/admin/report/[id]",
   ];
 
   return (
