@@ -67,7 +67,7 @@ const PetSitterListPage = () => {
             <SearchHeader />
       </div>
       <main className="flex flex-col md:flex-row min-h-screen px-4 md:px-20 py-5 gap-5 md:gap-10 bg-gray-50 justify-center">
-        <div className="block md:sticky md:top-28 md:self-start md:w-1/4">
+        <div className="block md:sticky md:top-28 md:self-start md:w-1/4 self-center">
           <FilterSidebar
             filters={filters}
             onChange={handleChange}

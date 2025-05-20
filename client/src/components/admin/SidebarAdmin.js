@@ -13,8 +13,8 @@ const menu = [
     label: "Pet Owner",
     alt: "owner",
     icon: ownerIcon,
-    value: "owner",
-    path: "/admin/owner",
+    value: "pet-owners",
+    path: "/admin/pet-owners",
   },
   {
     label: "Pet Sitter",
@@ -60,16 +60,17 @@ export default function Sidebar({ className = "" }) {
   return (
     <aside
       className={`
-      w-full md:w-[240px] max-w-full
+      w-full md:w-[240px] md:max-w-[240px]
       flex flex-row md:flex-col
       items-center md:items-stretch
-      border-t md:border-t-0 md:border-r border-[#EAECF0] bg-black relative
+      md:border-r md:border-[#7B7E8F] bg-black relative
       md:sticky md:top-0 md:h-screen
+      box-border max-h-screen
       ${className}
     `}
     >
-      <div className="flex flex-col w-full h-full">
-        <div className="hidden md:flex flex-col w-full px-6 mb-6 mt-6">
+      <div className="flex flex-col w-full h-full max-h-screen">
+        <div className="hidden md:flex flex-col items-left w-full px-6 mb-6 mt-6">
           <button type="button" onClick={() => router.push("/")}>
             <Image
               src={sitterlogo}

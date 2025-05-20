@@ -50,9 +50,12 @@ export default function PetSitterProfilePage() {
       const user_id = decoded.user_id || decoded.sub || decoded.id;
 
       try {
-        const res = await axios.get(`/api/pet-sitter?user_id=${user_id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await axios.get(
+          `/api/pet-sitter/update-profile?user_id=${user_id}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         const data = res.data.data;
         if (data) {
           setInitialValues({
@@ -96,7 +99,7 @@ export default function PetSitterProfilePage() {
       status: "waiting for approval",
     };
     try {
-      await axios.post("/api/pet-sitter", payload, {
+      await axios.post("/api/pet-sitter/update-profile", payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
       // แจ้งเตือนหรือ redirect ได้
