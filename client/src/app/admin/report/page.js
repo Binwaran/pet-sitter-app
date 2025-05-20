@@ -1,7 +1,7 @@
 "use client";
 import Sidebar from "@/components/admin/SidebarAdmin";
 
-export default function AdminPage() {
+export default function AdminReportPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F9FAFB]">

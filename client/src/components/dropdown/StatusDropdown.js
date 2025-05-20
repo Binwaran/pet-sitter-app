@@ -2,18 +2,19 @@
 
 import { useRef, useEffect, useState } from "react";
 
-const experienceOptions = [
-  { label: "0-2 Years", value: "0-2" },
-  { label: "3-5 Years", value: "3-5" },
-  { label: "5+ Years", value: "5+" },
+const statusOptions = [
+  { label: "All", value: "all" },
+  { label: "Waiting for approve", value: "waiting for approval" },
+  { label: "Approved", value: "approved" },
+  { label: "Rejected", value: "rejected" },
 ];
 
-const ExperienceDropdown = ({ value, onChange, className = "" }) => {
+const StatusDropdown = ({ value, onChange, className = "" }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   const handleSelect = (option) => {
-    onChange(option); // ใช้ onChange จาก props
+    onChange(option);
     setIsOpen(false);
   };
 
@@ -28,21 +29,19 @@ const ExperienceDropdown = ({ value, onChange, className = "" }) => {
   }, []);
 
   return (
-    <div className="relative w-full" ref={dropdownRef}>
+    <div className="relative min-w-[160px] w-full" ref={dropdownRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full min-w-[144px] flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] text-left ${className}`}
+        className={`w-full flex items-center justify-between px-4 py-2 rounded-lg border border-[#E4E4E7] bg-white text-left text-[#344054] text-[16px] font-normal ${className}`}
       >
-        {experienceOptions.find((opt) => opt.value === value)?.label || (
-          <span className="text-[#7B7E8F] text-[16px] font-normal">0-2 Years</span>
-        )}
+        {statusOptions.find((opt) => opt.value === value)?.label || "All status"}
         <span className="text-xs text-[#9AA1B9]">⏷</span>
       </button>
 
       {isOpen && (
         <ul className="absolute z-10 mt-2 w-full bg-white border border-[#EAECF0] rounded-lg shadow-md max-h-[240px] overflow-auto">
-          {experienceOptions.map((option, idx) => (
+          {statusOptions.map((option, idx) => (
             <li
               key={idx}
               onClick={() => handleSelect(option.value)}
@@ -57,4 +56,4 @@ const ExperienceDropdown = ({ value, onChange, className = "" }) => {
   );
 };
 
-export default ExperienceDropdown;
+export default StatusDropdown;
