@@ -18,6 +18,7 @@ import ExperienceDropdown from "@/components/dropdown/ExperienceDropdown";
 import PetTypeMultiSelect from "@/components/dropdown/PetTypeMultiSelect";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import { ButtonOrange } from "@/components/buttons/OrangeButtons";
 
 export default function PetSitterProfilePage() {
   const [initialValues, setInitialValues] = useState({
@@ -38,6 +39,8 @@ export default function PetSitterProfilePage() {
     profile_image: null,
     gallery: [],
     pet_types: [],
+    bank_name: "",
+    village: "",
   });
   const [sitterStatus, setSitterStatus] = useState(null);
   const [adminSuggestion, setAdminSuggestion] = useState("");
@@ -51,7 +54,7 @@ export default function PetSitterProfilePage() {
 
       try {
         const res = await axios.get(
-          `/api/pet-sitter/update-profile?user_id=${user_id}`,
+          `/api/pet-sitters/update-profile?user_id=${user_id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -66,16 +69,18 @@ export default function PetSitterProfilePage() {
             introduction: data.introduction ?? "",
             trade_name: data.trade_name ?? "",
             services: data.services ?? "",
-            place_description: data.place_description ?? "",
-            account_number: data.account_number ?? "",
-            address_detail: data.address_detail ?? "",
+            place_description: data.my_place ?? "",
+            account_number: data.acc_no ?? "",
+            address_detail: data.house_number ?? "",
             district: data.district ?? "",
             sub_district: data.sub_district ?? "",
             province: data.province ?? "",
             post_code: data.post_code ?? "",
-            profile_image: data.profile_image ?? null,
-            gallery: data.gallery ?? [],
-            pet_types: data.pet_types ?? [],
+            profile_image: data.profile_image_url ?? null,
+            gallery: data.gallery_image_url ?? [],
+            pet_types: data.pet_type ?? [],
+            bank_name: data.bank_name ?? "",
+            village: data.village ?? "",
           });
           setSitterStatus(data.status);
           setAdminSuggestion(data.admin_suggestion);
@@ -90,16 +95,31 @@ export default function PetSitterProfilePage() {
   const handleSubmit = async (values) => {
     const token = localStorage.getItem("token");
     if (!token) return;
-    const decoded = jwt_decode(token);
+    const decoded = jwtDecode(token);
     const user_id = decoded.user_id || decoded.sub || decoded.id;
 
     const payload = {
-      ...values,
       user_id,
+      experience: values.experience,
+      introduction: values.introduction,
+      trade_name: values.trade_name,
+      bank_name: values.bank_name,
+      acc_no: values.account_number,
+      pet_type: values.pet_types,
+      services: values.services,
+      my_place: values.place_description,
+      province: values.province,
+      district: values.district,
+      sub_district: values.sub_district,
+      house_number: values.address_detail,
+      village: values.village,
+      post_code: values.post_code,
+      gallery_image_url: values.gallery,
+      profile_image_url: values.profile_image,
       status: "waiting for approval",
     };
     try {
-      await axios.post("/api/pet-sitter/update-profile", payload, {
+      await axios.post("/api/pet-sitters/update-profile", payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
       // แจ้งเตือนหรือ redirect ได้
@@ -153,14 +173,15 @@ export default function PetSitterProfilePage() {
                         </span>
                       )}
                     </div>
-                    <button
+                    <ButtonOrange
                       type="submit"
-                      className="bg-[#FF6B00] text-white px-6 py-2 rounded-full font-semibold"
-                    >
-                      {sitterStatus === null || sitterStatus === "rejected"
-                        ? "Request for approval"
-                        : "Update"}
-                    </button>
+                      className="w-full sm:w-auto"
+                      text={
+                        sitterStatus === null || sitterStatus === "rejected"
+                          ? "Request for approval"
+                          : "Update"
+                      }
+                    />
                   </div>
 
                   {/* Admin Suggestion (เฉพาะ rejected) */}
@@ -382,33 +403,71 @@ export default function PetSitterProfilePage() {
                     </div>
                   </section>
                   {/* เงื่อนไข: approved เท่านั้นถึงแสดงส่วนอื่น */}
-                  {sitterStatus === "approved" && (
-                    <>
-                      {/* Pet Sitter Info */}
-                      <section className="bg-white rounded-2xl px-4 sm:px-6 md:px-10 py-6 sm:py-8 shadow-sm mb-8">
-                        <h2 className="text-[#AEB1C3] font-semibold text-[18px] sm:text-[20px] mb-4 sm:mb-6">
-                          Pet Sitter
-                        </h2>
-                        <div className="flex flex-col gap-4">
+                  {/* {sitterStatus === "approved" && ( */}
+                  <>
+                    {/* Pet Sitter Info */}
+                    <section className="bg-white rounded-2xl px-4 sm:px-6 md:px-10 py-6 sm:py-8 shadow-sm mb-8">
+                      <h2 className="text-[#AEB1C3] font-semibold text-[18px] sm:text-[20px] mb-4 sm:mb-6">
+                        Pet Sitter
+                      </h2>
+                      <div className="flex flex-col gap-4">
+                        <label
+                          htmlFor="trade_name"
+                          className="pb-1 text-[16px] font-medium"
+                        >
+                          Pet sitter name (Trade Name)*
+                        </label>
+                        <div className="relative">
+                          <Field
+                            type="text"
+                            id="trade_name"
+                            name="trade_name"
+                            className={`input border-[#DCDFED] ${
+                              touched.trade_name && errors.trade_name
+                                ? "pr-10 border-red-500"
+                                : ""
+                            }`}
+                          />
+                          {touched.trade_name && errors.trade_name && (
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                              <Image
+                                src={exclamationcircle}
+                                alt="error"
+                                width={13}
+                                height={13}
+                              />
+                            </span>
+                          )}
+                        </div>
+                        {touched.trade_name && errors.trade_name && (
+                          <div className="text-red-500 text-xs">
+                            {errors.trade_name}
+                          </div>
+                        )}
+                        <div className="flex flex-col">
                           <label
-                            htmlFor="trade_name"
+                            id="pet_types-label"
+                            htmlFor="pet_types"
                             className="pb-1 text-[16px] font-medium"
                           >
-                            Pet sitter name (Trade Name)*
+                            Pet type*
                           </label>
                           <div className="relative">
-                            <Field
-                              type="text"
-                              id="trade_name"
-                              name="trade_name"
-                              className={`input border-[#DCDFED] ${
-                                touched.trade_name && errors.trade_name
-                                  ? "pr-10 border-red-500"
+                            <PetTypeMultiSelect
+                              id="pet_types"
+                              name="pet_types"
+                              value={values.pet_types}
+                              onChange={(val) =>
+                                setFieldValue("pet_types", val)
+                              }
+                              className={
+                                touched.pet_types && errors.pet_types
+                                  ? "border-red-500"
                                   : ""
-                              }`}
+                              }
                             />
-                            {touched.trade_name && errors.trade_name && (
-                              <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                            {touched.pet_types && errors.pet_types && (
+                              <span className="absolute right-6 top-1/2 -translate-y-1/2">
                                 <Image
                                   src={exclamationcircle}
                                   alt="error"
@@ -418,71 +477,71 @@ export default function PetSitterProfilePage() {
                               </span>
                             )}
                           </div>
-                          {touched.trade_name && errors.trade_name && (
+                          {touched.pet_types && errors.pet_types && (
                             <div className="text-red-500 text-xs">
-                              {errors.trade_name}
+                              {errors.pet_types}
                             </div>
                           )}
-                          <div className="flex flex-col">
-                            <label
-                              id="pet_types-label"
-                              htmlFor="pet_types"
-                              className="pb-1 text-[16px] font-medium"
-                            >
-                              Pet type*
-                            </label>
-                            <div className="relative">
-                              <PetTypeMultiSelect
-                                id="pet_types"
-                                name="pet_types"
-                                value={values.pet_types}
-                                onChange={(val) =>
-                                  setFieldValue("pet_types", val)
-                                }
-                                className={
-                                  touched.pet_types && errors.pet_types
-                                    ? "border-red-500"
-                                    : ""
-                                }
-                              />
-                              {touched.pet_types && errors.pet_types && (
-                                <span className="absolute right-6 top-1/2 -translate-y-1/2">
-                                  <Image
-                                    src={exclamationcircle}
-                                    alt="error"
-                                    width={13}
-                                    height={13}
-                                  />
-                                </span>
-                              )}
-                            </div>
-                            {touched.pet_types && errors.pet_types && (
-                              <div className="text-red-500 text-xs">
-                                {errors.pet_types}
-                              </div>
+                        </div>
+                        <div>
+                          <label
+                            htmlFor="services"
+                            className="pb-1 text-[16px] font-medium"
+                          >
+                            Services (Describe all of your service for pet
+                            sitting)
+                          </label>
+                          <div className="relative">
+                            <Field
+                              type="text"
+                              id="services"
+                              as="textarea"
+                              name="services"
+                              className={`w-full min-h-[120px] border border-[#DCDFED] rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] ${
+                                touched.services && errors.services
+                                  ? "pr-10 border-red-500"
+                                  : ""
+                              }`}
+                            />
+                            {touched.services && errors.services && (
+                              <span className="absolute right-3 top-3">
+                                <Image
+                                  src={exclamationcircle}
+                                  alt="error"
+                                  width={13}
+                                  height={13}
+                                />
+                              </span>
                             )}
                           </div>
-                          <div>
-                            <label
-                              htmlFor="services"
-                              className="pb-1 text-[16px] font-medium"
-                            >
-                              Services (Describe all of your service for pet
-                              sitting)
-                            </label>
-                            <div className="relative">
-                              <Field
-                                type="text"
-                                id="services"
-                                as="textarea"
-                                name="services"
-                                className={`w-full min-h-[120px] border border-[#DCDFED] rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] ${
-                                  touched.services && errors.services
-                                    ? "pr-10 border-red-500"
-                                    : ""
-                                }`}
-                              />
-                              {touched.services && errors.services && (
+                          {touched.services && errors.services && (
+                            <div className="text-red-500 text-xs">
+                              {errors.services}
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <label
+                            htmlFor="place_description"
+                            className="pb-1 text-[16px] font-medium"
+                          >
+                            My Place (Describe you place)
+                          </label>
+                          <div className="relative">
+                            <Field
+                              type="text"
+                              id="place_description"
+                              as="textarea"
+                              name="place_description"
+                              className={`w-full min-h-[120px] border border-[#DCDFED] rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] ${
+                                touched.place_description &&
+                                errors.place_description
+                                  ? "pr-10 border-red-500"
+                                  : ""
+                              }`}
+                            />
+                            {touched.place_description &&
+                              errors.place_description && (
                                 <span className="absolute right-3 top-3">
                                   <Image
                                     src={exclamationcircle}
@@ -492,71 +551,33 @@ export default function PetSitterProfilePage() {
                                   />
                                 </span>
                               )}
-                            </div>
-                            {touched.services && errors.services && (
+                          </div>
+                          {touched.place_description &&
+                            errors.place_description && (
                               <div className="text-red-500 text-xs">
-                                {errors.services}
+                                {errors.place_description}
                               </div>
                             )}
-                          </div>
-                          <div>
-                            <label
-                              htmlFor="place_description"
-                              className="pb-1 text-[16px] font-medium"
-                            >
-                              My Place (Describe you place)
-                            </label>
-                            <div className="relative">
-                              <Field
-                                type="text"
-                                id="place_description"
-                                as="textarea"
-                                name="place_description"
-                                className={`w-full min-h-[120px] border border-[#DCDFED] rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] ${
-                                  touched.place_description &&
-                                  errors.place_description
-                                    ? "pr-10 border-red-500"
-                                    : ""
-                                }`}
-                              />
-                              {touched.place_description &&
-                                errors.place_description && (
-                                  <span className="absolute right-3 top-3">
-                                    <Image
-                                      src={exclamationcircle}
-                                      alt="error"
-                                      width={13}
-                                      height={13}
-                                    />
-                                  </span>
-                                )}
-                            </div>
-                            {touched.place_description &&
-                              errors.place_description && (
-                                <div className="text-red-500 text-xs">
-                                  {errors.place_description}
-                                </div>
-                              )}
-                          </div>
-                          <div>
-                            <p className="text-[16px] mb-2 font-medium">
-                              Image Gallery (Maximum 10 images)
-                            </p>
-                            <GalleryUpload
-                              value={values.gallery}
-                              onChange={(files) =>
-                                setFieldValue("gallery", files)
-                              }
-                              error={touched.gallery && errors.gallery}
-                            />
-                          </div>
                         </div>
-                      </section>
+                        <div>
+                          <p className="text-[16px] mb-2 font-medium">
+                            Image Gallery (Maximum 10 images)
+                          </p>
+                          <GalleryUpload
+                            value={values.gallery}
+                            onChange={(files) =>
+                              setFieldValue("gallery", files)
+                            }
+                            error={touched.gallery && errors.gallery}
+                          />
+                        </div>
+                      </div>
+                    </section>
 
-                      {/* Address */}
-                      <AddressSection />
-                    </>
-                  )}
+                    {/* Address */}
+                    <AddressSection />
+                  </>
+                  {/* )} */}
                 </Form>
               )}
             </Formik>
