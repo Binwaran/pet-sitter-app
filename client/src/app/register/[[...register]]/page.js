@@ -90,7 +90,6 @@ const RegisterPage = () => {
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen relative bg-white">
-      {/* ถ้ามี AuthIllustrations ให้ใส่เหมือนหน้า Login */}
       <AuthIllustrations />
       <div className="z-10 flex flex-1 justify-center items-start p-6 md:p-16 mt-10 md:mt-24">
         <div className="w-full max-w-md space-y-6">
@@ -124,7 +123,6 @@ const RegisterPage = () => {
               error={errors.password}
               placeholder="Create your password"
             />
-            <div id="clerk-captcha" className="mt-5"></div>
             <button
               type="submit"
               className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-full transition font-semibold"

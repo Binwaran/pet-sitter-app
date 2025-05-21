@@ -1,12 +1,13 @@
 // src/app/layout.js
 "use client";
 
-import "../styles/globals.css"; // ถ้ามี global styles
+import "../styles/globals.css";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import { usePathname } from "next/navigation";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner"; // ✅ เพิ่ม toast
+import { AuthProvider } from "@/context/AuthContext";
 
 export default function RootLayout({ children }) {
   const pathname = usePathname();
