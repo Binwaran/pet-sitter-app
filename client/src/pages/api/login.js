@@ -9,38 +9,54 @@ export default async function handler(req, res) {
 
   const { email, password } = req.body;
 
-  // 1. ดึงข้อมูล user ตาม email
+  // ✅ [1] ตรวจว่ากรอกข้อมูลครบไหม
+  if (!email || !password) {
+    return res.status(400).json({
+      errors: {
+        email: !email ? "Email is required" : undefined,
+        password: !password ? "Password is required" : undefined,
+      },
+    });
+  }
+
+  // ✅ [2] ค้นหา user จาก email
   const { data: user, error } = await supabase
-    .from("users") // 🔁 ตรวจชื่อ table ให้ตรงกับ Supabase ของคุณ
+    .from("users")
     .select("*")
     .eq("email", email)
     .single();
 
+  const errors = {};
+
+  // ✅ [3] ตรวจสอบอีเมล
   if (error || !user) {
-    return res.status(401).json({ message: "Invalid email or password" });
+    errors.email = "Incorrect email";
+  } else {
+    // ✅ [4] ตรวจสอบรหัสผ่าน (ถ้าเจอ user แล้วเท่านั้น)
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      errors.password = "Incorrect password";
+    }
   }
 
-  // 2. ตรวจรหัสผ่าน
-  const isPasswordValid = await bcrypt.compare(password, user.password);
-
-  if (!isPasswordValid) {
-    return res.status(401).json({ message: "Invalid email or password" });
+  // ✅ [5] ถ้ามี error ใดๆ ส่งกลับ
+  if (Object.keys(errors).length > 0) {
+    return res.status(401).json({ errors });
   }
 
-  // ✅ 3. สร้าง JWT token
+  // ✅ [6] สร้าง token และส่งกลับ
   const token = jwt.sign(
     {
       id: user.id,
       email: user.email,
     },
-    process.env.JWT_SECRET, // ใช้ secret ที่คุณตั้งใน .env.local
-    { expiresIn: "7d" } // อายุ token เช่น 7 วัน
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" }
   );
 
-  // ✅ ส่ง token กลับ
   return res.status(200).json({
     message: "Login successful",
-    token, // ✅ token ที่ส่งกลับไปให้ frontend
+    token,
     user: {
       id: user.id,
       email: user.email,

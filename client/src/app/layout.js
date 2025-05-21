@@ -6,6 +6,7 @@ import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import { usePathname } from "next/navigation";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Toaster } from "sonner"; // ✅ เพิ่ม toast
 
 export default function RootLayout({ children }) {
   const pathname = usePathname();
@@ -27,6 +28,7 @@ export default function RootLayout({ children }) {
           <main>{children}</main>
           {!noLayoutRoutes.includes(pathname) && <Footer />}
         </ClerkProvider>
+        <Toaster richColors position="top-center" /> {/* ✅ เพิ่มตรงนี้ */}
       </body>
     </html>
   );
