@@ -12,8 +12,8 @@ const NavBarDesktop = ({
   handleLogout,
 }) => {
   return (
-    <nav className="w-full flex justify-between items-center py-5 px-5 lg:px-0 relative z-50">
-      <section className="max-w-[1440px] mx-auto min-w-0 w-full sm:flex sm:justify-between sm:items-center lg:px-20 hidden">
+    <nav className="w-full flex justify-center items-center pt-3 pb-5 px-5 lg:px-0 relative z-50">
+      <section className="max-w-full min-w-0 w-full sm:flex sm:justify-between sm:items-center lg:px-20 hidden">
         <Link href="/">
           <Image src="/assets/sitter-logo.svg" alt="sitter-logo" width={131} height={131} />
         </Link>
@@ -85,7 +85,7 @@ const NavBarDesktop = ({
 
             {/* CTA */}
             <Link href="/pet-sitters">
-              <button className="items-center justify-center w-[168px] h-[48px] bg-[var(--primary-orange-color-500)] text-white text-[16px] font-bold rounded-full tracking-wide">
+              <button className="items-center justify-center w-[168px] h-[48px] bg-[var(--primary-orange-color-500)] text-white text-[16px] font-bold rounded-full tracking-wide hover:bg-[#FF986F] active:bg-[#E44A0C] hover:scale-105 focus:scale-100 transition-transform cursor-pointer">
                 Find A Pet Sitter
               </button>
             </Link>
@@ -99,7 +99,7 @@ const NavBarDesktop = ({
               Login
             </Link>
             <Link href="/pet-sitters">
-              <button className="items-center justify-center w-[168px] h-[48px] bg-[var(--primary-orange-color-500)] text-white text-[16px] font-bold rounded-full tracking-wide">
+              <button className="items-center justify-center w-[168px] h-[48px] bg-[var(--primary-orange-color-500)] hover:bg-[#FF986F] active:bg-[#E44A0C] text-white text-[16px] font-bold rounded-full tracking-wide hover:scale-105 focus:scale-100 transition-transform cursor-pointer">
                 Find A Pet Sitter
               </button>
             </Link>

@@ -18,15 +18,32 @@ export default function RootLayout({ children }) {
     "/pet-sitters/calendar",
     "/pet-sitters/payout",
     "/pet-sitters/booking/[id]",
+    "/pet-sitters/profile/[id]",
+    "/pet-sitters/calendar/[id]",
+    "/pet-sitters/payout/[id]",
+    "/admin",
+    "/admin/pet-owners",
+    "/admin/pet-owners/[userId]",
+    "/admin/pet-sitters",
+    "/admin/pet-sitters/[userId]",
+    "/admin/report",
   ];
+
+  const isNoLayout = noLayoutRoutes.some(
+    (route) =>
+      route === pathname ||
+      (route.includes("[userId]") &&
+        pathname.startsWith(route.replace("[userId]", ""))) ||
+      (route.includes("[id]") && pathname.startsWith(route.replace("[id]", "")))
+  );
 
   return (
     <html lang="en">
       <body>
         <ClerkProvider>
-          {!noLayoutRoutes.includes(pathname) && <NavBar />}
+          {!isNoLayout && <NavBar />}
           <main>{children}</main>
-          {!noLayoutRoutes.includes(pathname) && <Footer />}
+          {!isNoLayout && <Footer />}
         </ClerkProvider>
         <Toaster richColors position="top-center" /> {/* ✅ เพิ่มตรงนี้ */}
       </body>
