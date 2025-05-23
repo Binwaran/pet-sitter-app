@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { jwtDecode } from "jwt-decode";
 
 export const AuthContext = createContext(null);
 
@@ -10,10 +11,14 @@ export function AuthProvider({ children }) {
   // โหลด token/user จาก localStorage ตอน mount
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
-    const storedUser = localStorage.getItem("user");
-    if (storedToken && storedUser) {
+    if (storedToken) {
       setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+      try {
+        const decoded = jwtDecode(storedToken);
+        setUser(decoded); // user จะได้ข้อมูลจาก JWT เช่น { id, email, role }
+      } catch (e) {
+        setUser(null);
+      }
     }
     setLoading(false);
   }, []);
@@ -28,9 +33,14 @@ export function AuthProvider({ children }) {
     const data = await res.json();
     if (res.ok) {
       setToken(data.token);
-      setUser(data.user);
       localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      try {
+        const decoded = jwtDecode(data.token);
+        setUser(decoded);
+        localStorage.setItem("user", JSON.stringify(decoded));
+      } catch (e) {
+        setUser(null);
+      }
       return { success: true };
     } else {
       return { success: false, message: data.message };

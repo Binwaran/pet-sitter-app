@@ -2,14 +2,18 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { toast } from "sonner"; // ✅
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import AuthIllustrations from "@/components/Auth/AuthIllustrations";
 import AuthHeader from "@/components/Auth/AuthHeader";
 import SocialLoginButtons from "@/components/Auth/SocialLoginButtons";
 import LoginForm from "@/components/Auth/LoginForm";
+import { useAuth } from "@/context/AuthContext";
 
 export default function CustomLogin() {
+  const { login, loading } = useAuth();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState(false);
@@ -20,61 +24,35 @@ export default function CustomLogin() {
     setEmailError(false);
     setPasswordError(false);
 
-    // ✅ [1] ตรวจว่ากรอกครบหรือยัง
-  if (!email || !password) {
+    // [1] ตรวจว่ากรอกครบหรือยัง
+    if (!email || !password) {
       if (!email) setEmailError(true);
       if (!password) setPasswordError(true);
-    toast.error("Email and password are required");
-    return;
-  }
+      toast.error("Email and password are required");
+      return;
+    }
 
-  // ✅ [2] ตรวจรูปแบบอีเมล
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
+    // [2] ตรวจรูปแบบอีเมล
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
       setEmailError(true);
       toast.error("Invalid email format");
       return;
-  }
-
-    try {
-      const res = await fetch("/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-  if (data.errors) {
-    if (data.errors.email) {
-      setEmailError(true);
-      toast.error(data.errors.email);
     }
-    if (data.errors.password) {
-      setPasswordError(true);
-      // แสดงเฉพาะ error แรกที่เจอ
-      if (!data.errors.email) toast.error(data.errors.password);
-    }
-  } else {
-    // fallback เฉพาะกรณีไม่มี errors
-    toast.error(data.message || "Login failed");
-  }
-  return;
-}
 
-      // ✅ Save JWT token to localStorage
-      localStorage.setItem("token", data.token);
-      toast.success("Login สำเร็จ!"); // ✅
+    // [3] เรียก login จาก context
+    const result = await login(email, password);
 
+    if (result.success) {
+      toast.success("Login สำเร็จ!");
       setTimeout(() => {
-      // ✅ Redirect to dashboard or home page
-         window.location.href = "/dashboard";
+        router.push("/dashboard");
       }, 1000);
-    } catch (err) {
-      toast.error("Something went wrong"); // ✅
+    } else {
+      // แสดง error
+      if (result.message?.toLowerCase().includes("email")) setEmailError(true);
+      if (result.message?.toLowerCase().includes("password")) setPasswordError(true);
+      toast.error(result.message || "Login failed");
     }
   };
 
@@ -93,7 +71,6 @@ export default function CustomLogin() {
             handleLogin={handleLogin}
             emailError={emailError}
             passwordError={passwordError}
-            // error={""} // ❌ ไม่ต้องใช้แล้วถ้าใช้ toast
           />
 
           <div className="relative">

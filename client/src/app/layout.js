@@ -5,7 +5,6 @@ import "../styles/globals.css";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import { usePathname } from "next/navigation";
-import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner"; // ✅ เพิ่ม toast
 import { AuthProvider } from "@/context/AuthContext";
 
@@ -41,11 +40,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <ClerkProvider>
-          {!isNoLayout && <NavBar />}
-          <main>{children}</main>
-          {!isNoLayout && <Footer />}
-        </ClerkProvider>
+        <AuthProvider>
+            {!noLayoutRoutes.includes(pathname) && <NavBar />}
+            <main>{children}</main>
+            {!noLayoutRoutes.includes(pathname) && <Footer />}
+          </AuthProvider>
         <Toaster richColors position="top-center" /> {/* ✅ เพิ่มตรงนี้ */}
       </body>
     </html>

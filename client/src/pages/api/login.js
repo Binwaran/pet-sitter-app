@@ -49,6 +49,7 @@ export default async function handler(req, res) {
     {
       id: user.id,
       email: user.email,
+      role: user.role, 
     },
     process.env.JWT_SECRET,
     { expiresIn: "7d" }
@@ -60,6 +61,7 @@ export default async function handler(req, res) {
     user: {
       id: user.id,
       email: user.email,
+      role: user.role, 
     },
   });
 }

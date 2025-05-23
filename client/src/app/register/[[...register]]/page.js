@@ -85,7 +85,13 @@ const RegisterPage = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    if (name === "phone") {
+      // กรองให้เหลือเฉพาะตัวเลขเท่านั้น
+      const onlyNums = value.replace(/[^0-9]/g, "");
+      setFormData({ ...formData, [name]: onlyNums });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   return (

@@ -1,14 +1,16 @@
 "use client";
-import React, { useEffect, useState, useContext } from "react";
-import { useRouter } from "next/navigation";
-import { AuthContext } from "@/context/AuthContext"; // เพิ่ม import
+import React, { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 const petTypes = ["Dog", "Cat", "Other"];
 const sexes = ["Male", "Female", "Unknown"];
 
 export default function EditPetPage() {
-  const { user, loading } = useContext(AuthContext); // ใช้ context แทน useSession
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const petId = searchParams.get("pet_id"); // <-- ดึง pet_id จาก query
   const [pet, setPet] = useState(null);
   const [form, setForm] = useState({
     name: "",
@@ -24,7 +26,7 @@ export default function EditPetPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (loading) return; // รอ auth context
+    if (authLoading) return;
     if (!user) {
       setFetchLoading(false);
       return;
@@ -33,9 +35,14 @@ export default function EditPetPage() {
       router.replace("/unauthorized");
       return;
     }
+    if (!petId) {
+      setError("No pet selected");
+      setFetchLoading(false);
+      return;
+    }
     const fetchPet = async () => {
       try {
-        const res = await fetch(`/api/pets?ownerId=${user.id}`);
+        const res = await fetch(`/api/pets/${petId}`);
         if (!res.ok) {
           setError("Pet not found or API error");
           setFetchLoading(false);
@@ -60,7 +67,7 @@ export default function EditPetPage() {
       }
     };
     fetchPet();
-  }, [user, loading, router]);
+  }, [user, authLoading, router, petId]);
 
   const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -68,7 +75,7 @@ export default function EditPetPage() {
 
   const handleSubmit = async e => {
     e.preventDefault();
-    await fetch(`/api/pets/${pet.id}`, {
+    await fetch(`/api/pets/${petId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
@@ -76,7 +83,7 @@ export default function EditPetPage() {
     router.push("/owner/pets");
   };
 
-  if (loading || fetchLoading) return <div>Loading...</div>;
+  if (authLoading || fetchLoading) return <div>Loading...</div>;
   if (!user) return <div>Please sign in</div>;
   if (error) return <div className="text-red-500">{error}</div>;
 
