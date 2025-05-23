@@ -1,7 +1,8 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { usePetId } from "@/context/PetIdContext";
 
 const petTypes = ["Dog", "Cat", "Other"];
 const sexes = ["Male", "Female", "Unknown"];
@@ -9,8 +10,7 @@ const sexes = ["Male", "Female", "Unknown"];
 export default function EditPetPageInner() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const petId = searchParams.get("pet_id"); // <-- ดึง pet_id จาก query
+  const { petId } = usePetId();
   const [pet, setPet] = useState(null);
   const [form, setForm] = useState({
     name: "",
