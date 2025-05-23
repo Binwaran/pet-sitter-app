@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import { usePathname } from "next/navigation";
 import { Toaster } from "sonner"; // ✅ เพิ่ม toast
 import { AuthProvider } from "@/context/AuthContext";
+import { PetIdProvider } from "@/context/PetIdContext";
 
 export default function RootLayout({ children }) {
   const pathname = usePathname();
@@ -41,10 +42,12 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <AuthProvider>
+          <PetIdProvider>
             {!noLayoutRoutes.includes(pathname) && <NavBar />}
             <main>{children}</main>
             {!noLayoutRoutes.includes(pathname) && <Footer />}
-          </AuthProvider>
+          </PetIdProvider>
+        </AuthProvider>
         <Toaster richColors position="top-center" /> {/* ✅ เพิ่มตรงนี้ */}
       </body>
     </html>
