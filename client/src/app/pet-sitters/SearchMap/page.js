@@ -8,7 +8,7 @@ import SearchHeader from '@/components/pet-sitters/SearchHeader'
 const SearchMapPage = () => {
   const [filters, setFilters] = useState({
     keyword: '',
-    pet_type: [],
+    petTypes: [],
     rating: '',
     experience: ''
   })

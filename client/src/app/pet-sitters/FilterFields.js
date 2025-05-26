@@ -24,6 +24,7 @@ const FilterFields = ({
   onClear,
   variant = "sidebar", // 'sidebar' หรือ 'searchbar'
 }) => {
+   console.log('Filters received in FilterFields:', filters);
   const renderStars = (count) => {
     const stars = [];
     for (let i = 0; i < count; i++) {
