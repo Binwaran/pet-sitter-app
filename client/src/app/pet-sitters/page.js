@@ -18,6 +18,7 @@ const PetSitterListPage = () => {
   } = useSearchFilters()
 
   const [currentPage, setCurrentPage] = useState(1)
+  const [isMobile, setIsMobile] = useState(false)
   const itemsPerPage = 5
 
   const paginatedResults = results.slice(
@@ -26,23 +27,32 @@ const PetSitterListPage = () => {
   )
   const totalPages = Math.ceil(results.length / itemsPerPage)
 
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const searchParams = new URLSearchParams(window.location.search)
-      const keyword = searchParams.get('keyword') || '';
-      const petTypes = searchParams.get('pet')?.split(",") || [];
-      const rating = searchParams.get('rating') || '';
-      const experience = searchParams.get('experience') || '';
+      const keyword = searchParams.get('keyword') || ''
+      const petTypes = searchParams.get('pet')?.split(',') || []
+      const rating = searchParams.get('rating') || ''
+      const experience = searchParams.get('experience') || ''
 
-      const hasParams = keyword || petTypes.length > 0 || rating || experience;
+      const hasParams = keyword || petTypes.length > 0 || rating || experience
 
-  if (hasParams) {
-    const newFilters = { keyword, petTypes, rating, experience };
-    setFilters(newFilters);
-    fetchData(newFilters);
-  }
- }}, []);
+      if (hasParams) {
+        const newFilters = { keyword, petTypes, rating, experience }
+        setFilters(newFilters)
+        fetchData(newFilters)
+      }
+    }
+  }, [])
 
   const handleChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value })
@@ -59,6 +69,16 @@ const PetSitterListPage = () => {
   const handlePageChange = (page) => {
     setCurrentPage(page)
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleSearch = () => {
+    fetchData(filters)
+    setCurrentPage(1)
+  }
+
+  const handleClear = () => {
+    clearFilters()
+    setCurrentPage(1)
   }
 
   return (
