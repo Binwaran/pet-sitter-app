@@ -24,15 +24,6 @@ const FilterFields = ({
   onClear,
   variant = "sidebar", // 'sidebar' หรือ 'searchbar'
 }) => {
-  const renderStars = (count) => {
-    const stars = [];
-    for (let i = 0; i < count; i++) {
-      stars.push(
-        <FontAwesomeIcon key={i} icon={faStar} className="text-orange-400" />
-      );
-    }
-    return stars;
-  };
 
   const isSidebar = variant === "sidebar";
   const isSearchbar = variant === "searchbar";

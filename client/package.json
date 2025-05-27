@@ -10,6 +10,9 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.19.2",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/material": "^7.1.0",
     "@supabase/supabase-js": "^2.49.4",
     "axios": "^1.9.0",
     "bcrypt": "^6.0.0",

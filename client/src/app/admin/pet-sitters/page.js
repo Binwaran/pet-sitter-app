@@ -4,6 +4,7 @@ import axios from "axios";
 import Sidebar from "@/components/admin/SidebarAdmin";
 import StatusDropdown from "@/components/dropdown/StatusDropdown";
 import { useRouter } from "next/navigation";
+import { Pagination, PaginationItem } from "@mui/material";
 
 const STATUS_MAP = {
   "waiting for approval": {
@@ -28,6 +29,8 @@ export default function AdminPetSittersPage() {
   const [loading, setLoading] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const rowsPerPage = 8;
 
   const router = useRouter();
 
@@ -59,23 +62,31 @@ export default function AdminPetSittersPage() {
     return matchStatus && matchSearch;
   });
 
+  const totalPages = Math.ceil(filteredSitters.length / rowsPerPage);
+  const paginatedSitters = filteredSitters.slice(
+    (page - 1) * rowsPerPage,
+    page * rowsPerPage
+  );
+
   return (
-    <div className="flex flex-col max-h-screen bg-[#F9FAFB] w-full min-w-0">
+    <div className="flex flex-col max-h-screen bg-[#F6F6F9] w-full min-w-0">
       <div className="flex w-full min-w-0">
         {/* Sidebar Desktop (Left) */}
         <Sidebar className="hidden md:flex h-full sticky top-0 left-0" />
-        <div className="flex-1 flex flex-col w-full h-full min-w-0">
+        <div className="flex-1 flex flex-col w-full h-full min-w-0 bg-[#F6F6F9]">
           {/* Sidebar Mobile (Top) */}
           <Sidebar
             className="flex flex-row md:hidden sticky top-0 z-30 w-full"
             horizontal
           />
           {/* Main Content */}
-          <div className="flex-1 flex flex-col gap-4 pt-[56px] md:pt-12 px-2 sm:px-4 md:px-8 lg:px-12 py-6 md:py-10 max-w-full w-full transition-all duration-300 relative h-full max-h-screen min-w-0">
-            <div className="flex flex-col md:flex-row md:justify-between gap-6 w-full">
-              <h1 className="text-2xl font-bold mb-2 md:mb-2">Pet Sitter</h1>
+          <div className="flex-1 flex flex-col gap-6 pt-10 px-12 pb-20 max-w-full w-full transition-all duration-300 relative h-full  min-w-0">
+            <div className="flex flex-col items-center lg:flex-row sm:justify-between gap-6 w-full">
+              <h1 className="text-2xl font-bold whitespace-nowrap">
+                Pet Sitter
+              </h1>
               {/* Search & Filter */}
-              <div className="flex flex-col sm:flex-row gap-4 mb-2">
+              <div className="flex flex-col lg:flex-row gap-4 w-full sm:justify-end">
                 <div className="relative w-full sm:w-auto">
                   <input
                     id="search"
@@ -84,9 +95,9 @@ export default function AdminPetSittersPage() {
                     placeholder="Search..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="px-4 py-2 rounded-lg border border-[#E4E4E7] bg-white h-[48px] w-full sm:w-[260px] pl-10"
+                    className="pl-3 pr-4 py-3 rounded-lg border border-[#E4E4E7] bg-white h-[48px] w-full sm:min-w-[240px]"
                   />
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
                     <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
                       <circle
                         cx="11"
@@ -112,20 +123,20 @@ export default function AdminPetSittersPage() {
               </div>
             </div>
             {/* Table */}
-            <div className="bg-white rounded-2xl shadow-sm overflow-x-auto w-full">
-              <table className="min-w-[600px] w-full">
+            <div className="bg-white rounded-2xl overflow-x-auto w-full">
+              <table className="min-w-[600px] w-full h-full">
                 <thead>
                   <tr className="bg-black text-white rounded-t-2xl">
-                    <th className="py-4 px-4 sm:px-6 text-left rounded-tl-2xl font-medium">
+                    <th className="py-3 px-4 text-left rounded-tl-2xl font-medium">
                       Full Name
                     </th>
-                    <th className="py-4 px-4 sm:px-6 text-left font-medium">
+                    <th className="py-3 px-4 text-left font-medium">
                       Pet Sitter Name
                     </th>
-                    <th className="py-4 px-4 sm:px-6 text-left font-medium">
+                    <th className="py-3 px-4 text-left font-medium">
                       Email
                     </th>
-                    <th className="py-4 px-4 sm:px-6 text-left rounded-tr-2xl font-medium">
+                    <th className="py-3 px-4 text-left rounded-tr-2xl font-medium">
                       Status
                     </th>
                   </tr>
@@ -133,14 +144,18 @@ export default function AdminPetSittersPage() {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={4}>Loading...</td>
+                      <td colSpan={4} className="text-center py-6">
+                        Loading...
+                      </td>
                     </tr>
-                  ) : filteredSitters.length === 0 ? (
+                  ) : paginatedSitters.length === 0 ? (
                     <tr>
-                      <td colSpan={4}>No sitters found.</td>
+                      <td colSpan={4} className="text-center py-6">
+                        No sitters found.
+                      </td>
                     </tr>
                   ) : (
-                    filteredSitters.map((sitter) => (
+                    paginatedSitters.map((sitter) => (
                       <tr
                         key={sitter.user_id}
                         className="cursor-pointer border-b border-[#F0F0F0] last:border-0 hover:bg-gray-50 transition"
@@ -148,35 +163,40 @@ export default function AdminPetSittersPage() {
                           router.push(`/admin/pet-sitters/${sitter.user_id}`)
                         }
                       >
-                        <td className="py-4 px-4 sm:px-6 flex items-center gap-3">
-                          <img
-                            src={
-                              sitter.profile_image_url ||
-                              "/assets/sidebar/profile.svg"
-                            }
-                            alt={sitter.full_name}
-                            className="w-10 h-10 rounded-full object-cover bg-gray-100"
-                          />
-                          <span className="font-medium">
+                        <td className="py-6 px-4 gap-2.5 h-[92px] flex items-center">
+                          <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden">
+                            <img
+                              src={
+                                sitter.profile_image_url ||
+                                "/assets/sidebar/profile.svg"
+                              }
+                              alt={sitter.full_name}
+                              className="w-full h-full object-cover bg-gray-100"
+                            />
+                          </div>
+                          <span className="font-medium whitespace-nowrap">
                             {sitter.full_name}
                           </span>
                         </td>
-                        <td className="py-4 px-4 sm:px-6">
+                        <td className="font-medium  py-6 px-4 gap-2.5 h-[92px]">
                           {sitter.trade_name}
                         </td>
-                        <td className="py-4 px-4 sm:px-6">{sitter.email}</td>
-                        <td className="py-4 px-4 sm:px-6">
+                        <td className="font-medium  py-6 px-4 gap-2.5 h-[92px]">
+                          {sitter.email}
+                        </td>
+                        <td className="py-6 px-4 gap-2.5 h-[92px]">
                           <span
-                            className={`flex items-center gap-2 font-medium ${
-                              STATUS_MAP[sitter.status]?.color
+                            className={`flex items-center gap-2.5 font-medium whitespace-nowrap ${
+                              STATUS_MAP[sitter.status]?.color ||
+                              "text-gray-400"
                             }`}
                           >
                             <span
-                              className={`inline-block w-2 h-2 rounded-full ${
-                                STATUS_MAP[sitter.status]?.dot
+                              className={`inline-block w-[6px] h-[6px] rounded-full ${
+                                STATUS_MAP[sitter.status]?.dot || "bg-gray-400"
                               }`}
                             />
-                            {STATUS_MAP[sitter.status]?.text || "-"}
+                            {STATUS_MAP[sitter.status]?.text || "Unknown"}
                           </span>
                         </td>
                       </tr>
@@ -185,27 +205,90 @@ export default function AdminPetSittersPage() {
                 </tbody>
               </table>
             </div>
-            {/* Pagination (mockup) */}
-            <div className="flex justify-center items-center gap-2 mt-8 flex-wrap">
-              <button className="text-gray-400 px-2 py-1 rounded" disabled>
-                &lt;
-              </button>
-              <button className="bg-[#F7F7FA] text-black font-semibold px-3 py-1 rounded-full">
-                1
-              </button>
-              <button className="bg-white text-black px-3 py-1 rounded-full">
-                2
-              </button>
-              <span className="text-gray-400">...</span>
-              <button className="bg-white text-black px-3 py-1 rounded-full">
-                44
-              </button>
-              <button className="bg-white text-black px-3 py-1 rounded-full">
-                45
-              </button>
-              <button className="text-gray-400 px-2 py-1 rounded" disabled>
-                &gt;
-              </button>
+            {/* Pagination */}
+            <div className="flex justify-center items-baseline flex-wrap">
+              <Pagination
+                count={totalPages}
+                page={page}
+                onChange={(_, value) => setPage(value)}
+                siblingCount={1}
+                boundaryCount={2}
+                showFirstButton={false}
+                showLastButton={false}
+                sx={{
+                  "& .MuiPaginationItem-root": {
+                    backgroundColor: "#FFFFFF",
+                    color: "#AEB1C3",
+                    borderRadius: "999px",
+                    fontWeight: 700,
+                    fontSize: "16px",
+                    width: 40,
+                    height: 40,
+                  },
+                  "& .MuiPaginationItem-root.Mui-selected": {
+                    backgroundColor: "#FFF1EC",
+                    color: "#FF7037",
+                  },
+                  "& .MuiPaginationItem-root.Mui-selected:hover, & .MuiPaginationItem-root.Mui-selected.Mui-focusVisible":
+                    {
+                      backgroundColor: "#FFF1EC",
+                      color: "#FF7037",
+                    },
+                  "& .MuiPaginationItem-previousNext": {
+                    width: 36,
+                    height: 36,
+                    backgroundColor: "#F6F6F9",
+                  },
+                  "& .MuiPaginationItem-ellipsis": {
+                    verticalAlign: "bottom",
+                    display: "inline-flex",
+                    alignItems: "flex-end",
+                    justifyContent: "center",
+                    width: 40,
+                    height: 25,
+                    backgroundColor: "#F6F6F9",
+                  },
+                }}
+                renderItem={(item) => (
+                  <PaginationItem
+                    {...item}
+                    slots={{
+                      previous: () => (
+                        <svg
+                          width={8}
+                          height={15}
+                          viewBox="0 0 8 15"
+                          fill="none"
+                        >
+                          <path
+                            d="M7 1L1 7.5L7 14"
+                            stroke="#AEB1C3"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      ),
+                      next: () => (
+                        <svg
+                          width={8}
+                          height={15}
+                          viewBox="0 0 8 15"
+                          fill="none"
+                        >
+                          <path
+                            d="M1 14L7 7.5L1 1"
+                            stroke="#AEB1C3"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      ),
+                    }}
+                  />
+                )}
+              />
             </div>
           </div>
         </div>

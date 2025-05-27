@@ -29,7 +29,7 @@ const StatusDropdown = ({ value, onChange, className = "" }) => {
   }, []);
 
   return (
-    <div className="relative min-w-[160px] w-full" ref={dropdownRef}>
+    <div className="relative w-full lg:w-[240px]" ref={dropdownRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
