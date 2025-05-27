@@ -1,5 +1,6 @@
 @import url("https://fonts.cdnfonts.com/css/satoshi");
 @import "tailwindcss";
+@import "react-datepicker/dist/react-datepicker.css";
 
 *{
   font-family: "Satoshi", sans-serif;
@@ -48,4 +49,190 @@
 nav:hover {
   overscroll-behavior-x: contain;
   scroll-behavior: smooth;
+}
+
+.custom-input {
+  border: 1px solid #DCDFED!important;
+  border-radius: 8px;
+  width: 365px;
+  height: 48px;
+  padding: 5px 10px;
+  font-family: 'Satoshi', sans-serif;
+}
+
+.custom-input:focus {
+  outline: none;
+  border-color: #FF7037;
+  box-shadow: 0 0 0 2px #FF7037;
+}
+
+.custom-calendar {
+  border: none !important;
+  border-radius: 12px !important;
+  padding: 10px 10px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  font-family: 'Satoshi', sans-serif;
+}
+
+.custom-day {
+  border-radius: 8px;
+  padding: 0.5rem;
+  transition: background 0.2s ease;
+}
+
+.custom-day:hover {
+  background: #FFE2D0;
+  color: #FF7037;
+  cursor: pointer;
+}
+
+.react-datepicker__day--selected {
+  background: #FF7037 !important;
+  color: white !important;
+  border-radius: 9999px !important;
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+  padding: 2px 2px;
+  
+}
+
+.react-datepicker__header {
+  background-color: white !important;
+  border-bottom: none !important;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  display: flex;
+  text-align: center !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 1rem;
+  position: relative;
+}
+
+.react-datepicker__current-month {
+  order: 1;
+  margin-right: auto;
+  font-weight: 400;
+  font-size: 1.3rem;
+  text-align: left !important;
+  padding-left: 0.5rem;
+  font-family: 'Satoshi', sans-serif;
+}
+
+.react-datepicker__day-names {
+  display: flex !important;
+  justify-content: flex-start !important;
+  font-weight: 400;
+  font-size: 1rem !important;
+  padding-top: 0.6rem;
+  gap: 0.5rem !important;
+  padding-right: 0.5rem !important;
+  margin-right: 0.5rem !important;
+
+}
+
+.react-datepicker__day {
+  width: 36px;
+  height: 36px;
+  font-size: 1.2rem;
+  font-weight: 300;
+  border-radius: 50%;
+  line-height: 36px;
+  transition: background 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex-shrink: 0;
+  
+}
+
+.react-datepicker__day:hover {
+  background: #FF7037 !important;
+  color: #FFFFFF;
+  cursor: pointer;
+  border-radius: 9999px !important;
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+  justify-content: center;
+  align-items: center;
+  
+}
+
+.today-only {
+  background-color: #cfe9ff !important;
+  color: #1e3a8a !important;
+  border-radius: 9999px;
+}
+
+
+.react-datepicker__day--today {
+  background-color: transparent !important;
+  color: inherit !important;
+}
+
+.react-datepicker__header .react-datepicker__day-names .react-datepicker__day-name {
+  color: #AEB1C3 !important;
+}
+
+.custom-calendar .react-datepicker__day-names {
+  display: flex !important;
+  justify-content: flex-start !important;
+  padding-left: 1px !important;
+  margin-left: 0 !important;
+}
+
+.react-datepicker__navigation {
+  position: relative !important;
+  top: 0 !important;
+  transform: none !important;
+  margin-left: 0.25rem;
+  display: inline-block;
+}
+
+.react-datepicker__navigation--previous {
+  order: 2;
+}
+
+.react-datepicker__navigation--next {
+  order: 3;
+}
+
+/* === Custom Select Styling for React Select === */
+.react-select__control {
+  border-radius: 8px;
+  border: 1px solid #D1D5DB; /* gray-300 */
+  padding: 4px 12px;
+  box-shadow: none;
+  min-height: 40px;
+}
+
+.react-select__control:hover {
+  border-color: #FF7037;
+}
+
+.react-select__dropdown-indicator,
+.react-select__indicator-separator {
+  display: none;
+}
+
+.react-select__placeholder {
+  color: #9CA3AF;
+}
+
+.react-select__option--is-focused {
+  background-color: #FFF2E8;
+  color: #FF7037;
+}
+
+.react-select__option--is-selected {
+  background-color: #FF7037;
+  color: white;
+}
+
+.react-select__indicator,
+.react-select__indicators {
+  display: none !important;
 }
