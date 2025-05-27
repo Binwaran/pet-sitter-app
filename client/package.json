@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.19.2",
-    "@react-google-maps/api": "^2.20.6",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/material": "^7.1.0",
