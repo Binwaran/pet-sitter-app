@@ -39,8 +39,8 @@ export default function BookingModal({ sitterId, isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
-      <div className="bg-white rounded-lg p-6 w-[90%] max-w-md">
+    <div className="fixed inset-0 sm:z-50 bg-white sm:bg-black/50 flex items-center justify-center w-[375px] sm:w-full sm:h-full">
+      <div className="bg-white rounded-lg p-6 w-full sm:w-[90%] max-w-md">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Booking</h2>
           <button onClick={onClose}>✕</button>
