@@ -39,7 +39,7 @@ export default async function handler(req, res) {
         trade_name: sitter.trade_name,
         status: VALID_STATUSES.includes(normalizedStatus)
           ? normalizedStatus
-          : "-", // "waiting for approval" หรือ "-" หรือ "unknown"
+          : "Unknown", // "waiting for approval" หรือ "-" หรือ "unknown"
       };
     });
 
