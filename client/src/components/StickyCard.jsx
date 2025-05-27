@@ -1,5 +1,31 @@
-        
+"use client"
+import BookingModal from "./BookingModal"
+import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+
+
 const StickyCard = ({ sitter }) => {
+  const { user, loading } = useAuth();
+  const [showBooking, setShowBooking] = useState(false);
+  const router = useRouter();
+  
+  const handleBookingClick = () => {
+    console.log("click booking:", { user, loading });
+    //if (loading) return; // Wait for loading to finish
+    //if (!user) {
+    //  router.push("/login");
+    //} else {
+    //  setShowBooking(true);
+    //  console.log("modal should open");
+    //
+    setShowBooking(true);
+  }
+  
+  useEffect(() => {
+    console.log("showBooking changed:", showBooking);
+  }, [showBooking]);
+
     return (
         <div>
           <div className="bg-white p-6 rounded-lg shadow-md sm:mb-10 flex flex-col items-center text-center">
@@ -94,7 +120,7 @@ const StickyCard = ({ sitter }) => {
               </div>
               <div>
                 <button
-                  onClick={() => toast('📅 Booking popup soon...')}
+                  onClick={handleBookingClick}
                   className="w-[340px] sm:w-[180px] bg-orange-600 text-white text-xl font-medium py-3 px-2 rounded-4xl hover:bg-orange-200 hover:text-orange-600 mr-3 sm:mr-2 cursor-pointer"
                 >
                   Book Now
@@ -105,7 +131,7 @@ const StickyCard = ({ sitter }) => {
             <div className="sm:hidden flex flex-row gap-4 mb-4 mt-15"> 
               <div>
                 <button
-                  onClick={() => toast('📅 Booking popup soon...')}
+                  onClick={handleBookingClick}
                   className="w-[340px] sm:w-[180px] bg-orange-600 text-white text-xl font-medium py-3 px-2 rounded-4xl hover:bg-orange-200 hover:text-orange-600 mr-3 sm:mr-2 cursor-pointer"
                 >
                   Book Now
@@ -113,7 +139,12 @@ const StickyCard = ({ sitter }) => {
               </div>
             </div>
           </div>
+          <BookingModal 
+          key = {showBooking? "open" : "closed"}
+          sitterId={sitter.id} 
+          isOpen={showBooking} 
+          onClose={() => setShowBooking(false)} />
         </div>
         )
-}
+  };
 export default StickyCard
