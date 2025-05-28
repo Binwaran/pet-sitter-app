@@ -3,8 +3,11 @@ import { supabase } from "@/services/supabaseClient";
 export default async function handler(req, res) {
   const { id } = req.query;
 
+
   if (req.method === "PUT") {
     const data = req.body;
+
+    // อัปเดตข้อมูล pet
 
     // อัปเดตข้อมูล pet
     const { data: pet, error } = await supabase
