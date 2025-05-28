@@ -49,19 +49,16 @@ export default async function handler(req, res) {
     {
       id: user.id,
       email: user.email,
-      role: user.role, 
+      role: user.role,
     },
     process.env.JWT_SECRET,
     { expiresIn: "7d" }
   );
 
+  // Set JWT in httpOnly cookie
+  res.setHeader("Set-Cookie", `token=${token}; HttpOnly; Path=/; Max-Age=${60 * 60 * 24 * 7}; SameSite=Strict${process.env.NODE_ENV === "production" ? "; Secure" : ""}`);
+
   return res.status(200).json({
-    message: "Login successful",
-    token,
-    user: {
-      id: user.id,
-      email: user.email,
-      role: user.role, 
-    },
+    message: "Login successful"
   });
 }
