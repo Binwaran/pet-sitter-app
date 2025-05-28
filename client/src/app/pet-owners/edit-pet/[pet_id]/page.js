@@ -1,27 +1,40 @@
-/*
 "use client";
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { usePetId } from "@/context/PetIdContext";
 
-const petTypes = ["Dog", "Cat", "Other"];
-const sexes = ["Male", "Female", "Unknown"];
+const petTypes = [
+  "Dog",
+  "Cat",
+  "Bird",
+  "Rabbit",
+  "Mouse",
+  "Turtle",
+  "Snake",
+  "Other"
+];
+const sexes = [
+  { value: "เพศผู้", label: "เพศผู้" },
+  { value: "เพศเมีย", label: "เพศเมีย" },
+  { value: "ไม่ระบุ", label: "ไม่ระบุ" },
+];
 
 export default function EditPetPageInner() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-  const { petId } = usePetId();
+  const params = useParams();
+  const petId = params.pet_id === "new" ? null : params.pet_id;
   const [pet, setPet] = useState(null);
   const [form, setForm] = useState({
-    name: "",
-    type: "",
+    pet_name: "",
+    pet_type: "",
     breed: "",
     sex: "",
     age: "",
     color: "",
     weight: "",
     about: "",
+    pet_image_url: "",
   });
   const [fetchLoading, setFetchLoading] = useState(true);
   const [error, setError] = useState("");
@@ -37,7 +50,7 @@ export default function EditPetPageInner() {
       return;
     }
     if (!petId) {
-      setError("No pet selected");
+      // สร้างใหม่ ไม่ต้อง fetch
       setFetchLoading(false);
       return;
     }
@@ -52,14 +65,15 @@ export default function EditPetPageInner() {
         const data = await res.json();
         setPet(data);
         setForm({
-          name: data.name || "",
-          type: data.type || "",
+          pet_name: data.pet_name || "",
+          pet_type: data.pet_type || "",
           breed: data.breed || "",
           sex: data.sex || "",
           age: data.age || "",
           color: data.color || "",
           weight: data.weight || "",
           about: data.about || "",
+          pet_image_url: data.pet_image_url || "",
         });
         setFetchLoading(false);
       } catch (err) {
@@ -74,14 +88,37 @@ export default function EditPetPageInner() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    await fetch(`/api/pets/${petId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-    router.push("/owner/pets");
+    const payload = {
+      ...form,
+      age: form.age === "" ? null : Number(form.age),
+      weight: form.weight === "" ? null : Number(form.weight),
+    };
+    try {
+      let res;
+      if (petId) {
+        res = await fetch(`/api/pets/${petId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        res = await fetch(`/api/pets`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...payload, owner_id: user.id }),
+        });
+      }
+      if (res.ok) {
+        router.push("/pet-owners/pets");
+      } else {
+        const err = await res.json();
+        setError(err.error || "Save failed");
+      }
+    } catch (err) {
+      setError("Network error");
+    }
   };
 
   if (authLoading || fetchLoading) return <div>Loading...</div>;
@@ -96,8 +133,8 @@ export default function EditPetPageInner() {
           <label className="block font-medium mb-1">Pet Name*</label>
           <input
             type="text"
-            name="name"
-            value={form.name}
+            name="pet_name"
+            value={form.pet_name}
             onChange={handleChange}
             className="w-full border rounded px-3 py-2"
             placeholder="Pet name"
@@ -107,8 +144,8 @@ export default function EditPetPageInner() {
         <div>
           <label className="block font-medium mb-1">Pet Type*</label>
           <select
-            name="type"
-            value={form.type}
+            name="pet_type"
+            value={form.pet_type}
             onChange={handleChange}
             className="w-full border rounded px-3 py-2"
             required
@@ -142,7 +179,7 @@ export default function EditPetPageInner() {
           >
             <option value="">Select sex of your pet</option>
             {sexes.map(sex => (
-              <option key={sex} value={sex}>{sex}</option>
+              <option key={sex.value} value={sex.value}>{sex.label}</option>
             ))}
           </select>
         </div>
@@ -184,6 +221,17 @@ export default function EditPetPageInner() {
             required
           />
         </div>
+        <div>
+          <label className="block font-medium mb-1">Image URL</label>
+          <input
+            type="text"
+            name="pet_image_url"
+            value={form.pet_image_url}
+            onChange={handleChange}
+            className="w-full border rounded px-3 py-2"
+            placeholder="https://..."
+          />
+        </div>
       </div>
       <div>
         <label className="block font-medium mb-1">About</label>
@@ -200,7 +248,7 @@ export default function EditPetPageInner() {
         <button
           type="button"
           className="px-6 py-2 rounded-full bg-gray-100 text-gray-700 font-semibold"
-          onClick={() => router.push("/owner/pets")}
+          onClick={() => router.push("/pet-owners/pets")}
         >
           Cancel
         </button>
@@ -214,4 +262,3 @@ export default function EditPetPageInner() {
     </form>
   );
 }
-*/

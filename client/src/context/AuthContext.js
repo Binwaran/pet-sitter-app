@@ -1,62 +1,58 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { jwtDecode } from "jwt-decode";
 
 export const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // โหลด token/user จาก localStorage ตอน mount
+  // โหลด user จาก /api/me ตอน mount
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    if (storedToken) {
-      setToken(storedToken);
-      try {
-        const decoded = jwtDecode(storedToken);
-        setUser(decoded); // user จะได้ข้อมูลจาก JWT เช่น { id, email, role }
-      } catch (e) {
+    fetchUser();
+    // eslint-disable-next-line
+  }, []);
+
+  const fetchUser = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/me", { credentials: "include" });
+      if (res.ok) {
+        const userData = await res.json();
+        setUser(userData);
+      } else {
         setUser(null);
       }
+    } catch (e) {
+      setUser(null);
     }
     setLoading(false);
-  }, []);
+  };
 
   // login function
   const login = async (email, password) => {
     const res = await fetch("/api/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include", // สำคัญ!
       body: JSON.stringify({ email, password }),
     });
-    const data = await res.json();
     if (res.ok) {
-      setToken(data.token);
-      localStorage.setItem("token", data.token);
-      try {
-        const decoded = jwtDecode(data.token);
-        setUser(decoded);
-        localStorage.setItem("user", JSON.stringify(decoded));
-      } catch (e) {
-        setUser(null);
-      }
+      await fetchUser(); // ดึง user info ใหม่
       return { success: true };
     } else {
-      return { success: false, message: data.message };
+      const data = await res.json();
+      return { success: false, message: data.message || "Login failed" };
     }
   };
 
   // logout function
-  const logout = () => {
-    setToken(null);
+  const logout = async () => {
+    await fetch("/api/logout", { method: "POST", credentials: "include" });
     setUser(null);
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
