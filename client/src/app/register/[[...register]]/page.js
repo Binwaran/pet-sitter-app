@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import InputField from "@/components/register/InputField.js";
 import { validateEmail, validatePhone, validatePassword } from "@/components/InputVerification";
 import Link from "next/link";
-import AuthIllustrations from "@/components/Auth/AuthIllustrations"; // เพิ่มถ้ามีไฟล์นี้
+import AuthIllustrations from "@/components/Auth/AuthIllustrations"; 
 
 const RegisterPage = () => {
   const router = useRouter();
@@ -13,12 +13,15 @@ const RegisterPage = () => {
     email: "",
     phone: "",
     password: "",
+    confirmPassword: "",
   });
 
   const [errors, setErrors] = useState({
     email: "",
     phone: "",
     password: "",
+    confirmPassword: "",
+    general: "",
   });
 
   const validationRules = {
@@ -34,6 +37,10 @@ const RegisterPage = () => {
       validate: validatePassword,
       errorMessage: "Password must be longer than 8 characters.",
     },
+    confirmPassword: {
+      validate: (value) => value === formData.password,
+      errorMessage: "Passwords do not match.",
+    },
   };
 
   const validate = () => {
@@ -48,7 +55,7 @@ const RegisterPage = () => {
       }
     }
 
-    setErrors(newErrors);
+    setErrors((prev) => ({ ...prev, ...newErrors }));
     return isValid;
   };
 
@@ -75,23 +82,36 @@ const RegisterPage = () => {
           alert("Registration successful!");
           router.push("/login");
         } else {
-          setErrors({ ...errors, general: data.error });
+          setErrors((prev) => ({ ...prev, general: data.error }));
         }
       } catch (error) {
-        setErrors({ ...errors, general: "An unexpected error occurred." });
+        setErrors((prev) => ({ ...prev, general: "An unexpected error occurred." }));
       }
     }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === "phone") {
-      // กรองให้เหลือเฉพาะตัวเลขเท่านั้น
-      const onlyNums = value.replace(/[^0-9]/g, "");
-      setFormData({ ...formData, [name]: onlyNums });
-    } else {
-      setFormData({ ...formData, [name]: value });
+    let newFormData = { ...formData, [name]: value };
+
+    // Reset error ของ field ที่เปลี่ยน
+    setErrors((prev) => ({ ...prev, [name]: "" }));
+
+    // ถ้าเปลี่ยน password หรือ confirmPassword ให้ reset error confirmPassword ด้วย
+    if (name === "password" || name === "confirmPassword") {
+      setErrors((prev) => ({
+        ...prev,
+        confirmPassword: "",
+      }));
     }
+
+    // ถ้าเป็น phone ให้กรองเฉพาะตัวเลข
+    if (name === "phone") {
+      const onlyNums = value.replace(/[^0-9]/g, "");
+      newFormData = { ...formData, [name]: onlyNums };
+    }
+
+    setFormData(newFormData);
   };
 
   return (
@@ -128,6 +148,15 @@ const RegisterPage = () => {
               onChange={handleChange}
               error={errors.password}
               placeholder="Create your password"
+            />
+            <InputField
+              label="Confirm Password"
+              name="confirmPassword"
+              type="password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              error={errors.confirmPassword}
+              placeholder="Confirm your password"
             />
             <button
               type="submit"

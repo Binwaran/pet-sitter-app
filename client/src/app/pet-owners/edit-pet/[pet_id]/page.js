@@ -252,12 +252,35 @@ export default function EditPetPageInner() {
         >
           Cancel
         </button>
-        <button
-          type="submit"
-          className="px-6 py-2 rounded-full bg-orange-500 text-white font-semibold"
-        >
-          Save
-        </button>
+        <div>
+          {petId && (
+            <button
+              type="button"
+              className="px-6 py-2 rounded-full bg-red-500 text-white font-semibold mr-2"
+              onClick={async () => {
+                if (confirm("Are you sure you want to delete this pet?")) {
+                  const res = await fetch(`/api/pets/${petId}`, {
+                    method: "DELETE",
+                  });
+                  if (res.ok) {
+                    router.push("/pet-owners/pets");
+                  } else {
+                    const err = await res.json();
+                    setError(err.error || "Delete failed");
+                  }
+                }
+              }}
+            >
+              Delete
+            </button>
+          )}
+          <button
+            type="submit"
+            className="px-6 py-2 rounded-full bg-orange-500 text-white font-semibold"
+          >
+            Save
+          </button>
+        </div>
       </div>
     </form>
   );
