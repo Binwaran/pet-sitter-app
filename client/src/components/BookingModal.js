@@ -75,6 +75,7 @@ export default function BookingModal({ sitterId, isOpen, onClose }) {
 
                   return isToday ? "today-only" : "";
                 }}
+                
                               
               />
             </div>
