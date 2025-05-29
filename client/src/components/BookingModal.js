@@ -40,8 +40,8 @@ export default function BookingModal({ sitterId, isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 sm:z-50 bg-white sm:bg-black/50 flex items-center justify-center w-[375px] sm:w-full sm:h-full">
-      <div className="bg-white rounded-lg p-6 w-full sm:w-[90%] max-w-md">
+    <div className="fixed inset-0 z-100 sm:z-50 bg-black/50 flex items-start sm:items-center justify-center w-[375px] sm:w-full h-full">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md h-full sm:h-[300px]">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Booking</h2>
           <button onClick={onClose}>✕</button>
@@ -122,7 +122,7 @@ export default function BookingModal({ sitterId, isOpen, onClose }) {
                 <Select
                   options={timeOptions}
                   onChange={(selected) => setStartTime(selected.value)}
-                  className="w-[177px] cursor-text"
+                  className=" w-[140px] sm:w-[177px] cursor-text"
                   classNamePrefix="react-select"
                   placeholder="Start Time"
                 />
@@ -134,7 +134,7 @@ export default function BookingModal({ sitterId, isOpen, onClose }) {
                 <Select
                   options={timeOptions}
                   onChange={(selected) => setEndTime(selected.value)}
-                  className="w-[177px] cursor-text"
+                  className="w-[140px] sm:w-[177px] cursor-text"
                   classNamePrefix="react-select"
                   placeholder="End Time"
                 />

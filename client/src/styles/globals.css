@@ -60,6 +60,14 @@ nav:hover {
   font-family: 'Satoshi', sans-serif;
 }
 
+@media (max-width: 640px) {
+  .custom-input {
+    width: 290px;
+    max-width: 320px;
+  }
+}
+
+
 .custom-input:focus {
   outline: none;
   border-color: #FF7037;
