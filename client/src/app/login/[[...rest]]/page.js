@@ -31,7 +31,9 @@ export default function CustomLogin({ params }) {
     if (!email || !password) {
       if (!email) setEmailError(true);
       if (!password) setPasswordError(true);
-      toast.error("Email and password are required");
+      setTimeout(() => {
+        toast.error("Email and password are required");
+      }, 0);
       return;
     }
 
@@ -53,9 +55,27 @@ export default function CustomLogin({ params }) {
       }, 1000);
     } else {
       // แสดง error
-      if (result.message?.toLowerCase().includes("email")) setEmailError(true);
-      if (result.message?.toLowerCase().includes("password")) setPasswordError(true);
-      toast.error(result.message || "Login failed");
+      if (result.errors) {
+        if (result.errors.email) {
+          setEmailError(true);
+          toast.error(result.errors.email);
+        }
+        if (result.errors.password) {
+          setPasswordError(true);
+          toast.error(result.errors.password);
+        }
+
+        // หากไม่มี error แบบระบุช่อง ให้แจ้งรวม
+        if (!result.errors.email && !result.errors.password) {
+          setEmailError(true); // 👈 เพิ่ม
+          setPasswordError(true); // 👈 เพิ่ม
+          toast.error("Login failed. Please try again.");
+        }
+      } else {
+          setEmailError(true);
+          setPasswordError(true);
+        toast.error("Login failed. Please try again.");
+      }
     }
   };
 
