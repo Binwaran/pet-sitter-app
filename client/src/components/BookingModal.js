@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
 import DatePicker from "react-datepicker";
 import Select from 'react-select';
+import { format } from "date-fns";
 
 
 
@@ -75,6 +76,33 @@ export default function BookingModal({ sitterId, isOpen, onClose }) {
 
                   return isToday ? "today-only" : "";
                 }}
+                renderCustomHeader={({ date, decreaseMonth, increaseMonth }) => (
+                <div className="flex justify-between items-center px-4 py-2 w-full">
+                  <h2 className="text-xl font-semibold">
+                    {format(date, 'MMMM yyyy')}
+                  </h2>
+                  <div className="flex gap-2">
+                    <button onClick={decreaseMonth}>
+                      <Image
+                        src="/assets/icon=arrow-l.png"
+                        alt="previous month"
+                        width={20}
+                        height={20}
+                        className="opacity-50"
+                      />
+                    </button>
+                    <button onClick={increaseMonth}>
+                      <Image
+                        src="/assets/icon=arrow-r.png"
+                        alt="previous month"
+                        width={20}
+                        height={20}
+                        className="opacity-50"
+                      />
+                    </button>
+                  </div>
+                </div>
+              )}
                 
                               
               />
