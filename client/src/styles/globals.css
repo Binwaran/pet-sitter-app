@@ -234,3 +234,35 @@ nav:hover {
 .react-select__indicators {
   display: none !important;
 }
+
+.custom-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 1rem 0.5rem;
+  font-family: 'Satoshi', sans-serif;
+}
+
+.month-label {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.arrow-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.nav-arrow {
+  background-color: transparent;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: #FF7037;
+  transition: color 0.2s ease;
+}
+
+.nav-arrow:hover {
+  color: #ff4400;
+}
