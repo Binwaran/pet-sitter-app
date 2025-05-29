@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "react-datepicker": "^8.4.0",
-    "react-select": "^5.10.1"
+    "react-select": "^5.10.1",
+    "date-fns": "^..."
   }
 }
