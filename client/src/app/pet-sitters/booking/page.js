@@ -268,6 +268,6 @@ export default function BookingPage() {
           className="hidden md:block absolute bottom-0 right-0 w-32 lg:w-48 xl:w-60 pointer-events-none"
         />
       </div>
-    </>
+    </div>
   );
 }
