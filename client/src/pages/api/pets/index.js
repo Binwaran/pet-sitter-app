@@ -1,10 +1,11 @@
-import { supabase } from "../../../services/supabaseClient";
+import { supabase } from "@/services/supabaseClient";
 
 export default async function handler(req, res) {
   if (req.method === "GET") {
     const { ownerId } = req.query;
     if (!ownerId) return res.status(400).json({ error: "ownerId is required" });
 
+    // ดึง pet ตัวแรกของ owner (หรือจะใช้ .select("*") เพื่อดึงทั้งหมดก็ได้)
     const { data: pets, error } = await supabase
       .from("pets")
       .select("*")
