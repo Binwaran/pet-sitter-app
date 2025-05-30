@@ -17,7 +17,7 @@ const mockConversations = [
   },
 ];
 
-export default function ChatList({ onSelectUser, selectedUser }) {
+export default function ChatList({ chatList, selectedUserId, onSelectUser }) {
   return (
     <div className="w-[300px] bg-black text-white p-4 min-h-0 overflow-y-auto">
       <h2 className="text-xl mb-4">Messages</h2>
@@ -25,7 +25,7 @@ export default function ChatList({ onSelectUser, selectedUser }) {
         <div
           key={user.id}
           className={`flex items-center justify-between mb-3 cursor-pointer p-2 rounded-lg ${
-            selectedUser?.id === user.id ? 'bg-[#2c2c2c]' : ''
+            selectedUserId === user.id ? 'bg-[#2c2c2c]' : ''
           }`}
           onClick={() => onSelectUser(user)}
         >

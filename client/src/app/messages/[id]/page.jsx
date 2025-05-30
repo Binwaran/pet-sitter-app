@@ -6,6 +6,8 @@ import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/utils/supabase'
 import ChatList from '@/components/ChatList'
 import ChatWindow from '@/components/ChatWindow'
+import { useRouter } from 'next/navigation'
+
 
 export default function MessagesPage() {
   const { id } = useParams()
@@ -13,6 +15,8 @@ export default function MessagesPage() {
   const [messages, setMessages] = useState([])
   const [otherUser, setOtherUser] = useState(null)
   const [chatList, setChatList] = useState([])
+  const router = useRouter();
+
 
   useEffect(() => {
     if (!user || !id) return
@@ -50,7 +54,14 @@ export default function MessagesPage() {
     <div className="flex h-screen overflow-hidden">
       {/* Left: Chat List (Desktop Only) */}
       <div className="hidden sm:block w-[300px] border-r border-gray-200 bg-black text-white min-h-0">
-        <ChatList selectedUserId={id} chatList={chatList} />
+        <ChatList
+          selectedUserId={id}
+          chatList={chatList}
+          onSelectUser={(user) => {
+            router.push(`/messages/${user.id}`)
+          }}
+        />
+
       </div>
 
       {/* Right: Chat Window */}

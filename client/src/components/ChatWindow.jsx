@@ -67,7 +67,7 @@ export default function ChatWindow({
         </div>
         <div>
           <button onClick={onClose}>
-            <X className="w-6 h-6" />
+            <X className="w-7 h-7 text-gray-500" />
           </button>
         </div>
 
