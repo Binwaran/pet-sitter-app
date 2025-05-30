@@ -7,21 +7,20 @@ import { useRouter } from "next/navigation";
 
 const StickyCard = ({ sitter }) => {
   const { user, loading } = useAuth();
+  console.log("🔍 user:", user);
+  console.log("⏳ loading:", loading);
   const [showBooking, setShowBooking] = useState(false);
   const router = useRouter();
   
   const handleBookingClick = () => {
-    console.log("click booking:", { user, loading });
-    //if (loading) return; // Wait for loading to finish
-    //if (!user) {
-    //  router.push("/login");
-    //} else {
-    //  setShowBooking(true);
-    //  console.log("modal should open");
-    //
-    setShowBooking(true);
+    if (loading) return; // Wait for loading to finish
+    if (user) {
+      setShowBooking(true);
+    } else {
+      router.push("/login");
   }
-  
+  };
+
   useEffect(() => {
     console.log("showBooking changed:", showBooking);
   }, [showBooking]);
