@@ -19,7 +19,7 @@ const mockConversations = [
 
 export default function ChatList({ onSelectUser, selectedUser }) {
   return (
-    <div className="w-[300px] bg-black text-white p-4">
+    <div className="w-[300px] bg-black text-white p-4 min-h-0 overflow-y-auto">
       <h2 className="text-xl mb-4">Messages</h2>
       {mockConversations.map((user) => (
         <div

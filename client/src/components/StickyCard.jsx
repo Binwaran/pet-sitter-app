@@ -7,10 +7,9 @@ import { useRouter } from "next/navigation";
 
 const StickyCard = ({ sitter }) => {
   const { user, loading } = useAuth();
-  console.log("🔍 user:", user);
-  console.log("⏳ loading:", loading);
   const [showBooking, setShowBooking] = useState(false);
   const router = useRouter();
+  
   
   const handleBookingClick = () => {
     if (loading) return; // Wait for loading to finish
@@ -20,6 +19,16 @@ const StickyCard = ({ sitter }) => {
       router.push("/login");
   }
   };
+
+  const handleSendMessage = () => {
+      if (loading || !sitter?.id) return; 
+      if (user) {// Wait for loading to finish{
+        router.push(`/messages`);
+      } else {
+        router.push("/login");
+      }
+    };
+
 
   useEffect(() => {
     console.log("showBooking changed:", showBooking);
@@ -111,7 +120,7 @@ const StickyCard = ({ sitter }) => {
             <div className="hidden sm:flex sm:flex-row gap-4 mb-4 mt-15"> 
               <div>
                 <button
-                  onClick={() => toast('📨 Opening chat...')}
+                  onClick={handleSendMessage}
                   className="sm:w-[180px] bg-orange-200 text-orange-600 text-xl font-medium py-3 px-2 rounded-4xl mb-3 hover:bg-orange-600 hover:text-white ml-2 cursor-pointer"
                 >
                   Send Message
