@@ -9,6 +9,7 @@ const StickyCard = ({ sitter }) => {
   const { user, loading } = useAuth();
   const [showBooking, setShowBooking] = useState(false);
   const router = useRouter();
+  console.log('sitter:', sitter)
   
   
   const handleBookingClick = () => {
@@ -21,9 +22,9 @@ const StickyCard = ({ sitter }) => {
   };
 
   const handleSendMessage = () => {
-      if (loading || !sitter?.id) return; 
+      if (loading || !sitter.user_id) return; 
       if (user) {// Wait for loading to finish{
-        router.push(`/messages`);
+        router.push(`/messages/${sitter.user_id}`);
       } else {
         router.push("/login");
       }
