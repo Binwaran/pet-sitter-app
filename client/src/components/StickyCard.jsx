@@ -12,6 +12,7 @@ const StickyCard = ({ sitter }) => {
   console.log('sitter:', sitter)
   
   
+  
   const handleBookingClick = () => {
     if (loading) return; // Wait for loading to finish
     if (user) {
@@ -22,9 +23,15 @@ const StickyCard = ({ sitter }) => {
   };
 
   const handleSendMessage = () => {
+<<<<<<< HEAD
       if (loading || !sitter.user_id) return; 
       if (user) {// Wait for loading to finish{
         router.push(`/messages/${sitter.user_id}`);
+=======
+      if (loading || !sitter?.id) return; 
+      if (user) {// Wait for loading to finish{
+        router.push(`/messages`);
+>>>>>>> 5ca3f8f (fix: Desktop UI and Logic for message page)
       } else {
         router.push("/login");
       }

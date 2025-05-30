@@ -100,8 +100,14 @@ export default function ChatList({ selectedUserId, onSelectUser }) {
   
 
   return (
+<<<<<<< HEAD
     <div className="divide-y divide-gray-700">
       {chatPreviewList.map(({ user: chatUser, message, unreadCount }) => (
+=======
+    <div className="w-[300px] bg-black text-white p-4 min-h-0 overflow-y-auto">
+      <h2 className="text-xl mb-4">Messages</h2>
+      {mockConversations.map((user) => (
+>>>>>>> 5ca3f8f (fix: Desktop UI and Logic for message page)
         <div
           key={chatUser.id}
           className={`p-4 cursor-pointer hover:bg-gray-800 ${
