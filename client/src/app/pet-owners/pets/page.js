@@ -56,18 +56,11 @@ export default function YourPetPage() {
       <div className="flex-1">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Your Pet</h2>
-          <button
-            className="bg-orange-500 text-white px-5 py-2 rounded-full font-semibold"
-            onClick={() => {
-              router.push("/pet-owners/edit-pet/new");
-            }}
-          >
-            Create Pet
-          </button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+          {/* การ์ดสัตว์เลี้ยง */}
           {pets.length === 0 ? (
-            <div className="col-span-4 text-gray-500">No pets found.</div>
+            <div className="col-span-3 text-gray-500">No pets found.</div>
           ) : (
             pets.map((pet) => {
               const color = typeColorMap[pet.pet_type] || typeColorMap.default;
@@ -94,6 +87,18 @@ export default function YourPetPage() {
               );
             })
           )}
+          {/* การ์ด Create Pet */}
+          <div
+            className="bg-white rounded-2xl shadow p-6 flex flex-col items-center justify-center cursor-pointer hover:shadow-lg transition border-2 border-dashed border-orange-300"
+            onClick={() => {
+              router.push("/pet-owners/edit-pet/new");
+            }}
+          >
+            <div className="w-20 h-20 flex items-center justify-center rounded-full bg-orange-50 mb-3 text-4xl text-orange-400">
+              +
+            </div>
+            <div className="font-bold text-lg text-orange-500">Create Pet</div>
+          </div>
         </div>
       </div>
     </div>

@@ -11,7 +11,10 @@ import SocialLoginButtons from "@/components/Auth/SocialLoginButtons";
 import LoginForm from "@/components/Auth/LoginForm";
 import { useAuth } from "@/context/AuthContext";
 
-export default function CustomLogin() {
+export default function CustomLogin({ params }) {
+  // params.rest จะเป็น array ของ segment ที่ตามหลัง /login เช่น /login/xxx/yyy => params.rest = ['xxx', 'yyy']
+  // สามารถใช้ params.rest ได้ถ้าต้องการแยก logic ตาม path
+
   const { login, loading } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState("");

@@ -7,7 +7,7 @@ import { validateEmail, validatePhone, validatePassword } from "@/components/Inp
 import Link from "next/link";
 import AuthIllustrations from "@/components/Auth/AuthIllustrations"; 
 
-const RegisterPage = () => {
+const RegisterPage = ({ params }) => {
   const router = useRouter();
   const [formData, setFormData] = useState({
     email: "",
