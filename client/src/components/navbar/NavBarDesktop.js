@@ -58,7 +58,7 @@ const NavBarDesktop = ({
                       <span>Profile</span>
                     </div>
                   </Link>
-                  <Link href="/your-pet" className="block py-2 px-4 hover:bg-gray-100">
+                  <Link href="/pet-owners/pets" className="block py-2 px-4 hover:bg-gray-100">
                     <div className="flex items-center gap-2">
                       <Image src="/assets/icon=pet.png" alt="Your Pet" width={16} height={16} />
                       <span>Your Pet</span>
