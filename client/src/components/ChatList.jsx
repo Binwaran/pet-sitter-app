@@ -99,6 +99,10 @@ export default function ChatList({ selectedUserId, onSelectUser }) {
   }, [user?.id])
   
 
+<<<<<<< HEAD
+=======
+export default function ChatList({ chatList, selectedUserId, onSelectUser }) {
+>>>>>>> 02b8c34 (fix: deco on message page)
   return (
 <<<<<<< HEAD
     <div className="divide-y divide-gray-700">
@@ -109,9 +113,15 @@ export default function ChatList({ selectedUserId, onSelectUser }) {
       {mockConversations.map((user) => (
 >>>>>>> 5ca3f8f (fix: Desktop UI and Logic for message page)
         <div
+<<<<<<< HEAD
           key={chatUser.id}
           className={`p-4 cursor-pointer hover:bg-gray-800 ${
             selectedUserId === chatUser.id ? 'bg-gray-900' : ''
+=======
+          key={user.id}
+          className={`flex items-center justify-between mb-3 cursor-pointer p-2 rounded-lg ${
+            selectedUserId === user.id ? 'bg-[#2c2c2c]' : ''
+>>>>>>> 02b8c34 (fix: deco on message page)
           }`}
           onClick={() => onSelectUser(chatUser)}
         >

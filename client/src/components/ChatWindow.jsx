@@ -201,10 +201,14 @@ export default function ChatWindow({
         <div>
           <button onClick={onClose}>
 <<<<<<< HEAD
+<<<<<<< HEAD
             <X className="w-7 h-7 text-gray-500" />
 =======
             <X className="w-6 h-6" />
 >>>>>>> 5ca3f8f (fix: Desktop UI and Logic for message page)
+=======
+            <X className="w-7 h-7 text-gray-500" />
+>>>>>>> 02b8c34 (fix: deco on message page)
           </button>
         </div>
 

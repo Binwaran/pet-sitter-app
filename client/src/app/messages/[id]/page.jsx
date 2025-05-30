@@ -7,9 +7,14 @@ import { supabase } from '@/utils/supabase'
 import ChatList from '@/components/ChatList'
 import ChatWindow from '@/components/ChatWindow'
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { useRouter } from 'next/navigation'
 =======
 >>>>>>> 5ca3f8f (fix: Desktop UI and Logic for message page)
+=======
+import { useRouter } from 'next/navigation'
+
+>>>>>>> 02b8c34 (fix: deco on message page)
 
 export default function MessagesPage() {
   const { id } = useParams()
@@ -18,9 +23,14 @@ export default function MessagesPage() {
   const [otherUser, setOtherUser] = useState(null)
   const [chatList, setChatList] = useState([])
 <<<<<<< HEAD
+<<<<<<< HEAD
   const router = useRouter();
 =======
 >>>>>>> 5ca3f8f (fix: Desktop UI and Logic for message page)
+=======
+  const router = useRouter();
+
+>>>>>>> 02b8c34 (fix: deco on message page)
 
   useEffect(() => {
     if (!user || !id) return
@@ -96,6 +106,9 @@ export default function MessagesPage() {
       {/* Left: Chat List (Desktop Only) */}
       <div className="hidden sm:block w-[300px] border-r border-gray-200 bg-black text-white min-h-0">
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 02b8c34 (fix: deco on message page)
         <ChatList
           selectedUserId={id}
           chatList={chatList}
@@ -104,9 +117,12 @@ export default function MessagesPage() {
           }}
         />
 
+<<<<<<< HEAD
 =======
         <ChatList selectedUserId={id} chatList={chatList} />
 >>>>>>> 5ca3f8f (fix: Desktop UI and Logic for message page)
+=======
+>>>>>>> 02b8c34 (fix: deco on message page)
       </div>
 
       {/* Right: Chat Window */}
