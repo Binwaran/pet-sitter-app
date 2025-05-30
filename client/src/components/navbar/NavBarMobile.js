@@ -53,13 +53,13 @@ const NavBarMobile = ({
 
               {open && (
                 <div className="absolute right-0 mt-2 w-36 bg-white rounded shadow-lg p-2 z-50">
-                  <Link href="/profile" className="block py-2 px-4 hover:bg-gray-100">
+                  <Link href="/pet-onwers/profile" className="block py-2 px-4 hover:bg-gray-100">
                     <div className="flex items-center gap-2">
                       <Image src="/assets/icon=user.png" alt="Profile" width={16} height={16} />
                       <span>Profile</span>
                     </div>
                   </Link>
-                  <Link href="/your-pet" className="block py-2 px-4 hover:bg-gray-100">
+                  <Link href="/pet-owners/pets" className="block py-2 px-4 hover:bg-gray-100">
                     <div className="flex items-center gap-2">
                       <Image src="/assets/icon=pet.png" alt="Your Pet" width={16} height={16} />
                       <span>Your Pet</span>
