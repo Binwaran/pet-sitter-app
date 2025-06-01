@@ -89,7 +89,13 @@ export default function BookingPage() {
                 </button>
                 <button
                   className="px-6 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors font-medium disabled:opacity-50"
-                  onClick={() => console.log('Go Next')}
+                  onClick={() => {
+                    if (selectedPetIds.length > 0) {
+                      // Save selected pets to localStorage or context if needed
+                      localStorage.setItem('selectedPetIds', JSON.stringify(selectedPetIds));
+                      window.location.href = '/pet-sitters/booking/information';
+                    }
+                  }}
                   disabled={selectedPetIds.length === 0}
                 >
                   Next
