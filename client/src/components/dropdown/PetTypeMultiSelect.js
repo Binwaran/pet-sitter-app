@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 
-const options = ["Cat", "Dog", "Bird", "Rabbit"];
+const options = ["Cat", "Dog", "Bird", "Rabbit", "Mouse", "Turtle", "Snake",];
 
 export default function PetTypeMultiSelect({
   id,
@@ -34,47 +34,52 @@ export default function PetTypeMultiSelect({
   return (
     <div className={`relative ${className}`} ref={ref}>
       <button
-        id={id}
-        type="button"
-        tabIndex={0}
-        role="combobox" // เปลี่ยนจาก listbox เป็น combobox
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        aria-labelledby={id ? `${id}-label` : undefined}
-        onClick={() => setOpen((o) => !o)}
-        className="w-full min-h-[40px] sm:min-h-[48px] border border-[#DCDFED] rounded-lg px-2 py-2 flex flex-wrap items-center cursor-pointer bg-white"
+  id={id}
+  type="button"
+  tabIndex={0}
+  role="combobox"
+  aria-haspopup="listbox"
+  aria-expanded={open}
+  aria-labelledby={id ? `${id}-label` : undefined}
+  onClick={() => setOpen((o) => !o)}
+  className="w-full min-h-[48px] border border-[#DCDFED] rounded-lg pl-2 pr-4 py-2 flex flex-wrap justify-between items-center cursor-pointer bg-white"
+>
+  {/* Container สำหรับ tags ที่เลือก */}
+  <div className="flex flex-wrap flex-1 gap-2 items-center">
+    {value.length === 0 && (
+      <span className="text-[#7B7E8F]">Select pet type</span>
+    )}
+    {value.map((v) => (
+      <span
+        key={v}
+        className="flex items-center justify-center w-auto h-[32px] leading-[24px] bg-[#FFF1EC] text-[#E44A0C] rounded-full pl-3 pr-2 text-[14px] gap-1 font-medium"
       >
-        {value.length === 0 && (
-          <span className="text-[#7B7E8F]">Select pet type</span>
-        )}
-        {value.map((v) => (
-          <span
-            key={v}
-            className="flex items-center justify-center w-auto h-[32px] leading-[24px] bg-[#FFF1EC] text-[#E44A0C] rounded-full px-2 md:px-4 py-2 text-[14px] font-medium mr-0 md:mr-1 lg:mr-2"
-          >
-            {v}
-            <span
-              role="button"
-              tabIndex={0}
-              aria-label={`Remove ${v}`}
-              className="ml-2 text-[#E44A0C] hover:text-[#FF3B00] focus:outline-none cursor-pointer"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleRemove(v);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  handleRemove(v);
-                }
-              }}
-            >
-              &times;
-            </span>
-          </span>
-        ))}
-        <span className="ml-auto text-[#9AA1B9] text-xs">⏷</span>
-      </button>
+        {v}
+        <span
+          role="button"
+          tabIndex={0}
+          aria-label={`Remove ${v}`}
+          className="text-[#E44A0C] hover:text-[#FF3B00] focus:outline-none cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleRemove(v);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              handleRemove(v);
+            }
+          }}
+        >
+          &times;
+        </span>
+      </span>
+    ))}
+  </div>
+  
+  {/* ลูกศรชี้ลงอยู่ทางขวาเสมอ */}
+  <span className="flex text-[#9AA1B9] text-xs">⏷</span>
+</button>
       {open && (
         <ul
           role="listbox"

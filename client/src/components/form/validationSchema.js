@@ -4,6 +4,36 @@ import * as Yup from "yup";
 const SUPPORTED_FORMATS = ["image/jpg", "image/jpeg", "image/png"];
 const FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
+// ฟังก์ชันสำหรับตรวจสอบประเภทไฟล์ โดยไม่ตรวจสอบ URL
+const validateFileType = (value) => {
+  // ถ้าไม่มีค่า หรือเป็น string (URL) ให้ผ่านการตรวจสอบ
+  if (!value || typeof value === "string") return true;
+
+  // ถ้าเป็น File object ให้ตรวจสอบประเภทไฟล์
+  return SUPPORTED_FORMATS.includes(value.type);
+};
+
+// ฟังก์ชันสำหรับตรวจสอบขนาดไฟล์ โดยไม่ตรวจสอบ URL
+const validateFileSize = (value) => {
+  // ถ้าไม่มีค่า หรือเป็น string (URL) ให้ผ่านการตรวจสอบ
+  if (!value || typeof value === "string") return true;
+
+  // ถ้าเป็น File object ให้ตรวจสอบขนาดไฟล์
+  return value.size <= FILE_SIZE;
+};
+
+const createLocationFieldTest = (errorMessage) =>
+  Yup.mixed()
+    .required(errorMessage)
+    .test("is-valid-location", errorMessage, (value) => {
+      // กรณีส่งเป็น object (แบบใหม่)
+      if (typeof value === "object" && value !== null) {
+        return value.value && value.label;
+      }
+      // กรณีส่งเป็น string (แบบเดิม)
+      return typeof value === "string" && value.trim() !== "";
+    });
+
 export const profileSchema = Yup.object().shape({
   full_name: Yup.string()
     .min(6, "Full name must be more than 6 characters")
@@ -19,21 +49,22 @@ export const profileSchema = Yup.object().shape({
     .email("Invalid email format")
     .matches(/^[\w-.]+@[\w-]+\.[\w-.]+$/, "Email must be a valid email address")
     .required("Email is required"),
+
+  // แก้ไข validation สำหรับ profile_image
   profile_image: Yup.mixed()
     .test(
       "fileType",
       "Only .jpg, .jpeg, .png files are allowed",
-      (value) => !value || (value && SUPPORTED_FORMATS.includes(value.type))
+      validateFileType
     )
-    .test(
-      "fileSize",
-      "File size must be less than 2MB",
-      (value) => !value || (value && value.size <= FILE_SIZE)
-    ),
+    .test("fileSize", "File size must be less than 2MB", validateFileSize),
+
   trade_name: Yup.string().required("Trade name is required"),
   pet_types: Yup.array()
     .min(1, "Please select at least one pet type")
     .required("Pet type is required"),
+
+  // แก้ไข validation สำหรับ gallery
   gallery: Yup.array()
     .max(10, "You can upload up to 10 images")
     .of(
@@ -41,17 +72,14 @@ export const profileSchema = Yup.object().shape({
         .test(
           "fileType",
           "Only .jpg, .jpeg, .png files are allowed",
-          (value) => !value || (value && SUPPORTED_FORMATS.includes(value.type))
+          validateFileType
         )
-        .test(
-          "fileSize",
-          "File size must be less than 2MB",
-          (value) => !value || (value && value.size <= FILE_SIZE)
-        )
+        .test("fileSize", "File size must be less than 2MB", validateFileSize)
     ),
+
   address_detail: Yup.string().required("Address detail is required"),
-  province: Yup.string().required("Province is required"),
-  district: Yup.string().required("District is required"),
-  sub_district: Yup.string().required("Sub-district is required"),
+  province: createLocationFieldTest("Province is required"),
+  district: createLocationFieldTest("District is required"),
+  sub_district: createLocationFieldTest("Sub-district is required"),
   post_code: Yup.string().required("Post code is required"),
 });
