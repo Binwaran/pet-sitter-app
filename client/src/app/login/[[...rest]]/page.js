@@ -2,7 +2,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
 import AuthIllustrations from "@/components/Auth/AuthIllustrations";
@@ -17,6 +17,8 @@ export default function CustomLogin({ params }) {
 
   const { login, loading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect") || "/";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState(false);
@@ -51,7 +53,7 @@ export default function CustomLogin({ params }) {
     if (result.success) {
       toast.success("Login สำเร็จ!");
       setTimeout(() => {
-        router.push("/dashboard");
+        router.push(redirect); // ใช้ redirect ที่ได้จาก query
       }, 1000);
     } else {
       // แสดง error
