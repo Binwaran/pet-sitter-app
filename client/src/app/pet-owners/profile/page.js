@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useRequireRole } from "@/hooks/useRequireRole";
 import { useAuth } from "@/context/AuthContext";
 import ImageUpload from "@/components/profile/ImageUpload";
+import Sidebar from "@/components/profile/Sidebar";
+import profileimg from "public/assets/profile/profileimg.svg";
 
 export default function OwnerProfilePage() {
   const router = useRouter();
@@ -52,7 +54,7 @@ export default function OwnerProfilePage() {
       setPreviewUrl(url);
       return () => URL.revokeObjectURL(url);
     } else {
-      setPreviewUrl("");
+      setPreviewUrl(null); // fallback โดย JSX
     }
   }, [profileImageFile]);
 
@@ -83,9 +85,13 @@ export default function OwnerProfilePage() {
   if (!authorized) return null; // หรือแสดง spinner
 
   return (
-    <div className="flex min-h-screen bg-[#FAFAFB]">
-      {/* Sidebar */}
-      <aside className="w-full md:w-1/4 p-6">
+    <div className="bg-gray-100 min-h-screen">
+      <div className="px-20 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6">
+          {/* Sidebar */}
+          <Sidebar />
+          {/* Account Section */}
+          {/* <aside className="w-full md:w-1/4 p-6">
         <div className="bg-white rounded-2xl shadow p-6">
           <h2 className="font-semibold mb-6 text-lg">Account</h2>
           <ul className="space-y-3">
@@ -101,86 +107,107 @@ export default function OwnerProfilePage() {
             </li>
           </ul>
         </div>
-      </aside>
-      {/* Main */}
-      <main className="flex-1 flex justify-center items-start py-12">
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow p-10 w-full max-w-2xl">
-          <h1 className="text-2xl font-bold mb-8">Profile</h1>
-          <div className="flex flex-col items-center mb-8">
-            <div className="relative w-[140px] h-[140px] rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
-              {(previewUrl || profile.profile_image_url) ? (
-                <Image
-                  src={previewUrl || profile.profile_image_url}
-                  alt="avatar"
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <svg width="80" height="80" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="12" fill="#E5E7EB"/>
-                  <path d="M12 12a4 4 0 100-8 4 4 0 000 8zm0 2c-4 0-6 2-6 4v2h12v-2c0-2-2-4-6-4z" fill="#BDBDBD"/>
-                </svg>
-              )}
-              <div className="absolute bottom-2 right-2">
-                <ImageUpload value={profileImageFile} onChange={handleProfileImageChange} />
+      </aside> */}
+
+          {/* Main */}
+          <div className="bg-white p-10 rounded-2xl shadow-md min-h-[824px]">
+            <form onSubmit={handleSubmit}>
+              <h1 className="text-2xl font-bold mb-14">Profile</h1>
+
+              <div className="flex flex-col items-start mb-14">
+                <div className="relative w-[240px] h-[240px]">
+                  {/* Profile image circle */}
+                  <div className="relative w-full h-full rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                    <Image
+                      src="/assets/profile/profileimg.svg"
+                      alt="default-avatar"
+                      fill
+                      className="object-cover scale-50"
+                    />
+                    <Image
+                      src={
+                        previewUrl
+                          ? previewUrl
+                          : profile.profile_image_url
+                          ? profile.profile_image_url
+                          : "/assets/profile/profileimg.svg"
+                      }
+                      alt="avatar"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+
+                  {/* Upload button */}
+                  <div className="absolute bottom-1 right-1 rounded-full shadow-md">
+                    <ImageUpload
+                      value={profileImageFile}
+                      onChange={handleProfileImageChange}
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block mb-1 font-medium ">Your Name*</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={profile.name}
+                    onChange={handleChange}
+                    className="w-full border border-gray-200 rounded-lg px-4 py-2"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1 font-medium">Email*</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={profile.email}
+                    onChange={handleChange}
+                    className="w-full border border-gray-200 rounded-lg px-4 py-2"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1 font-medium">Phone*</label>
+                  <input
+                    type="text"
+                    name="phone"
+                    value={profile.phone}
+                    onChange={handleChange}
+                    className="w-full border border-gray-200 rounded-lg px-4 py-2"
+                    required
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1 font-medium">
+                    Date of Birth
+                  </label>
+                  <input
+                    type="date"
+                    name="birthday"
+                    value={profile.birthday || ""}
+                    onChange={handleChange}
+                    className="w-full border border-gray-200 rounded-lg px-4 py-2"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end mt-10">
+                <button
+                  type="submit"
+                  className="bg-orange-500  text-white px-6 py-3 rounded-full font-semibold cursor-pointer transition-all duration-200 hover:scale-105 hover:bg-orange-400"
+                >
+                  Update Profile
+                </button>
+              </div>
+            </form>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block mb-1 font-medium">Your Name*</label>
-              <input
-                type="text"
-                name="name"
-                value={profile.name}
-                onChange={handleChange}
-                className="w-full border rounded-lg px-4 py-2"
-                required
-              />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">Phone*</label>
-              <input
-                type="text"
-                name="phone"
-                value={profile.phone}
-                onChange={handleChange}
-                className="w-full border rounded-lg px-4 py-2"
-                required
-                inputMode="numeric"
-                pattern="[0-9]*"
-              />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">Email*</label>
-              <input
-                type="email"
-                name="email"
-                value={profile.email}
-                onChange={handleChange}
-                className="w-full border rounded-lg px-4 py-2"
-                required
-              />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">Date of Birth</label>
-              <input
-                type="date"
-                name="birthday"
-                value={profile.birthday || ""}
-                onChange={handleChange}
-                className="w-full border rounded-lg px-4 py-2"
-              />
-            </div>
-          </div>
-          <button
-            type="submit"
-            className="mt-8 bg-orange-500 text-white px-8 py-2 rounded-full font-semibold"
-          >
-            Update Profile
-          </button>
-        </form>
-      </main>
+        </div>
+      </div>
     </div>
   );
 }
