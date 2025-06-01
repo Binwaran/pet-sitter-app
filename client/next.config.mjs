@@ -8,7 +8,8 @@ const nextConfig = {
       'static.wixstatic.com',
       's.isanook.com',
       'www.technologychaoban.com',
-      'bexgbrkoynqhxbqrjlko.supabase.co',  
+      'bexgbrkoynqhxbqrjlko.supabase.co', 
+      'www.bil-jac.com', 
     ],
   },
 };
