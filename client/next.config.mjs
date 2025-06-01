@@ -7,7 +7,8 @@ const nextConfig = {
       'preview.redd.it',
       'static.wixstatic.com',
       's.isanook.com',
-      'www.technologychaoban.com'  
+      'www.technologychaoban.com',
+      'bexgbrkoynqhxbqrjlko.supabase.co',  
     ],
   },
 };
