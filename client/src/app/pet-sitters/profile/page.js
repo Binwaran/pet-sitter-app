@@ -52,6 +52,8 @@ const LoadingSpinner = memo(({ text = "Loading..." }) => (
   </div>
 ));
 
+LoadingSpinner.displayName = "LoadingSpinner";
+
 export default function PetSitterProfilePage() {
   const [initialValues, setInitialValues] = useState({
     full_name: "",
@@ -340,6 +342,8 @@ export default function PetSitterProfilePage() {
     return null;
   });
 
+  StatusIndicator.displayName = "StatusIndicator";
+
   if (isLoading) {
     return (
       <div className="flex flex-col min-h-screen bg-[#F9FAFB] relative">
@@ -506,6 +510,8 @@ const BasicInfoSection = memo(({ values, setFieldValue, errors, touched }) => {
   );
 });
 
+BasicInfoSection.displayName = "BasicInfoSection";
+
 // Pet Sitter Info Section Component
 const PetSitterInfoSection = memo(
   ({ values, setFieldValue, errors, touched }) => {
@@ -562,6 +568,8 @@ const PetSitterInfoSection = memo(
     );
   }
 );
+
+PetSitterInfoSection.displayName = "PetSitterInfoSection";
 
 // Address Section Component
 const AddressSection = memo(() => {
@@ -692,3 +700,5 @@ const AddressSection = memo(() => {
     </section>
   );
 });
+
+AddressSection.displayName = "AddressSection";

@@ -202,7 +202,7 @@ export default function AdminPetSitterDetailPage() {
     } finally {
       setActionState((prev) => ({ ...prev, rejectLoading: false }));
     }
-  }, [userId, modalState.reason, updateSitterStatus]);
+  }, [userId, modalState, updateSitterStatus]);
 
   // Effect to load data on mount or tab change
   useEffect(() => {
