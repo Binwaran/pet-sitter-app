@@ -41,7 +41,7 @@ const mockMessages = [
 ];
 
 export default function ChatWindow({
-  user = mockUser,
+  user,
   onClose = () => {},
   currentUser = mockCurrentUser,
   messages: initialMessages = mockMessages,
