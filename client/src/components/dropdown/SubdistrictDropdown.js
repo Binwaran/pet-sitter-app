@@ -47,6 +47,8 @@ const SubdistrictDropdown = ({
         id={id}
         tabIndex={0}
         role="button"
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
         onClick={() => setIsOpen((prev) => !prev)}
         className={`flex items-center justify-between w-full pl-3 pr-4 py-3 border border-[#DCDFED] rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] ${
           !actualDistrictCode ? "opacity-50 pointer-events-none" : ""
@@ -62,10 +64,18 @@ const SubdistrictDropdown = ({
         <span className="text-xs text-[#9AA1B9]">⏷</span>
       </button>
       {isOpen && actualDistrictCode && (
-        <ul className="absolute z-10 mt-2 w-full bg-white border border-[#EAECF0] rounded-lg shadow-md max-h-[280px] overflow-auto">
+        <ul
+          role="listbox"
+          className="absolute z-10 mt-2 w-full bg-white border border-[#EAECF0] rounded-lg shadow-md max-h-[280px] overflow-auto"
+        >
           {filteredSubdistricts.map((subdistrict) => (
             <li
               key={subdistrict.subdistrictCode}
+              role="option"
+              aria-selected={
+                value?.value === subdistrict.subdistrictCode ||
+                value === subdistrict.subdistrictCode
+              }
               onClick={() => {
                 onChange({
                   value: subdistrict.subdistrictCode,
