@@ -1,55 +1,123 @@
-import { useState } from 'react';
+'use client';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import Image from 'next/image';
-
-// MOCK MODE: ลบออกเมื่อเชื่อมระบบจริง
-const mockUser = {
-  id: 'mock-sitter-1',
-  name: 'Ploy the Pet Sitter',
-  profile_image_url: '/sitter.jpg',
-};
-
-const mockCurrentUser = {
-  id: 'mock-owner-1',
-  name: 'Nofffie',
-  role: 'owner',
-  profileImage: '/user.jpg',
-};
-
-const mockMessages = [
-  {
-    id: 1,
-    senderId: 'mock-owner-1',
-    content: 'Hello! I’d like to book you.',
-  },
-  {
-    id: 2,
-    senderId: 'mock-sitter-1',
-    content: 'Sure! When do you need me?',
-  },
-];
+import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '@/utils/supabase';
 
 export default function ChatWindow({
-  user = mockUser,
+  user,
   onClose = () => {},
-  currentUser = mockCurrentUser,
-  messages: initialMessages = mockMessages,
+  currentUser,
+  messages: initialMessages = [],
 }) {
   const [messages, setMessages] = useState(initialMessages);
   const [input, setInput] = useState('');
+  const [imageFile, setImageFile] = useState(null);
 
-  const handleSend = () => {
-    if (!input.trim()) return;
+  useEffect(() => {
+    if (!currentUser?.id || !user?.id) return
 
-    const newMsg = {
-      id: Date.now(),
-      senderId: currentUser.id,
-      content: input.trim(),
-    };
+    const channel = supabase
+      .channel('chat-room')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `receiver_id=eq.${currentUser.id}`,
+        },
+        (payload) => {
+          const newMessage = payload.new
 
-    setMessages([...messages, newMsg]);
-    setInput('');
-  };
+          // แสดงเฉพาะข้อความที่เกี่ยวข้องกับการแชทนี้
+          if (
+            newMessage.sender_id === user.id &&
+            newMessage.receiver_id === currentUser.id
+          ) {
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: newMessage.id,
+                senderId: newMessage.sender_id,
+                content: newMessage.content,
+                image_url: newMessage.image_url,
+              },
+            ])
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [user?.id, currentUser?.id])
+
+  // ✅ ฟังก์ชันส่งข้อความ
+  const handleSend = async () => {
+    if (!input.trim() && !imageFile) return
+    if (!currentUser?.id || !user?.id) {
+      console.error('❌ currentUser หรือ user ไม่มี id');
+      return
+    }
+
+    let imageUrl = null
+
+    if (imageFile) {
+      const fileExt = imageFile.name.split('.').pop()
+      const filename = `${currentUser.id}/${Date.now()}-${uuidv4()}.${fileExt}`
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('chat-images')
+        .upload(filename, imageFile)
+
+      if (uploadError) {
+        console.error('❌ Image upload failed:', uploadError.message)
+        return
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('chat-images')
+        .getPublicUrl(filename)
+
+      imageUrl = urlData?.publicUrl || null
+    }
+
+    const { error: insertError } = await supabase
+      .from('messages')
+      .insert([
+        {
+          sender_id: currentUser.id,
+          receiver_id: user.id,
+          content: input.trim(),
+          image_url: imageUrl,
+          created_at: new Date().toISOString(),
+        },
+      ])
+
+    if (insertError) {
+      console.error('❌ Failed to send message:', insertError.message)
+      return
+    }
+
+    // แสดงข้อความทันทีฝั่ง sender
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        senderId: currentUser.id,
+        content: input.trim(),
+        image_url: imageUrl,
+      },
+    ])
+
+    setInput('')
+    setImageFile(null)
+  }
+
+
 
   return (
     <div className="flex-1 flex flex-col h-full">
@@ -99,7 +167,14 @@ export default function ChatWindow({
                   : 'self-start bg-white border text-gray-700'
               }`}
             >
-              {msg.content}
+              <div>{msg.content}</div>
+              {msg.image_url && (
+                <img
+                  src={msg.image_url}
+                  alt="attachment"
+                  className="mt-2 max-w-xs rounded-lg"
+                />
+              )}
             </div>
           ))
         )}
@@ -114,7 +189,13 @@ export default function ChatWindow({
                   width={70}
                   height={70}
                 />
-          <input type="file" id="image" className="hidden" />
+          <input
+            type="file"
+            id="image"
+            className="hidden"
+            accept="image/*"
+            onChange={(e) => setImageFile(e.target.files[0])}
+          />
         </label>
 
         <input

@@ -23,20 +23,36 @@ const NavBar = () => {
   };
 
   useEffect(() => {
-    if (!user) return;
-    fetch("/api/unread-messages", { credentials: "include" })
-      .then((res) => res.json())
-      .then((data) => setHasNewMessage(data.unread > 0))
-      .catch((err) => console.error("message error", err));
-  }, [user]);
+    const checkLoginStatus = async () => {
+      try {
+        const res = await fetch("/api/me", { credentials: "include" });
+        if (res.ok) {
+          setIsLoggedIn(true);
+        } else {
+          setIsLoggedIn(false);
+        }
+      } catch {
+        setIsLoggedIn(false);
+      }
+    };
+    checkLoginStatus();
+  }, []);
 
-  useEffect(() => {
-    if (!user) return;
-    fetch("/api/unread-notifications", { credentials: "include" })
-      .then((res) => res.json())
-      .then((data) => setHasNewNotification(data.unread > 0))
-      .catch((err) => console.error("notification error", err));
-  }, [user]);
+  //useEffect(() => {        *รอมีหน้าเพจสำหรับแสดงข้อความใหม่ก่อน
+  //  if (!isLoggedIn) return;
+  //  fetch("/api/unread-messages", { credentials: "include" })
+  //    .then((res) => res.json())
+  //   .then((data) => setHasNewMessage(data.unread > 0))
+  //    .catch((err) => console.error("message error", err));
+  //}, [isLoggedIn]);
+
+  //useEffect(() => {
+  //  if (!user) return;
+  //  fetch("/api/unread-notifications", { credentials: "include" })
+  //    .then((res) => res.json())
+  //    .then((data) => setHasNewNotification(data.unread > 0))
+  //    .catch((err) => console.error("notification error", err));
+  //}, [user]);
 
   // กำหนดสถานะ login จาก context
   const isLoggedIn = !!user;
