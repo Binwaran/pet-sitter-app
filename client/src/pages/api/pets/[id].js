@@ -11,6 +11,7 @@ export default async function handler(req, res) {
       .from("pets")
       .update(data)
       .eq("pet_id", id)
+      .eq("pet_id", id)
       .single();
 
     if (error) return res.status(400).json({ error: error.message });

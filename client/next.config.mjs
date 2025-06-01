@@ -1,7 +1,16 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {images: {
-    domains: ['images.pexels.com', 'cdn.pixabay.com', 'preview.redd.it']
-  },};
-  
-  export default nextConfig;
-  
+const nextConfig = {
+  images: {
+    domains: [
+      'images.pexels.com',
+      'cdn.pixabay.com',
+      'preview.redd.it',
+      'static.wixstatic.com',
+      's.isanook.com',
+      'www.technologychaoban.com',
+      'bexgbrkoynqhxbqrjlko.supabase.co',  
+    ],
+  },
+};
+
+export default nextConfig;
