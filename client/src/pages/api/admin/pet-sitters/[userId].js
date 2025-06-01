@@ -31,12 +31,15 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: error?.message || "Not found" });
     }
 
+    // ส่งข้อมูลทั้งหมดรวมถึง pending_data กลับไป
     return res.status(200).json({
       data: {
         users: data.users,
         pet_sitter: {
           ...data,
           users: undefined,
+          // แน่ใจว่าส่ง pending_data ไปด้วย
+          pending_data: data.pending_data || null,
         },
       },
     });

@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import provinces from "../../app/data/provinces.json";
 
-const ProvinceDropdown = ({ value, onChange, className = "" }) => {
+const ProvinceDropdown = ({ id, value, onChange, className = "" }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -17,17 +17,19 @@ const ProvinceDropdown = ({ value, onChange, className = "" }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const selectedProvince = provinces.find(
-    (province) => province.provinceCode === value
-  );
+  // แก้ไขวิธีดึงค่า selectedProvince
+  const selectedProvince = value && typeof value === 'object'
+  ? provinces.find(province => String(province.provinceCode) === String(value.value))
+  : provinces.find(province => String(province.provinceCode) === String(value));
 
   return (
     <div ref={dropdownRef} className="relative w-full">
-      <div
+      <button
+        id={id}
         tabIndex={0}
         role="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className={`flex items-center justify-between px-4 py-3 border rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] ${className}`}
+        className={`flex items-center justify-between w-full pl-3 pr-4 py-3 border rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] ${className}`}
       >
         <span
           className={selectedProvince ? "text-[#344054]" : "text-[#7B7E8F]"}
@@ -37,17 +39,22 @@ const ProvinceDropdown = ({ value, onChange, className = "" }) => {
             : "Select Province"}
         </span>
         <span className="text-xs text-[#9AA1B9]">⏷</span>
-      </div>
+      </button>
       {isOpen && (
         <ul className="absolute z-10 mt-2 w-full bg-white border border-[#EAECF0] rounded-lg shadow-md max-h-[280px] overflow-auto">
           {provinces.map((province) => (
             <li
               key={province.provinceCode}
               onClick={() => {
-                onChange(province.provinceCode);
+                // แก้ไขส่วนนี้ให้ส่ง object ที่มีทั้ง value และ label
+                onChange({
+                  value: province.provinceCode,
+                  label: province.provinceNameEn,
+                });
                 setIsOpen(false);
               }}
               className={`px-4 py-2 cursor-pointer hover:bg-[#F9FAFB] ${
+                value?.value === province.provinceCode ||
                 value === province.provinceCode
                   ? "bg-[#FEF3ED] text-[#FEA267] font-semibold"
                   : ""

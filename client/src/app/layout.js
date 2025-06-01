@@ -15,10 +15,10 @@ export default function RootLayout({ children }) {
     "/login",
     "/register",
     "/pet-sitters/profile",
-    "/pet-sitters/booking",
+    "/pet-sitters/booking-list",
     "/pet-sitters/calendar",
     "/pet-sitters/payout",
-    "/pet-sitters/booking/[id]",
+    "/pet-sitters/booking-list/[id]",
     "/pet-sitters/profile/[id]",
     "/pet-sitters/calendar/[id]",
     "/pet-sitters/payout/[id]",
@@ -39,17 +39,17 @@ export default function RootLayout({ children }) {
   );
 
   return (
-    <html lang="en">
-      <body>
-        <AuthProvider>
-          <PetIdProvider>
-            {!noLayoutRoutes.includes(pathname) && <NavBar />}
-            <main>{children}</main>
-            {!noLayoutRoutes.includes(pathname) && <Footer />}
-          </PetIdProvider>
-        </AuthProvider>
-        <Toaster richColors position="top-center" /> {/* ✅ เพิ่มตรงนี้ */}
-      </body>
-    </html>
-  );
+  <html lang="en">
+    <body>
+      <AuthProvider>
+        <PetIdProvider>
+          {!isNoLayout && <NavBar />}
+          <main>{children}</main>
+          {!isNoLayout && <Footer />}
+        </PetIdProvider>
+      </AuthProvider>
+      <Toaster richColors position="top-center" />
+    </body>
+  </html>
+);
 }

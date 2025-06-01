@@ -31,7 +31,7 @@
 }
 
 .input {
-  @apply w-full h-[48px] px-4 py-2 border rounded-lg text-[16px] text-[#101828] focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)];
+  @apply w-full h-[48px] pl-3 pr-4 py-3 border rounded-lg text-[16px] bg-white text-black focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)];
 }
 
 .badge {

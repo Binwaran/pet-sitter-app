@@ -20,10 +20,12 @@ export default async function handler(req, res) {
         )
       `
       )
-      .eq("users.role", "sitter");
+      .eq("users.role", "sitter")
+      .order("updated_at", { ascending: false }) // เรียงตาม updated_at ล่าสุดขึ้นก่อน
+      .order("created_at", { ascending: false }); // ถ้าไม่มี updated_at ให้เรียงตาม created_at
 
     if (error) {
-      console.error("Supabase error:", error); // 👈 เพิ่มตรงนี้
+      console.error("Supabase error:", error);
       return res.status(500).json({ error: error.message });
     }
 
@@ -39,7 +41,9 @@ export default async function handler(req, res) {
         trade_name: sitter.trade_name,
         status: VALID_STATUSES.includes(normalizedStatus)
           ? normalizedStatus
-          : "Unknown", // "waiting for approval" หรือ "-" หรือ "unknown"
+          : "Unknown",
+        created_at: sitter.created_at, // เพิ่มเวลาที่สร้าง
+        updated_at: sitter.updated_at, // เพิ่มเวลาที่อัพเดท
       };
     });
 
