@@ -84,6 +84,15 @@ export default function OwnerProfilePage() {
   if (loading) return <div>Loading...</div>;
   if (!authorized) return null; // หรือแสดง spinner
 
+console.log("🧪 profile:", profile);
+console.log("🧪 profile.profile_image_url:", profile.profile_image_url);
+
+  const imageSrc =
+  previewUrl?.trim() ||
+  (profile.profile_image_url && profile.profile_image_url.trim() !== ""
+    ? profile.profile_image_url
+    : "/assets/profile/profileimg.svg");
+
   return (
     <div className="bg-gray-100 min-h-screen">
       <div className="px-20 py-8">
@@ -119,22 +128,11 @@ export default function OwnerProfilePage() {
                   {/* Profile image circle */}
                   <div className="relative w-full h-full rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
                     <Image
-                      src="/assets/profile/profileimg.svg"
-                      alt="default-avatar"
-                      fill
-                      className="object-cover scale-50"
-                    />
-                    <Image
-                      src={
-                        previewUrl
-                          ? previewUrl
-                          : profile.profile_image_url
-                          ? profile.profile_image_url
-                          : "/assets/profile/profileimg.svg"
-                      }
+                      key={imageSrc}
+                      src={imageSrc}
                       alt="avatar"
                       fill
-                      className="object-cover"
+                      className="object-cover transition-all duration-300"
                     />
                   </div>
 
