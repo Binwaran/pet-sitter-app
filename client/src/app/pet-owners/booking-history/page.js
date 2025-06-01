@@ -1,11 +1,16 @@
-'use client';
-import { useEffect, useState } from 'react';
-import BookingCard from "@/components/profile/BookingCard";
+"use client";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import Sidebar from "@/components/profile/Sidebar";
+import BookingCard from "@/components/profile/BookingCard";
 
 export default function BookingHistoryPage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   function getStatusDate(booking) {
     const status = booking.status;
@@ -37,53 +42,62 @@ export default function BookingHistoryPage() {
   }
 
   useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      // ยังไม่ได้ login
+      const redirectPath = encodeURIComponent(window.location.pathname);
+      router.replace(`/login?redirect=${redirectPath}`);
+      return;
+    }
+    if (user.role !== "owner") {
+      router.replace("/unauthorized");
+      return;
+    }
+    if (!user.id) {
+      setError("ไม่พบ owner_id ในบัญชีนี้");
+      setLoading(false);
+      return;
+    }
+
     const fetchBookings = async () => {
       setLoading(true);
       try {
-        const res = await fetch('/api/booking');
+        const res = await fetch(`/api/booking?owner_id=${user.id}`);
         if (!res.ok) throw new Error("Failed to fetch bookings");
-
         const data = await res.json();
-
-        // ✅ เพิ่ม getStatusDate ก่อน setBookings
         const mapped = data.map((booking) => ({
           ...booking,
           statusDate: getStatusDate(booking),
         }));
-
         setBookings(mapped);
-      } catch (error) {
-        console.error("Error loading bookings:", error);
-        setBookings([]); // fallback เพื่อไม่ให้ error map ตอน render
+      } catch (err) {
+        setError("เกิดข้อผิดพลาดในการโหลดข้อมูล booking");
+        setBookings([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchBookings();
-  }, []);
+  }, [user, authLoading, router]);
+
+  if (authLoading || loading) return <div>Loading...</div>;
+  if (error) return <div className="text-red-500">{error}</div>;
 
   return (
     <div className="bg-gray-100 min-h-screen">
       <div className="px-20 py-8">
         <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6">
-
-          {/* Sidebar ซ้าย */}
           <Sidebar />
-
-          {/* รายการ Booking ด้านขวา */}
           <div className="self-start">
             <div className="bg-white p-6 rounded-2xl shadow-md">
               <h1 className="text-2xl font-bold mb-14">Booking History</h1>
-
-              {loading && <p>Loading...</p>}
-
-              {bookings.map((booking, index) => (
-                <BookingCard key={booking.booking_id || index} booking={booking} />
-              ))}
-
-              {!loading && bookings.length === 0 && (
+              {bookings.length === 0 ? (
                 <p className="text-gray-500">No bookings found.</p>
+              ) : (
+                bookings.map((booking, index) => (
+                  <BookingCard key={booking.booking_id || index} booking={booking} />
+                ))
               )}
             </div>
           </div>
