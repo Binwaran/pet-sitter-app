@@ -3,9 +3,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import NavBarMobile from "./navbar/NavBarMobile";
 import NavBarDesktop from "./navbar/NavBarDesktop";
+import { useAuth } from "@/context/AuthContext";
 
 const NavBar = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(null);
+  const { user, loading, logout } = useAuth();
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [hasNewNotification, setHasNewNotification] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -16,43 +17,29 @@ const NavBar = () => {
   const toggleMobileMenu = () => setMobileOpen((v) => !v);
 
   const handleLogout = async () => {
-    await fetch("/api/logout", { method: "POST", credentials: "include" });
+    await logout();
     alert("Logout successful");
-    setIsLoggedIn(false);
     router.push("/");
   };
 
   useEffect(() => {
-    const checkLoginStatus = async () => {
-      try {
-        const res = await fetch("/api/me", { credentials: "include" });
-        if (res.ok) {
-          setIsLoggedIn(true);
-        } else {
-          setIsLoggedIn(false);
-        }
-      } catch {
-        setIsLoggedIn(false);
-      }
-    };
-    checkLoginStatus();
-  }, []);
-
-  useEffect(() => {
-    if (!isLoggedIn) return;
+    if (!user) return;
     fetch("/api/unread-messages", { credentials: "include" })
       .then((res) => res.json())
       .then((data) => setHasNewMessage(data.unread > 0))
       .catch((err) => console.error("message error", err));
-  }, [isLoggedIn]);
+  }, [user]);
 
   useEffect(() => {
-    if (!isLoggedIn) return;
+    if (!user) return;
     fetch("/api/unread-notifications", { credentials: "include" })
       .then((res) => res.json())
       .then((data) => setHasNewNotification(data.unread > 0))
       .catch((err) => console.error("notification error", err));
-  }, [isLoggedIn]);
+  }, [user]);
+
+  // กำหนดสถานะ login จาก context
+  const isLoggedIn = !!user;
 
   return (
     <>
