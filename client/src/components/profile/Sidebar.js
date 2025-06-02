@@ -8,8 +8,8 @@ import { usePathname } from "next/navigation"; // ✅ ใช้ตรวจ path
 const menuItems = [
   { label: "Profile", href: "/pet-owners/profile", icon: "/assets/icon=user.png" },
   { label: "Your Pet", href: "/pet-owners/pets", icon: "/assets/icon=pet.png" },
-  { label: "Booking History", href: "/account/booking-history", icon: "/assets/icon=list-ul.png" },
-  { label: "Change Password", href: "/account/change-password", icon: "/assets/icon=list-ul.png" },
+  { label: "Booking History", href: "/pet-owners/booking-history", icon: "/assets/icon=list-ul.png" },
+  { label: "Change Password", href: "/pet-owners/change-password", icon: "/assets/icon=list-ul.png" },
 ];
 
 export default function Sidebar() {

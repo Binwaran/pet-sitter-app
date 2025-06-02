@@ -9,6 +9,24 @@ import ImageUpload from "@/components/profile/ImageUpload";
 import Sidebar from "@/components/profile/Sidebar";
 import profileimg from "public/assets/profile/profileimg.svg";
 
+const uploadToStorage = async (file) => {
+  const fileExt = file.name.split(".").pop();
+  const fileName = `${Date.now()}.${fileExt}`;
+  const filePath = `avatars/${fileName}`;
+
+  const { error } = await supabase.storage
+    .from("profile-images") // เปลี่ยนชื่อ bucket ตามจริง
+    .upload(filePath, file);
+
+  if (error) throw error;
+
+  const { data } = supabase.storage
+    .from("profile-images")
+    .getPublicUrl(filePath);
+
+  return data.publicUrl;
+};
+
 export default function OwnerProfilePage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
@@ -67,31 +85,50 @@ export default function OwnerProfilePage() {
 
     let imageUrl = profile.profile_image_url;
 
-    // ตัวอย่าง: อัปโหลดไฟล์ไป storage ก่อน (ต้องเขียนฟังก์ชัน uploadToStorage เอง)
     if (profileImageFile) {
-      // imageUrl = await uploadToStorage(profileImageFile);
-      // setProfile({ ...profile, profile_image_url: imageUrl });
+      try {
+        imageUrl = await uploadToStorage(profileImageFile);
+
+        // ✅ อัปเดต state ให้รูปใหม่แสดงทันที
+        setProfile((prev) => ({
+          ...prev,
+          profile_image_url: imageUrl,
+        }));
+      } catch (error) {
+        console.error("Upload error:", error.message);
+        alert("อัปโหลดรูปไม่สำเร็จ");
+        return;
+      }
     }
 
     const res = await fetch(`/api/profile?user_id=${user.id}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...profile, profile_image_url: imageUrl }),
+      body: JSON.stringify({
+        ...profile,
+        profile_image_url: imageUrl,
+      }),
     });
-    if (res.ok) alert("Profile saved!");
+
+    if (res.ok) {
+      alert("Profile saved!");
+    } else {
+      alert("บันทึกข้อมูลไม่สำเร็จ");
+    }
   };
 
   if (loading) return <div>Loading...</div>;
   if (!authorized) return null; // หรือแสดง spinner
 
-console.log("🧪 profile:", profile);
-console.log("🧪 profile.profile_image_url:", profile.profile_image_url);
+  console.log("🧪 profile:", profile);
+  console.log("🧪 profile.profile_image_url:", profile.profile_image_url);
 
   const imageSrc =
-  previewUrl?.trim() ||
-  (profile.profile_image_url && profile.profile_image_url.trim() !== ""
-    ? profile.profile_image_url
-    : "/assets/profile/profileimg.svg");
+    previewUrl?.trim() ||
+    (profile?.profile_image_url?.startsWith("blob:")
+      ? ""
+      : profile?.profile_image_url?.trim()) ||
+    "/assets/profile/profileimg.svg";
 
   return (
     <div className="bg-gray-100 min-h-screen">
@@ -99,24 +136,6 @@ console.log("🧪 profile.profile_image_url:", profile.profile_image_url);
         <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6">
           {/* Sidebar */}
           <Sidebar />
-          {/* Account Section */}
-          {/* <aside className="w-full md:w-1/4 p-6">
-        <div className="bg-white rounded-2xl shadow p-6">
-          <h2 className="font-semibold mb-6 text-lg">Account</h2>
-          <ul className="space-y-3">
-            <li className="flex items-center gap-2 text-orange-500 font-semibold">
-              <span className="inline-block w-2 h-2 bg-orange-500 rounded-full"></span>
-              Profile
-            </li>
-            <li className="text-gray-500 hover:text-orange-500 cursor-pointer transition">
-              Your Pet
-            </li>
-            <li className="text-gray-500 hover:text-orange-500 cursor-pointer transition">
-              Booking History
-            </li>
-          </ul>
-        </div>
-      </aside> */}
 
           {/* Main */}
           <div className="bg-white p-10 rounded-2xl shadow-md min-h-[824px]">
@@ -132,7 +151,11 @@ console.log("🧪 profile.profile_image_url:", profile.profile_image_url);
                       src={imageSrc}
                       alt="avatar"
                       fill
-                      className="object-cover transition-all duration-300"
+                      className={`object-cover transition-all duration-300 ${
+                        imageSrc.includes("/assets/profile/profileimg.svg")
+                          ? "scale-45" // 👈 ทำให้รูป default เล็กลง 75%
+                          : ""
+                      }`}
                     />
                   </div>
 
