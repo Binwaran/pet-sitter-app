@@ -1,6 +1,6 @@
 // app/login/[...rest]/page.js
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -15,10 +15,24 @@ export default function CustomLogin({ params }) {
   // params.rest จะเป็น array ของ segment ที่ตามหลัง /login เช่น /login/xxx/yyy => params.rest = ['xxx', 'yyy']
   // สามารถใช้ params.rest ได้ถ้าต้องการแยก logic ตาม path
 
-  const { login, loading } = useAuth();
+  const { user, login, loading } = useAuth(); // เพิ่ม user
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/";
+
+  // เช็คว่าถ้า login อยู่แล้ว ให้ redirect ไป profile ตาม role
+  useEffect(() => {
+    if (user) {
+      if (user.role === "owner") {
+        router.replace("/pet-owners/profile");
+      } else if (user.role === "sitter") {
+        router.replace("/pet-sitters/profile");
+      } else {
+        router.replace("/"); // fallback
+      }
+    }
+  }, [user, router]);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState(false);

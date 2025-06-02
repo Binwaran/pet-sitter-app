@@ -44,6 +44,7 @@ const NavBar = () => {
   return (
     <>
       <NavBarMobile
+        user={user}
         isLoggedIn={isLoggedIn}
         hasNewMessage={hasNewMessage}
         hasNewNotification={hasNewNotification}
@@ -53,6 +54,7 @@ const NavBar = () => {
         className="block sm:hidden md:hidden lg:hidden"
       />
       <NavBarDesktop
+        user={user}
         isLoggedIn={isLoggedIn}
         hasNewMessage={hasNewMessage}
         hasNewNotification={hasNewNotification}

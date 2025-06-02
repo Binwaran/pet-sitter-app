@@ -1,14 +1,30 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import InputField from "@/components/register/InputField.js";
 import { validateEmail, validatePhone, validatePassword } from "@/components/InputVerification";
 import Link from "next/link";
-import AuthIllustrations from "@/components/Auth/AuthIllustrations"; 
+import AuthIllustrations from "@/components/Auth/AuthIllustrations";
+import { useAuth } from "@/context/AuthContext"; // เพิ่มบรรทัดนี้
 
 const RegisterPage = ({ params }) => {
   const router = useRouter();
+  const { user } = useAuth(); // เพิ่มบรรทัดนี้
+
+  // เพิ่ม useEffect สำหรับ redirect ถ้า login อยู่แล้ว
+  useEffect(() => {
+    if (user) {
+      if (user.role === "owner") {
+        router.replace("/pet-owners/profile");
+      } else if (user.role === "sitter") {
+        router.replace("/pet-sitters/profile");
+      } else {
+        router.replace("/");
+      }
+    }
+  }, [user, router]);
+
   const [formData, setFormData] = useState({
     email: "",
     phone: "",

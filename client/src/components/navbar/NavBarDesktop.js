@@ -4,6 +4,7 @@ import Link from "next/link";
 
 
 const NavBarDesktop = ({
+  user,
   isLoggedIn,
   hasNewMessage,
   hasNewNotification,
@@ -11,6 +12,8 @@ const NavBarDesktop = ({
   toggleDropdown,
   handleLogout,
 }) => {
+  const role = user?.role;
+
   return (
     <nav className="w-full flex justify-center items-center pt-3 pb-5 px-5 lg:px-0 relative z-50">
       <section className="max-w-full min-w-0 w-full sm:flex sm:justify-between sm:items-center lg:px-20 hidden">
@@ -52,24 +55,49 @@ const NavBarDesktop = ({
               />
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-36 bg-white rounded shadow-lg p-2 z-50">
-                  <Link href="/pet-owners/profile" className="block py-2 px-4 hover:bg-gray-100">
-                    <div className="flex items-center gap-2">
-                      <Image src="/assets/icon=user.png" alt="Profile" width={16} height={16} />
-                      <span>Profile</span>
-                    </div>
-                  </Link>
-                  <Link href="/pet-owners/pets" className="block py-2 px-4 hover:bg-gray-100">
-                    <div className="flex items-center gap-2">
-                      <Image src="/assets/icon=pet.png" alt="Your Pet" width={16} height={16} />
-                      <span>Your Pet</span>
-                    </div>
-                  </Link>
-                  <Link href="/history" className="block py-2 px-4 hover:bg-gray-100">
-                    <div className="flex items-center gap-2">
-                      <Image src="/assets/icon=list-ul.png" alt="History" width={16} height={16} />
-                      <span>History</span>
-                    </div>
-                  </Link>
+                  {role === "owner" ? (
+                    <>
+                      <Link href="/pet-owners/profile" className="block py-2 px-4 hover:bg-gray-100">
+                        <div className="flex items-center gap-2">
+                          <Image src="/assets/icon=user.png" alt="Profile" width={16} height={16} />
+                          <span>Profile</span>
+                        </div>
+                      </Link>
+                      <Link href="/pet-owners/pets" className="block py-2 px-4 hover:bg-gray-100">
+                        <div className="flex items-center gap-2">
+                          <Image src="/assets/icon=pet.png" alt="Your Pet" width={16} height={16} />
+                          <span>Your Pet</span>
+                        </div>
+                      </Link>
+                      <Link href="/pet-owners/booking-history" className="block py-2 px-4 hover:bg-gray-100">
+                        <div className="flex items-center gap-2">
+                          <Image src="/assets/icon=list-ul.png" alt="History" width={16} height={16} />
+                          <span>History</span>
+                        </div>
+                      </Link>
+                    </>
+                  ) : role === "sitter" ? (
+                    <>
+                      <Link href="/pet-sitters/profile" className="block py-2 px-4 hover:bg-gray-100">
+                        <div className="flex items-center gap-2">
+                          <Image src="/assets/icon=user.png" alt="Profile" width={16} height={16} />
+                          <span>Profile</span>
+                        </div>
+                      </Link>
+                      <Link href="/pet-sitters/booking-list" className="block py-2 px-4 hover:bg-gray-100">
+                        <div className="flex items-center gap-2">
+                          <Image src="/assets/icon=pet.png" alt="Booking List" width={16} height={16} />
+                          <span>Booking list</span>
+                        </div>
+                      </Link>
+                      <Link href="/pet-sitters/calendar" className="block py-2 px-4 hover:bg-gray-100">
+                        <div className="flex items-center gap-2">
+                          <Image src="/assets/icon=list-ul.png" alt="Calendar" width={16} height={16} />
+                          <span>Calendar</span>
+                        </div>
+                      </Link>
+                    </>
+                  ) : null}
                   <button
                     onClick={handleLogout}
                     className="block w-full text-left py-2 px-4 hover:bg-gray-100"
