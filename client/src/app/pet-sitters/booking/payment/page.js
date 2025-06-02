@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import BookingSteps from '@/components/booking/BookingSteps';
 import BookingSummaryCard from '@/components/booking/BookingSummaryCard';
 import { useRouter } from 'next/navigation';
+import { AlertCircle } from 'lucide-react'; // ✅ เพิ่มไอคอน
 
 export default function BookingPaymentPage() {
   const [form, setForm] = useState({
@@ -44,7 +45,6 @@ export default function BookingPaymentPage() {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      alert('Please fill in all required fields.');
       return;
     }
     alert('Booking confirmed!');
@@ -62,6 +62,7 @@ export default function BookingPaymentPage() {
           <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-md p-6 flex flex-col gap-6">
             <h2 className="text-xl font-bold mb-6 text-gray-800">Credit Card</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Card Number */}
               <div className="flex flex-col gap-2 relative">
                 <label htmlFor="cardNumber" className="font-medium">Card Number*</label>
                 <input
@@ -73,8 +74,12 @@ export default function BookingPaymentPage() {
                   className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400 ${errors.cardNumber ? 'border-red-500' : 'border-gray-300'}`}
                   placeholder="xxxx-xxxx-xxxx-xxxx"
                 />
-                {errors.cardNumber && <span className="text-red-500 text-sm mt-1">{errors.cardNumber}</span>}
+                {errors.cardNumber && (
+                  <AlertCircle className="absolute right-3 top-10 text-red-500 w-5 h-5" />
+                )}
               </div>
+
+              {/* Card Owner */}
               <div className="flex flex-col gap-2 relative">
                 <label htmlFor="cardOwner" className="font-medium">Card Owner Name*</label>
                 <input
@@ -86,8 +91,12 @@ export default function BookingPaymentPage() {
                   className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400 ${errors.cardOwner ? 'border-red-500' : 'border-gray-300'}`}
                   placeholder="Full name as shown on card"
                 />
-                {errors.cardOwner && <span className="text-red-500 text-sm mt-1">{errors.cardOwner}</span>}
+                {errors.cardOwner && (
+                  <AlertCircle className="absolute right-3 top-10 text-red-500 w-5 h-5" />
+                )}
               </div>
+
+              {/* Expiry */}
               <div className="flex flex-col gap-2 relative">
                 <label htmlFor="expiry" className="font-medium">Expiry Date*</label>
                 <input
@@ -99,8 +108,12 @@ export default function BookingPaymentPage() {
                   className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400 ${errors.expiry ? 'border-red-500' : 'border-gray-300'}`}
                   placeholder="MM/YY"
                 />
-                {errors.expiry && <span className="text-red-500 text-sm mt-1">{errors.expiry}</span>}
+                {errors.expiry && (
+                  <AlertCircle className="absolute right-3 top-10 text-red-500 w-5 h-5" />
+                )}
               </div>
+
+              {/* CVC */}
               <div className="flex flex-col gap-2 relative">
                 <label htmlFor="cvc" className="font-medium">CVC/CVV*</label>
                 <input
@@ -112,9 +125,12 @@ export default function BookingPaymentPage() {
                   className={`w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400 ${errors.cvc ? 'border-red-500' : 'border-gray-300'}`}
                   placeholder="xxx"
                 />
-                {errors.cvc && <span className="text-red-500 text-sm mt-1">{errors.cvc}</span>}
+                {errors.cvc && (
+                  <AlertCircle className="absolute right-3 top-10 text-red-500 w-5 h-5" />
+                )}
               </div>
             </div>
+
             <div className="flex justify-between mt-8">
               <button
                 type="button"

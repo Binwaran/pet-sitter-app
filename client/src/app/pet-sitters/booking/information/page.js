@@ -34,7 +34,6 @@ export default function BookingInformationPage() {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      alert('Please fill in all required fields.');
       return;
     }
     localStorage.setItem('bookingDetails', JSON.stringify(form));
