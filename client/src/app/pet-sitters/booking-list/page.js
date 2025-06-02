@@ -1,122 +1,405 @@
-'use client';
+"use client";
+import { useEffect, useState, useMemo, useCallback } from "react";
+import axios from "axios";
+import Sidebar from "@/components/sitters/SidebarSitter";
+import Topbar from "@/components/sitters/TopbarSitter";
+import StatusDropdown from "@/components/dropdown/StatusDropdown";
+import { useRouter } from "next/navigation";
+import { Pagination, PaginationItem } from "@mui/material";
 
-import React, { useEffect, useState } from 'react';
-import NavBar from '@/components/NavBar';
-import BookingSteps from '@/components/booking/BookingSteps';
-import BookingSummaryCard from '@/components/booking/BookingSummaryCard';
-import { PetSelectionList } from '@/components/booking/PetSelectionCard';
-import { useAuth } from '@/context/AuthContext';
-import axios from 'axios';
-import Footer from '@/components/Footer';
+// Define status constants with appropriate colors matching the Figma
+const STATUS_MAP = {
+  "waiting for confirm": {
+    text: "Waiting for confirm",
+    color: "text-[#FA8AC0]",
+    dot: "bg-[#FA8AC0]",
+  },
+  "waiting for service": {
+    text: "Waiting for service",
+    color: "text-[#F9C846]",
+    dot: "bg-[#F9C846]",
+  },
+  "in service": {
+    text: "In service",
+    color: "text-[#76D0FC]",
+    dot: "bg-[#76D0FC]",
+  },
+  success: {
+    text: "Success",
+    color: "text-[#1CCD83]",
+    dot: "bg-[#1CCD83]",
+  },
+  cancelled: {
+    text: "Canceled",
+    color: "text-[#EA1010]",
+    dot: "bg-[#EA1010]",
+  },
+};
 
-export default function BookingPage() {
-  const { user, loading: authLoading } = useAuth();
-  const [pets, setPets] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedPetIds, setSelectedPetIds] = useState([]);
-
-  const handlePetSelect = (petId) => {
-    setSelectedPetIds((prevSelected) =>
-      prevSelected.includes(petId)
-        ? prevSelected.filter((id) => id !== petId)
-        : [...prevSelected, petId]
-    );
-  };
-
-  useEffect(() => {
-    if (authLoading) return;
-    if (!user || !user.id) {
-      setLoading(false);
-      setError('กรุณาเข้าสู่ระบบ');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    axios.get(`/api/pets?ownerId=${user.id}`)
-      .then((res) => {
-        setPets(res.data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.response?.data?.error || 'Error loading pets');
-        setLoading(false);
-      });
-  }, [user, authLoading]);
-
-  const updatedBookingDetails = {
-    pet: selectedPetIds.length > 0 ? selectedPetIds.join(', ') : 'No pet selected',
-    pets: pets.filter((pet) => selectedPetIds.includes(pet.pet_id)),
+// Status Badge Component
+const StatusBadge = ({ status }) => {
+  const statusKey = status?.toLowerCase() || "";
+  const config = STATUS_MAP[statusKey] || {
+    color: "text-gray-400",
+    dot: "bg-gray-400",
+    text: "Unknown",
   };
 
   return (
-    <>
-      <NavBar />
-      <div className="flex flex-col min-h-screen bg-[#F9FAFB] p-4 md:p-6 lg:p-8 relative">
-        <div className="container mx-auto flex flex-col lg:flex-row gap-6">
-          <div className="flex-1 flex flex-col gap-6">
-            <div className="bg-white rounded-2xl shadow-md p-6 ">
-              <BookingSteps currentStep={1} />
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-md p-6">
-              <h2 className="text-xl font-bold mb-2 text-gray-800">Choose your pet</h2>
-              <div className="w-full mt-2">
-                {loading ? (
-                  <div className="text-gray-500">Loading pets...</div>
-                ) : error ? (
-                  <div className="text-red-500">{error}</div>
-                ) : (
-                  <PetSelectionList
-                    pets={pets}
-                    selectedPetIds={selectedPetIds}
-                    onSelect={handlePetSelect}
-                    cardClassName="w-48 h-56 bg-white border-2 rounded-2xl flex flex-col items-center justify-between p-4 cursor-pointer transition-all duration-200 shadow-sm"
-                    selectedCardClassName="border-orange-500 shadow-md"
-                    unselectedCardClassName="border-gray-200 hover:border-orange-300"
-                    disabledCardClassName="opacity-50 pointer-events-none"
-                  />
-                )}
-              </div>
-              <div className="flex justify-between mt-8">
-                <button
-                  className="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 bg-[#FFF6F0] hover:bg-gray-100 transition-colors font-medium"
-                  onClick={() => console.log('Go Back')}
-                >
-                  Back
-                </button>
-                <button
-                  className="px-6 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors font-medium disabled:opacity-50"
-                  onClick={() => {
-                    if (selectedPetIds.length > 0) {
-                      // Save selected pets to localStorage or context if needed
-                      localStorage.setItem('selectedPetIds', JSON.stringify(selectedPetIds));
-                      window.location.href = '/pet-sitters/booking/information';
-                    }
-                  }}
-                  disabled={selectedPetIds.length === 0}
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          </div>
-          <div className="w-full lg:w-1/3">
-            <div className="lg:sticky lg:top-8 z-10">
-              <BookingSummaryCard bookingDetails={updatedBookingDetails} />
-            </div>
-          </div>
-        </div>
-        <img
-          src="/assets/GraphicBookingPage.png"
-          alt="Booking Graphic"
-          className="hidden md:block absolute bottom-0 right-0 w-32 lg:w-48 xl:w-60 pointer-events-none"
-        />
-      </div>
-
-      <Footer />
-    </>
+    <span
+      className={`flex items-center gap-2.5 font-medium whitespace-nowrap ${config.color}`}
+    >
+      <span
+        className={`inline-block w-[6px] h-[6px] rounded-full ${config.dot}`}
+      />
+      {config.text}
+    </span>
   );
-}
+};
+
+// Pagination Component
+const PaginationControls = ({ count, page, onChange }) => (
+  <Pagination
+    count={count}
+    page={page}
+    onChange={onChange}
+    siblingCount={1}
+    boundaryCount={2}
+    showFirstButton={false}
+    showLastButton={false}
+    sx={{
+      "& .MuiPaginationItem-root": {
+        backgroundColor: "#FFFFFF",
+        color: "#AEB1C3",
+        borderRadius: "999px",
+        fontWeight: 700,
+        fontSize: "16px",
+        width: 40,
+        height: 40,
+      },
+      "& .MuiPaginationItem-root.Mui-selected": {
+        backgroundColor: "#FFF1EC",
+        color: "#FF7037",
+      },
+      "& .MuiPaginationItem-root.Mui-selected:hover, & .MuiPaginationItem-root.Mui-selected.Mui-focusVisible":
+        {
+          backgroundColor: "#FFF1EC",
+          color: "#FF7037",
+        },
+      "& .MuiPaginationItem-previousNext": {
+        width: 36,
+        height: 36,
+        backgroundColor: "#F6F6F9",
+      },
+      "& .MuiPaginationItem-ellipsis": {
+        verticalAlign: "bottom",
+        display: "inline-flex",
+        alignItems: "flex-end",
+        justifyContent: "center",
+        width: 40,
+        height: 25,
+        backgroundColor: "#F6F6F9",
+      },
+    }}
+    renderItem={(item) => (
+      <PaginationItem
+        {...item}
+        slots={{
+          previous: () => (
+            <svg width={8} height={15} viewBox="0 0 8 15" fill="none">
+              <path
+                d="M7 1L1 7.5L7 14"
+                stroke="#AEB1C3"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          ),
+          next: () => (
+            <svg width={8} height={15} viewBox="0 0 8 15" fill="none">
+              <path
+                d="M1 14L7 7.5L1 1"
+                stroke="#AEB1C3"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          ),
+        }}
+      />
+    )}
+  />
+);
+
+// Search Input Component
+const SearchInput = ({ value, onChange }) => (
+  <div className="relative w-full sm:w-auto">
+    <input
+      type="text"
+      placeholder="Search..."
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="pl-3 pr-4 py-3 rounded-lg border border-[#E4E4E7] bg-white h-[48px] w-full sm:min-w-[240px]"
+    />
+    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="7" stroke="#B0B3C7" strokeWidth="2" />
+        <path
+          stroke="#B0B3C7"
+          strokeWidth="2"
+          strokeLinecap="round"
+          d="M20 20l-3-3"
+        />
+      </svg>
+    </span>
+  </div>
+);
+
+// Custom hook for managing booking data
+const useBookings = () => {
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const rowsPerPage = 8;
+
+  const fetchBookings = useCallback(async () => {
+  setLoading(true);
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("No token found");
+      setLoading(false);
+      return;
+    }
+
+    // Fix: Use the correct API endpoint without needing sitterId
+    const res = await axios.get(`/api/pet-sitters/bookings`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    // Sort bookings by date (newest first)
+    const sortedData = (res.data.data || []).sort((a, b) => {
+      const dateA = new Date(a.start_time || 0);
+      const dateB = new Date(b.start_time || 0);
+      return dateB - dateA;
+    });
+
+    setBookings(sortedData);
+  } catch (err) {
+    console.error("Error fetching bookings:", err);
+    setBookings([]);
+  } finally {
+    setLoading(false);
+  }
+}, []);
+
+  // Filter bookings based on search and status
+  const filteredBookings = useMemo(() => {
+    return bookings.filter((booking) => {
+      const matchStatus =
+        selectedStatus === "all" ? true : booking.status === selectedStatus;
+        
+      const keyword = search.trim().toLowerCase();
+      const matchSearch =
+        !keyword ||
+        (booking.owner_name && booking.owner_name.toLowerCase().includes(keyword));
+        
+      return matchStatus && matchSearch;
+    });
+  }, [bookings, selectedStatus, search]);
+
+  const totalPages = useMemo(
+    () => Math.ceil(filteredBookings.length / rowsPerPage),
+    [filteredBookings.length, rowsPerPage]
+  );
+
+  const paginatedBookings = useMemo(
+    () => filteredBookings.slice((page - 1) * rowsPerPage, page * rowsPerPage),
+    [filteredBookings, page, rowsPerPage]
+  );
+
+  const handlePageChange = useCallback((_, value) => {
+    setPage(value);
+  }, []);
+
+  const handleStatusChange = useCallback((value) => {
+    setSelectedStatus(value);
+    setPage(1); // Reset page when filter changes
+  }, []);
+
+  const handleSearchChange = useCallback((value) => {
+    setSearch(value);
+    setPage(1); // Reset page when search changes
+  }, []);
+
+  return {
+    loading,
+    paginatedBookings,
+    page,
+    totalPages,
+    selectedStatus,
+    search,
+    fetchBookings,
+    handlePageChange,
+    handleStatusChange,
+    handleSearchChange,
+  };
+};
+
+const BookingPage = () => {
+  const router = useRouter();
+  const {
+    loading,
+    paginatedBookings,
+    page,
+    totalPages,
+    selectedStatus,
+    search,
+    fetchBookings,
+    handlePageChange,
+    handleStatusChange,
+    handleSearchChange,
+  } = useBookings();
+
+  useEffect(() => {
+    fetchBookings();
+  }, [fetchBookings]);
+
+  const handleBookingClick = useCallback(
+    (bookingId) => {
+      router.push(`/pet-sitters/booking-list/${bookingId}`);
+    },
+    [router]
+  );
+
+  return (
+    <div className="flex flex-col min-h-screen bg-[#F9FAFB] relative">
+      <div className="flex md:flex-row flex-col min-w-0">
+        <Sidebar className="hidden md:flex" />
+        <div className="flex-1 flex flex-col">
+          {/* Header container */}
+          <div className="fixed top-0 left-0 right-0 z-50 md:left-[240px] flex flex-col">
+            <Topbar className="w-full" />
+            <div className="md:hidden w-full">
+              <Sidebar className="flex flex-row md:hidden bg-white border-b border-[#DCDFED]" />
+            </div>
+          </div>
+
+          {/* Main content */}
+          <main className="flex-1 flex flex-col w-full px-4 md:px-10 py-6 gap-6 relative mt-[123px] md:mt-[72px]">
+            <div className="flex flex-col items-center lg:flex-row sm:justify-between gap-6 w-full">
+              <h1 className="text-2xl font-bold whitespace-nowrap">
+                Booking List
+              </h1>
+
+              {/* Search & Filter */}
+              <div className="flex flex-col lg:flex-row gap-4 w-full sm:justify-end">
+                <SearchInput value={search} onChange={handleSearchChange} />
+                <StatusDropdown
+                  value={selectedStatus}
+                  onChange={handleStatusChange}
+                  statusOptions={[
+                    { value: "all", label: "All status" },
+                    { value: "waiting for confirm", label: "Waiting for confirm" },
+                    { value: "waiting for service", label: "Waiting for service" },
+                    { value: "in service", label: "In service" },
+                    { value: "success", label: "Success" },
+                    { value: "cancelled", label: "Canceled" }
+                  ]}
+                  className="w-full h-[48px] bg-white border border-[#E4E4E7] rounded-lg"
+                />
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="bg-white rounded-2xl overflow-x-auto w-full">
+              <table className="min-w-[600px] w-full h-full">
+                <thead>
+                  <tr className="bg-black text-white rounded-t-2xl">
+                    <th className="py-3 px-4 text-left rounded-tl-2xl font-medium">
+                      Pet Owner Name
+                    </th>
+                    <th className="py-3 px-4 text-left font-medium">
+                      Pet(s)
+                    </th>
+                    <th className="py-3 px-4 text-left font-medium">Duration</th>
+                    <th className="py-3 px-4 text-left font-medium">Booked Date</th>
+                    <th className="py-3 px-4 text-left rounded-tr-2xl font-medium">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={5} className="text-center py-6">
+                        Loading...
+                      </td>
+                    </tr>
+                  ) : paginatedBookings.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="text-center py-6">
+                        No bookings found.
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedBookings.map((booking) => (
+                      <tr
+                        key={booking.id}
+                        className="cursor-pointer border-b border-[#F0F0F0] last:border-0 hover:bg-gray-50 transition"
+                        onClick={() => handleBookingClick(booking.id)}
+                      >
+                        <td className="py-6 px-4 gap-2.5 h-[92px] flex items-center">
+                          <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden">
+                            <img
+                              src={
+                                booking.owner_image ||
+                                "/assets/sidebar/profile.svg"
+                              }
+                              alt={booking.owner_name}
+                              className="w-full h-full object-cover bg-gray-100"
+                            />
+                          </div>
+                          <span className="font-medium whitespace-nowrap">
+                            {booking.owner_name}
+                          </span>
+                        </td>
+                        <td className="font-medium py-6 px-4 gap-2.5 h-[92px]">
+                          {booking.pet_count || 0}
+                        </td>
+                        <td className="font-medium py-6 px-4 gap-2.5 h-[92px]">
+                          {booking.duration || 0} hours
+                        </td>
+                        <td className="font-medium py-6 px-4 gap-2.5 h-[92px]">
+                          {booking.booked_date || "N/A"}
+                        </td>
+                        <td className="py-6 px-4 gap-2.5 h-[92px]">
+                          <StatusBadge status={booking.status} />
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex justify-center items-baseline flex-wrap">
+              <PaginationControls
+                count={totalPages}
+                page={page}
+                onChange={handlePageChange}
+              />
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default BookingPage;
