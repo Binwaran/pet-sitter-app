@@ -1,64 +1,107 @@
 "use client";
+import React, { useEffect, useRef, useCallback, memo } from "react";
 import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
+
+// นำเข้าไฟล์รูปภาพ
 import sitterlogo from "/public/assets/sitter-logo-white.svg";
 import ownerIcon from "/public/assets/sidebar/profile.svg";
 import sitterIcon from "/public/assets/sidebar/paw.svg";
 import reportIcon from "/public/assets/sidebar/report.svg";
 import logout from "/public/assets/sidebar/logout.svg";
-import { useEffect, useRef } from "react";
-import { usePathname, useRouter } from "next/navigation";
 
-const menu = [
-  {
-    label: "Pet Owner",
-    alt: "owner",
-    icon: ownerIcon,
-    value: "pet-owners",
-    path: "/admin/pet-owners",
-  },
+// ย้าย constants ออกมาด้านนอกเพื่อไม่ต้องสร้างใหม่ทุกครั้ง
+const MENU_ITEMS = [
+  { label: "Pet Owner", alt: "owner", icon: ownerIcon, value: "pet-owners" },
   {
     label: "Pet Sitter",
     alt: "sitter",
     icon: sitterIcon,
     value: "pet-sitters",
-    path: "/admin/pet-sitters",
   },
-  {
-    label: "Report",
-    alt: "report",
-    icon: reportIcon,
-    value: "report",
-    path: "/admin/report",
-  },
+  { label: "Report", alt: "report", icon: reportIcon, value: "report" },
 ];
 
-export default function Sidebar({ className = "" }) {
+// สร้าง component ย่อยสำหรับ menu item
+const MenuItem = memo(({ item, isSelected, onClick }) => (
+  <button
+    type="button"
+    onClick={() => onClick(item.value)}
+    className={`
+      flex items-center px-6 py-4 gap-4 
+      md:text-left justify-center md:justify-start text-center 
+      transition whitespace-nowrap cursor-pointer 
+      w-full h-[51px] md:h-[56px]
+      ${
+        isSelected
+          ? "bg-[#3A3B46] text-white font-semibold"
+          : "hover:bg-[#3A3B46]"
+      }
+    `}
+  >
+    <Image src={item.icon} alt={item.label} width={24} height={24} />
+    {item.label}
+  </button>
+));
+
+MenuItem.displayName = "MenuItem";
+
+// สร้าง component สำหรับปุ่ม Logout
+const LogoutButton = memo(({ onClick, isMobile = false }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`
+      flex items-center px-6 py-4 gap-4 text-white 
+      ${
+        isMobile
+          ? "md:hidden justify-center text-center hover:bg-[#3A3B46] transition whitespace-nowrap cursor-pointer"
+          : "hidden md:flex hover:bg-[#3A3B46] transition whitespace-nowrap w-full border-t border-[#5B5D6F] h-[56px] cursor-pointer"
+      }
+    `}
+  >
+    <Image src={logout} alt="logout" width={24} height={24} />
+    Log Out
+  </button>
+));
+
+LogoutButton.displayName = "LogoutButton";
+
+const Sidebar = memo(({ className = "" }) => {
   const router = useRouter();
   const pathname = usePathname();
   const navRef = useRef(null);
 
-  const selected = menu.find((item) => pathname?.includes(item.value))?.value;
+  // หา value ของเมนูที่เลือกจาก pathname
+  const selectedValue = MENU_ITEMS.find((item) =>
+    pathname?.includes(item.value)
+  )?.value;
 
-  const handleMenuClick = (value) => {
-    router.push(`/admin/${value}`);
-  };
-  
-  // สร้างฟังก์ชันแยกเพื่อลดการซ้ำซ้อน
-  const handleLogout = () => {
+  // ใช้ useCallback เพื่อป้องกันการสร้างฟังก์ชันใหม่ทุกครั้งที่ render
+  const handleMenuClick = useCallback(
+    (value) => {
+      router.push(`/admin/${value}`);
+    },
+    [router]
+  );
+
+  const handleLogout = useCallback(() => {
     localStorage.removeItem("accessToken");
     router.push("/login");
-  };
+  }, [router]);
 
   // เพิ่ม useEffect สำหรับ wheel horizontal scroll
   useEffect(() => {
     const nav = navRef.current;
     if (!nav) return;
+
     const onWheel = (e) => {
       if (e.deltaY !== 0) {
         nav.scrollLeft += e.deltaY;
         e.preventDefault();
       }
     };
+
     nav.addEventListener("wheel", onWheel, { passive: false });
     return () => nav.removeEventListener("wheel", onWheel);
   }, []);
@@ -66,14 +109,14 @@ export default function Sidebar({ className = "" }) {
   return (
     <aside
       className={`
-      w-full md:w-[240px] 
-      flex flex-row md:flex-col
-      items-center md:items-stretch
-      md:border-r md:border-[#5B5D6F] bg-black relative
-      md:sticky md:top-0
-      h-full md:h-screen
-      ${className}
-    `}
+        w-full md:w-[240px] 
+        flex flex-row md:flex-col
+        items-center md:items-stretch
+        md:border-r md:border-[#5B5D6F] bg-black relative
+        md:sticky md:top-0
+        h-full md:h-screen
+        ${className}
+      `}
     >
       <div className="flex flex-col w-full h-full md:py-4">
         {/* Logo - แสดงเฉพาะบน Desktop */}
@@ -90,7 +133,7 @@ export default function Sidebar({ className = "" }) {
             Admin Panel
           </span>
         </div>
-        
+
         {/* เนื้อหาและปุ่ม Logout */}
         <div className="flex flex-col justify-between h-full">
           {/* เมนู Navigation */}
@@ -106,53 +149,27 @@ export default function Sidebar({ className = "" }) {
             "
             style={{ maxWidth: "100vw" }}
           >
-            {menu.map((item) => (
-              <button
+            {MENU_ITEMS.map((item) => (
+              <MenuItem
                 key={item.value}
-                type="button"
-                onClick={() => handleMenuClick(item.value)}
-                className={`
-                  flex items-center px-6 py-4 gap-4 
-                  md:text-left justify-center md:justify-start text-center 
-                  transition whitespace-nowrap cursor-pointer 
-                  w-full h-[51px] md:h-[56px]
-                  ${selected === item.value 
-                    ? "bg-[#3A3B46] text-white font-semibold" 
-                    : "hover:bg-[#3A3B46]"}
-                `}
-              >
-                <Image
-                  src={item.icon}
-                  alt={item.label}
-                  width={24}
-                  height={24}
-                />
-                {item.label}
-              </button>
+                item={item}
+                isSelected={selectedValue === item.value}
+                onClick={handleMenuClick}
+              />
             ))}
-            
+
             {/* Logout button: แสดงเฉพาะบน mobile */}
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="flex items-center px-6 py-4 gap-4 text-white md:hidden justify-center text-center hover:bg-[#3A3B46] transition whitespace-nowrap cursor-pointer"
-            >
-              <Image src={logout} alt="logout" width={24} height={24} />
-              Log Out
-            </button>
+            <LogoutButton onClick={handleLogout} isMobile />
           </nav>
-          
+
           {/* Logout button: แสดงเฉพาะบน desktop */}
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="hidden md:flex items-center px-6 py-4 gap-4 text-white hover:bg-[#3A3B46] transition whitespace-nowrap w-full border-t border-[#5B5D6F] h-[56px] cursor-pointer"
-          >
-            <Image src={logout} alt="logout" width={24} height={24} />
-            Log Out
-          </button>
+          <LogoutButton onClick={handleLogout} />
         </div>
       </div>
     </aside>
   );
-}
+});
+
+Sidebar.displayName = "Sidebar";
+
+export default Sidebar;

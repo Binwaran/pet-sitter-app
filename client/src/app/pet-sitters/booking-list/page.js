@@ -1,33 +1,45 @@
 "use client";
 import { useEffect, useState, useMemo, useCallback } from "react";
 import axios from "axios";
-import Sidebar from "@/components/admin/SidebarAdmin";
+import Sidebar from "@/components/sitters/SidebarSitter";
+import Topbar from "@/components/sitters/TopbarSitter";
 import StatusDropdown from "@/components/dropdown/StatusDropdown";
 import { useRouter } from "next/navigation";
 import { Pagination, PaginationItem } from "@mui/material";
 
-// แยก constant ออกมาให้ชัดเจน
+// Define status constants with appropriate colors matching the Figma
 const STATUS_MAP = {
-  "waiting for approval": {
-    text: "Waiting for approve",
+  "waiting for confirm": {
+    text: "Waiting for confirm",
     color: "text-[#FA8AC0]",
     dot: "bg-[#FA8AC0]",
   },
-  approved: {
-    text: "Approved",
+  "waiting for service": {
+    text: "Waiting for service",
+    color: "text-[#F9C846]",
+    dot: "bg-[#F9C846]",
+  },
+  "in service": {
+    text: "In service",
+    color: "text-[#76D0FC]",
+    dot: "bg-[#76D0FC]",
+  },
+  success: {
+    text: "Success",
     color: "text-[#1CCD83]",
     dot: "bg-[#1CCD83]",
   },
-  rejected: {
-    text: "Rejected",
+  cancelled: {
+    text: "Canceled",
     color: "text-[#EA1010]",
     dot: "bg-[#EA1010]",
   },
 };
 
-// แยก components ย่อยออกมา
+// Status Badge Component
 const StatusBadge = ({ status }) => {
-  const config = STATUS_MAP[status] || {
+  const statusKey = status?.toLowerCase() || "";
+  const config = STATUS_MAP[statusKey] || {
     color: "text-gray-400",
     dot: "bg-gray-400",
     text: "Unknown",
@@ -45,6 +57,7 @@ const StatusBadge = ({ status }) => {
   );
 };
 
+// Pagination Component
 const PaginationControls = ({ count, page, onChange }) => (
   <Pagination
     count={count}
@@ -120,6 +133,7 @@ const PaginationControls = ({ count, page, onChange }) => (
   />
 );
 
+// Search Input Component
 const SearchInput = ({ value, onChange }) => (
   <div className="relative w-full sm:w-auto">
     <input
@@ -143,58 +157,69 @@ const SearchInput = ({ value, onChange }) => (
   </div>
 );
 
-// Custom hook สำหรับการจัดการข้อมูล Pet Sitters
-const usePetSitters = () => {
-  const [sitters, setSitters] = useState([]);
+// Custom hook for managing booking data
+const useBookings = () => {
+  const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const rowsPerPage = 8;
 
-  const fetchSitters = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get("/api/admin/pet-sitters");
-      // กรณีที่ backend ยังไม่ได้เรียงลำดับให้ หรือต้องการเรียงอีกครั้งหลังการกรอง
-      const sortedData = (res.data.data || []).sort((a, b) => {
-        // เรียงตาม updated_at ถ้ามี หรือไม่ก็ใช้ created_at
-        const dateA = new Date(a.updated_at || a.created_at || 0);
-        const dateB = new Date(b.updated_at || b.created_at || 0);
-        return dateB - dateA; // เรียงจากใหม่ไปเก่า (มากไปน้อย)
-      });
-      setSitters(sortedData);
-    } catch (err) {
-      console.error("Error fetching pet sitters:", err);
-      setSitters([]);
-    } finally {
+  const fetchBookings = useCallback(async () => {
+  setLoading(true);
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("No token found");
       setLoading(false);
+      return;
     }
-  }, []);
 
-  // ใช้ useMemo เพื่อคำนวณเฉพาะเมื่อข้อมูลเปลี่ยน
-  const filteredSitters = useMemo(() => {
-    return sitters.filter((s) => {
+    // Fix: Use the correct API endpoint without needing sitterId
+    const res = await axios.get(`/api/pet-sitters/bookings`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    // Sort bookings by date (newest first)
+    const sortedData = (res.data.data || []).sort((a, b) => {
+      const dateA = new Date(a.start_time || 0);
+      const dateB = new Date(b.start_time || 0);
+      return dateB - dateA;
+    });
+
+    setBookings(sortedData);
+  } catch (err) {
+    console.error("Error fetching bookings:", err);
+    setBookings([]);
+  } finally {
+    setLoading(false);
+  }
+}, []);
+
+  // Filter bookings based on search and status
+  const filteredBookings = useMemo(() => {
+    return bookings.filter((booking) => {
       const matchStatus =
-        selectedStatus === "all" ? true : s.status === selectedStatus;
+        selectedStatus === "all" ? true : booking.status === selectedStatus;
+        
       const keyword = search.trim().toLowerCase();
       const matchSearch =
         !keyword ||
-        (s.full_name && s.full_name.toLowerCase().includes(keyword)) ||
-        (s.trade_name && s.trade_name.toLowerCase().includes(keyword)) ||
-        (s.email && s.email.toLowerCase().includes(keyword));
+        (booking.owner_name && booking.owner_name.toLowerCase().includes(keyword));
+        
       return matchStatus && matchSearch;
     });
-  }, [sitters, selectedStatus, search]);
+  }, [bookings, selectedStatus, search]);
 
   const totalPages = useMemo(
-    () => Math.ceil(filteredSitters.length / rowsPerPage),
-    [filteredSitters.length, rowsPerPage]
+    () => Math.ceil(filteredBookings.length / rowsPerPage),
+    [filteredBookings.length, rowsPerPage]
   );
 
-  const paginatedSitters = useMemo(
-    () => filteredSitters.slice((page - 1) * rowsPerPage, page * rowsPerPage),
-    [filteredSitters, page, rowsPerPage]
+  const paginatedBookings = useMemo(
+    () => filteredBookings.slice((page - 1) * rowsPerPage, page * rowsPerPage),
+    [filteredBookings, page, rowsPerPage]
   );
 
   const handlePageChange = useCallback((_, value) => {
@@ -213,62 +238,62 @@ const usePetSitters = () => {
 
   return {
     loading,
-    paginatedSitters,
+    paginatedBookings,
     page,
     totalPages,
     selectedStatus,
     search,
-    fetchSitters,
+    fetchBookings,
     handlePageChange,
     handleStatusChange,
     handleSearchChange,
   };
 };
 
-export default function AdminPetSittersPage() {
+const BookingPage = () => {
   const router = useRouter();
   const {
     loading,
-    paginatedSitters,
+    paginatedBookings,
     page,
     totalPages,
     selectedStatus,
     search,
-    fetchSitters,
+    fetchBookings,
     handlePageChange,
     handleStatusChange,
     handleSearchChange,
-  } = usePetSitters();
+  } = useBookings();
 
   useEffect(() => {
-    fetchSitters();
-  }, [fetchSitters]);
+    fetchBookings();
+  }, [fetchBookings]);
 
-  const handleSitterClick = useCallback(
-    (sitterId) => {
-      router.push(`/admin/pet-sitters/${sitterId}`);
+  const handleBookingClick = useCallback(
+    (bookingId) => {
+      router.push(`/pet-sitters/booking-list/${bookingId}`);
     },
     [router]
   );
 
   return (
-    <div className="flex flex-col max-h-screen bg-[#F6F6F9] w-full min-w-0">
-      <div className="flex w-full min-w-0">
-        {/* Sidebar Desktop */}
-        <Sidebar className="hidden md:flex h-full sticky top-0 left-0" />
+    <div className="flex flex-col min-h-screen bg-[#F9FAFB] relative">
+      <div className="flex md:flex-row flex-col min-w-0">
+        <Sidebar className="hidden md:flex" />
+        <div className="flex-1 flex flex-col">
+          {/* Header container */}
+          <div className="fixed top-0 left-0 right-0 z-50 md:left-[240px] flex flex-col">
+            <Topbar className="w-full" />
+            <div className="md:hidden w-full">
+              <Sidebar className="flex flex-row md:hidden bg-white border-b border-[#DCDFED]" />
+            </div>
+          </div>
 
-        <div className="flex-1 flex flex-col w-full h-full min-w-0 bg-[#F6F6F9]">
-          {/* Sidebar Mobile */}
-          <Sidebar
-            className="flex flex-row md:hidden sticky top-0 z-30 w-full"
-            horizontal
-          />
-
-          {/* Main Content */}
-          <div className="flex-1 flex flex-col gap-6 pt-10 px-12 pb-20 max-w-full w-full transition-all duration-300 relative h-full min-w-0">
+          {/* Main content */}
+          <main className="flex-1 flex flex-col w-full px-4 md:px-10 py-6 gap-6 relative mt-[123px] md:mt-[72px]">
             <div className="flex flex-col items-center lg:flex-row sm:justify-between gap-6 w-full">
               <h1 className="text-2xl font-bold whitespace-nowrap">
-                Pet Sitter
+                Booking List
               </h1>
 
               {/* Search & Filter */}
@@ -277,6 +302,14 @@ export default function AdminPetSittersPage() {
                 <StatusDropdown
                   value={selectedStatus}
                   onChange={handleStatusChange}
+                  statusOptions={[
+                    { value: "all", label: "All status" },
+                    { value: "waiting for confirm", label: "Waiting for confirm" },
+                    { value: "waiting for service", label: "Waiting for service" },
+                    { value: "in service", label: "In service" },
+                    { value: "success", label: "Success" },
+                    { value: "cancelled", label: "Canceled" }
+                  ]}
                   className="w-full h-[48px] bg-white border border-[#E4E4E7] rounded-lg"
                 />
               </div>
@@ -288,12 +321,13 @@ export default function AdminPetSittersPage() {
                 <thead>
                   <tr className="bg-black text-white rounded-t-2xl">
                     <th className="py-3 px-4 text-left rounded-tl-2xl font-medium">
-                      Full Name
+                      Pet Owner Name
                     </th>
                     <th className="py-3 px-4 text-left font-medium">
-                      Pet Sitter Name
+                      Pet(s)
                     </th>
-                    <th className="py-3 px-4 text-left font-medium">Email</th>
+                    <th className="py-3 px-4 text-left font-medium">Duration</th>
+                    <th className="py-3 px-4 text-left font-medium">Booked Date</th>
                     <th className="py-3 px-4 text-left rounded-tr-2xl font-medium">
                       Status
                     </th>
@@ -302,46 +336,49 @@ export default function AdminPetSittersPage() {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={4} className="text-center py-6">
+                      <td colSpan={5} className="text-center py-6">
                         Loading...
                       </td>
                     </tr>
-                  ) : paginatedSitters.length === 0 ? (
+                  ) : paginatedBookings.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="text-center py-6">
-                        No sitters found.
+                      <td colSpan={5} className="text-center py-6">
+                        No bookings found.
                       </td>
                     </tr>
                   ) : (
-                    paginatedSitters.map((sitter) => (
+                    paginatedBookings.map((booking) => (
                       <tr
-                        key={sitter.user_id}
+                        key={booking.id}
                         className="cursor-pointer border-b border-[#F0F0F0] last:border-0 hover:bg-gray-50 transition"
-                        onClick={() => handleSitterClick(sitter.user_id)}
+                        onClick={() => handleBookingClick(booking.id)}
                       >
                         <td className="py-6 px-4 gap-2.5 h-[92px] flex items-center">
                           <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden">
                             <img
                               src={
-                                sitter.profile_image_url ||
+                                booking.owner_image ||
                                 "/assets/sidebar/profile.svg"
                               }
-                              alt={sitter.full_name}
+                              alt={booking.owner_name}
                               className="w-full h-full object-cover bg-gray-100"
                             />
                           </div>
                           <span className="font-medium whitespace-nowrap">
-                            {sitter.full_name}
+                            {booking.owner_name}
                           </span>
                         </td>
                         <td className="font-medium py-6 px-4 gap-2.5 h-[92px]">
-                          {sitter.trade_name}
+                          {booking.pet_count || 0}
                         </td>
                         <td className="font-medium py-6 px-4 gap-2.5 h-[92px]">
-                          {sitter.email}
+                          {booking.duration || 0} hours
+                        </td>
+                        <td className="font-medium py-6 px-4 gap-2.5 h-[92px]">
+                          {booking.booked_date || "N/A"}
                         </td>
                         <td className="py-6 px-4 gap-2.5 h-[92px]">
-                          <StatusBadge status={sitter.status} />
+                          <StatusBadge status={booking.status} />
                         </td>
                       </tr>
                     ))
@@ -358,9 +395,11 @@ export default function AdminPetSittersPage() {
                 onChange={handlePageChange}
               />
             </div>
-          </div>
+          </main>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default BookingPage;

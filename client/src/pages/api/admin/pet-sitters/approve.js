@@ -19,56 +19,57 @@ export default async function handler(req, res) {
   console.log("Processing approval request for userId:", userId);
 
   try {
-    // ตรวจสอบว่ามีข้อมูลอยู่หรือไม่
+    // ตรวจสอบว่ามีข้อมูลและ pending_data อยู่หรือไม่
     const { data: checkData, error: checkError } = await supabase
       .from("pet_sitter")
       .select("*")
-      .eq("user_id", userId);
-
-    console.log("Check result:", { checkData, checkError });
+      .eq("user_id", userId)
+      .single();
 
     if (checkError) {
       console.error("Check error:", checkError);
       return res.status(500).json({ message: checkError.message });
     }
 
-    if (!checkData || checkData.length === 0) {
+    if (!checkData) {
       console.error("Pet sitter not found with userId:", userId);
       return res.status(404).json({ message: "Pet sitter not found" });
     }
 
-    console.log("Found pet sitter data:", checkData[0]);
+    if (!checkData.pending_data) {
+      console.error("No pending data found for approval");
+      return res
+        .status(400)
+        .json({ message: "No pending data found for approval" });
+    }
 
-    // ดำเนินการอัพเดท พร้อมแสดงข้อมูลเพิ่มเติมเพื่อ debug
-    console.log("Updating status to 'approved' for userId:", userId);
-    const { data: updateData, error } = await supabase
+    // นำข้อมูลจาก pending_data มาอัพเดทเป็นข้อมูลหลัก
+    const pendingData = checkData.pending_data;
+
+    // แยกข้อมูลที่ต้องการอัพเดท
+    const { profile_info, ...otherPendingData } = pendingData;
+
+    // อัพเดทข้อมูลหลักใน pet_sitter
+    const { data: updateData, error: updateError } = await supabase
       .from("pet_sitter")
       .update({
+        ...otherPendingData,
         status: "approved",
         admin_suggestion: null,
+        pending_data: null, // ล้าง pending data
       })
       .eq("user_id", userId)
       .select();
 
-    console.log("Update result:", { updateData, error, userId });
-
-    if (error) {
-      console.error("Update error:", error);
-      return res.status(500).json({ message: error.message });
+    if (updateError) {
+      console.error("Update error:", updateError);
+      return res.status(500).json({ message: updateError.message });
     }
 
-    // ถึงแม้การอัพเดทสำเร็จแต่ไม่มีข้อมูลกลับมา ให้ใช้ข้อมูลจาก checkData
     return res.status(200).json({
       success: true,
       message: "Approved successfully",
-      data:
-        updateData && updateData.length > 0
-          ? updateData[0]
-          : {
-              ...checkData[0],
-              status: "approved",
-              admin_suggestion: null,
-            },
+      data: updateData[0],
     });
   } catch (err) {
     console.error("Server error:", err);

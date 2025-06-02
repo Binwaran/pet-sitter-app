@@ -2,14 +2,20 @@
 
 import { useRef, useEffect, useState } from "react";
 
-const statusOptions = [
+// ค่าเริ่มต้นสำหรับกรณีที่ไม่ได้ส่ง statusOptions มา
+const defaultStatusOptions = [
   { label: "All", value: "all" },
   { label: "Waiting for approve", value: "waiting for approval" },
   { label: "Approved", value: "approved" },
   { label: "Rejected", value: "rejected" },
 ];
 
-const StatusDropdown = ({ value, onChange, className = "" }) => {
+const StatusDropdown = ({
+  value,
+  onChange,
+  className = "",
+  statusOptions = defaultStatusOptions, // รับ statusOptions เป็น props และกำหนดค่าเริ่มต้น
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -35,7 +41,8 @@ const StatusDropdown = ({ value, onChange, className = "" }) => {
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full flex items-center justify-between px-4 py-2 rounded-lg border border-[#E4E4E7] bg-white text-left text-[#344054] text-[16px] font-normal ${className}`}
       >
-        {statusOptions.find((opt) => opt.value === value)?.label || "All status"}
+        {statusOptions.find((opt) => opt.value === value)?.label ||
+          "All status"}
         <span className="text-xs text-[#9AA1B9]">⏷</span>
       </button>
 

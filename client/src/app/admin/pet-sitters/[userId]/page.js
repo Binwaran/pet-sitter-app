@@ -1,7 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import axios from "axios";
+import Image from "next/image";
 import Sidebar from "@/components/admin/SidebarAdmin";
 import {
   ButtonOrange,
@@ -11,7 +12,9 @@ import Modal from "@/components/Modal";
 import ProfileTab from "@/components/admin/pet-sitters/ProfileTab";
 import BookingTab from "@/components/admin/pet-sitters/BookingTab";
 import ReviewsTab from "@/components/admin/pet-sitters/ReviewsTab";
+import exclamation from "/public/assets/profile/exclamation-circle.svg";
 
+// แยกข้อมูล status เป็น constants แยกต่างหาก
 const STATUS_MAP = {
   "waiting for approval": {
     text: "Waiting for approve",
@@ -29,40 +32,74 @@ const STATUS_MAP = {
     dot: "bg-[#EA1010]",
   },
 };
-import Image from "next/image";
-import exclamation from "/public/assets/profile/exclamation-circle.svg";
+
+// Component แสดง layout เมื่อไม่มีข้อมูล/รอข้อมูล
+const EmptyLayout = ({ children }) => (
+  <>
+    <div className="md:hidden sticky top-0 z-30 h-[51px] md:h-full">
+      <Sidebar horizontal />
+    </div>
+    <div className="flex flex-row w-full h-full bg-[#F6F6F9]">
+      <div className="hidden md:flex h-full sticky top-0 z-30">
+        <Sidebar />
+      </div>
+      <div className="bg-[#F6F6F9] w-full h-screen flex justify-center items-center">
+        <div className="text-xl font-bold">{children}</div>
+      </div>
+    </div>
+  </>
+);
+
+// Tab button component
+const TabButton = ({ isActive, label, onClick }) => (
+  <button
+    className={`min-w-[100px] py-3 px-4 md:px-8 font-semibold text-[16px] md:text-[20px] ${
+      isActive
+        ? "text-[#FF7037] bg-white"
+        : "text-[#AEB1C3] bg-[#DCDFED] hover:text-[#FF7037]"
+    } ${
+      label === "Profile" ? "rounded-t-xl" : "md:rounded-t-xl"
+    } transition cursor-pointer`}
+    onClick={onClick}
+  >
+    {label}
+  </button>
+);
 
 export default function AdminPetSitterDetailPage() {
   const { userId } = useParams();
   const [sitter, setSitter] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("profile");
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [rejectReason, setRejectReason] = useState("");
-  const [rejectLoading, setRejectLoading] = useState(false);
-  const [approveLoading, setApproveLoading] = useState(false);
+  const [modalState, setModalState] = useState({
+    show: false,
+    reason: "",
+    isLoading: false,
+  });
+  const [actionState, setActionState] = useState({
+    approveLoading: false,
+    rejectLoading: false,
+  });
   const [bookings, setBookings] = useState([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
 
-  // ดึงข้อมูลล่าสุดจาก backend เสมอ
-  const fetchSitter = async () => {
+  // Memoized function to fetch sitter data
+  const fetchSitter = useCallback(async () => {
     try {
       setLoading(true);
-      // เพิ่ม timestamp เพื่อป้องกัน cache
       const res = await axios.get(
         `/api/admin/pet-sitters/${userId}?t=${Date.now()}`
       );
       setSitter(res.data.data);
     } catch (err) {
-      console.error("Failed to fetch sitter:", err);
       setSitter(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
 
-  // Function to fetch bookings for the current pet sitter
-  const fetchBookings = async () => {
+  // Memoized function to fetch booking data
+  const fetchBookings = useCallback(async () => {
     if (!sitter?.pet_sitter?.user_id) return;
 
     try {
@@ -72,14 +109,102 @@ export default function AdminPetSitterDetailPage() {
       );
       setBookings(res.data.data || []);
     } catch (err) {
-      console.error("Failed to fetch bookings:", err);
       setBookings([]);
     } finally {
       setBookingsLoading(false);
     }
-  };
+  }, [sitter?.pet_sitter?.user_id]);
 
-  // Add this to your useEffect
+  // Update sitter data after API call
+  const updateSitterStatus = useCallback((status, suggestion = null) => {
+    setSitter((prev) =>
+      prev
+        ? {
+            ...prev,
+            pet_sitter: {
+              ...prev.pet_sitter,
+              status,
+              admin_suggestion: suggestion,
+            },
+          }
+        : null
+    );
+  }, []);
+
+  // Handle approve action
+  const handleApprove = useCallback(async () => {
+    if (!window.confirm("Are you sure you want to approve this pet sitter?"))
+      return;
+
+    setActionState((prev) => ({ ...prev, approveLoading: true }));
+    try {
+      const response = await axios.post(`/api/admin/pet-sitters/approve`, {
+        userId: String(userId),
+      });
+
+      if (response.data.success) {
+        updateSitterStatus("approved", null);
+        window.alert("Approved successfully");
+
+        // Update with response data if available
+        if (response.data.data) {
+          setSitter((prev) => ({
+            ...prev,
+            pet_sitter: {
+              ...prev.pet_sitter,
+              ...response.data.data,
+            },
+          }));
+        }
+      }
+    } catch (err) {
+      window.alert(err?.response?.data?.message || "Approve failed");
+    } finally {
+      setActionState((prev) => ({ ...prev, approveLoading: false }));
+    }
+  }, [userId, updateSitterStatus]);
+
+  // Handle reject action
+  const handleReject = useCallback(() => {
+    setModalState((prev) => ({ ...prev, show: true }));
+  }, []);
+
+  // Handle confirm reject action
+  const handleConfirmReject = useCallback(async () => {
+    const { reason } = modalState;
+    if (!reason.trim()) return;
+
+    setActionState((prev) => ({ ...prev, rejectLoading: true }));
+    try {
+      const response = await axios.post(`/api/admin/pet-sitters/reject`, {
+        userId: String(userId),
+        reason,
+      });
+
+      if (response.data.success) {
+        updateSitterStatus("rejected", reason);
+        setModalState({ show: false, reason: "", isLoading: false });
+        window.alert("Rejected successfully");
+
+        // Update with response data if available
+        if (response.data.data) {
+          setSitter((prev) => ({
+            ...prev,
+            pet_sitter: {
+              ...prev.pet_sitter,
+              ...response.data.data,
+            },
+          }));
+        }
+      }
+    } catch (err) {
+      window.alert(err?.response?.data?.message || "Reject failed");
+    } finally {
+      setActionState((prev) => ({ ...prev, rejectLoading: false }));
+    }
+  }, [userId, modalState, updateSitterStatus]);
+
+  // Effect to load data on mount or tab change
   useEffect(() => {
     if (userId) {
       fetchSitter();
@@ -87,160 +212,35 @@ export default function AdminPetSitterDetailPage() {
         fetchBookings();
       }
     }
-  }, [userId, activeTab]);
+  }, [userId, activeTab, fetchSitter, fetchBookings]);
 
-  if (loading)
-    return (
-      <>
-        <div className="md:hidden sticky top-0 z-30 h-[51px] md:h-full">
-          <Sidebar horizontal />
-        </div>
-        <div className="flex flex-row w-full h-full bg-[#F6F6F9]">
-          <div className="hidden md:flex h-full sticky top-0 z-30">
-            <Sidebar />
-          </div>
-          <div className="bg-[#F6F6F9] w-full h-screen flex justify-center items-center">
-            <div className="text-xl font-bold">Loading...</div>
-          </div>
-        </div>
-      </>
-    );
+  // Show loading state
+  if (loading) return <EmptyLayout>Loading...</EmptyLayout>;
 
-  if (!sitter)
-    return (
-      <>
-        <div className="md:hidden sticky top-0 z-30 h-[51px] md:h-full">
-          <Sidebar horizontal />
-        </div>
-        <div className="flex flex-row w-full h-full bg-[#F6F6F9]">
-          <div className="hidden md:flex h-full sticky top-0 z-30">
-            <Sidebar />
-          </div>
-          <div className="bg-[#F6F6F9] w-full h-screen flex justify-center items-center">
-            <div className="text-xl font-bold">Not found</div>
-          </div>
-        </div>
-      </>
-    );
+  // Show not found state
+  if (!sitter) return <EmptyLayout>Not found</EmptyLayout>;
 
-  // Approve Handler
-  const handleApprove = async () => {
-    if (!window.confirm("Are you sure you want to approve this pet sitter?"))
-      return;
-
-    setApproveLoading(true);
-    try {
-      // แปลง userId ให้เป็น string เสมอ
-      console.log("userId type:", typeof userId, "value:", userId);
-      const userIdString = String(userId);
-      console.log("userIdString:", userIdString);
-
-      const response = await axios.post(`/api/admin/pet-sitters/approve`, {
-        userId: userIdString,
-      });
-
-      if (response.data.success) {
-        // อัพเดต UI ทันที
-        setSitter((prev) => ({
-          ...prev,
-          pet_sitter: {
-            ...prev.pet_sitter,
-            status: "approved",
-            admin_suggestion: null,
-          },
-        }));
-
-        window.alert("Approved successfully");
-
-        // แทนที่จะดึงข้อมูลใหม่ ให้ใช้ข้อมูลจาก API response
-        if (response.data.data) {
-          setSitter((prev) => ({
-            ...prev,
-            pet_sitter: {
-              ...prev.pet_sitter,
-              ...response.data.data,
-            },
-          }));
-        }
-      }
-    } catch (err) {
-      console.error("Approve error:", err);
-      console.error("Error response:", err.response?.data);
-      window.alert(err?.response?.data?.message || "Approve failed");
-    } finally {
-      setApproveLoading(false);
-    }
-  };
-
-  const handleReject = () => {
-    setShowRejectModal(true);
-  };
-
-  // เพิ่มฟังก์ชัน handleReject เพื่อเปิด modal
-  const handleConfirmReject = async () => {
-    if (!rejectReason.trim()) return;
-
-    setRejectLoading(true);
-    try {
-      // แปลง userId ให้เป็น string เสมอ
-      console.log("userId type:", typeof userId, "value:", userId);
-      const userIdString = String(userId);
-      console.log("userIdString:", userIdString);
-
-      const response = await axios.post(`/api/admin/pet-sitters/reject`, {
-        userId: userIdString,
-        reason: rejectReason,
-      });
-
-      if (response.data.success) {
-        // อัพเดต UI ทันที
-        setSitter((prev) => ({
-          ...prev,
-          pet_sitter: {
-            ...prev.pet_sitter,
-            status: "rejected",
-            admin_suggestion: rejectReason,
-          },
-        }));
-
-        setShowRejectModal(false);
-        setRejectReason("");
-        window.alert("Rejected successfully");
-
-        // แทนที่จะดึงข้อมูลใหม่ ให้ใช้ข้อมูลจาก API response
-        if (response.data.data) {
-          setSitter((prev) => ({
-            ...prev,
-            pet_sitter: {
-              ...prev.pet_sitter,
-              ...response.data.data,
-            },
-          }));
-        }
-      }
-    } catch (err) {
-      console.error("Reject error:", err);
-      console.error("Error response:", err.response?.data);
-      window.alert(err?.response?.data?.message || "Reject failed");
-    } finally {
-      setRejectLoading(false);
-    }
+  const { approveLoading, rejectLoading } = actionState;
+  const status = sitter.pet_sitter.status;
+  const statusInfo = STATUS_MAP[status] || {
+    text: "Unknown",
+    color: "text-gray-400",
+    dot: "bg-gray-400",
   };
 
   return (
     <>
-      {/* Modal สำหรับ Reject */}
+      {/* Modal for Reject */}
       <Modal
-        open={showRejectModal}
+        open={modalState.show}
         title="Reject Confirmation"
-        onClose={() => {
-          setShowRejectModal(false);
-          setRejectReason("");
-        }}
+        onClose={() =>
+          setModalState({ show: false, reason: "", isLoading: false })
+        }
         onConfirm={handleConfirmReject}
         confirmText="Reject"
         cancelText="Cancel"
-        disabled={!rejectReason.trim() || rejectLoading}
+        disabled={!modalState.reason.trim() || rejectLoading}
         maxWidthClass="md:max-w-[600px]"
       >
         <div className="flex flex-col gap-1">
@@ -249,18 +249,20 @@ export default function AdminPetSitterDetailPage() {
           </label>
           <textarea
             className="flex gap-2 w-full border border-[#DCDFED] rounded-lg px-4 py-3 min-h-[140px] focus:outline-none focus:ring-1 focus:ring-[#FF7037]"
-            value={rejectReason}
-            onChange={(e) => setRejectReason(e.target.value)}
+            value={modalState.reason}
+            onChange={(e) =>
+              setModalState((prev) => ({ ...prev, reason: e.target.value }))
+            }
             placeholder="Admin's suggestion here"
             disabled={rejectLoading}
           />
-          {!rejectReason.trim() && (
+          {!modalState.reason.trim() && (
             <div className="text-red-500 text-sm">Please provide a reason</div>
           )}
         </div>
       </Modal>
 
-      {/* Sidebar: Responsive */}
+      {/* Main Layout */}
       <div className="md:hidden sticky top-0 z-30 h-[51px] md:h-full">
         <Sidebar horizontal />
       </div>
@@ -299,43 +301,37 @@ export default function AdminPetSitterDetailPage() {
                   </span>
                   <span className="text-[16px] flex items-center gap-[8px] whitespace-nowrap">
                     <span
-                      className={`inline-block w-[6px] h-[6px] rounded-full ${
-                        STATUS_MAP[sitter.pet_sitter.status]?.dot ||
-                        "bg-gray-400"
-                      }`}
+                      className={`inline-block w-[6px] h-[6px] rounded-full ${statusInfo.dot}`}
                     ></span>
                     <span
-                      className={`text-[16px] font-medium ${
-                        STATUS_MAP[sitter.pet_sitter.status]?.color ||
-                        "text-gray-400"
-                      }`}
+                      className={`text-[16px] font-medium ${statusInfo.color}`}
                     >
-                      {STATUS_MAP[sitter.pet_sitter.status]?.text || "Unknown"}
+                      {statusInfo.text}
                     </span>
                   </span>
                 </div>
               </div>
+
               {/* Show reject reason if rejected */}
-              {sitter.pet_sitter.status === "rejected" &&
-                sitter.pet_sitter.admin_suggestion && (
-                  <div className="bg-[#DCDFED] text-[#EA1010] p-3 rounded-lg flex items-center gap-[10px]">
-                    <Image
-                      src={exclamation}
-                      alt="exclamation"
-                      width={20}
-                      height={20}
-                      className="text-[#EA1010] flex-shrink-0"
-                    />
-                    <span>
-                      This request has not been approved: &lsquo;
-                      {sitter.pet_sitter.admin_suggestion}&rsquo;
-                    </span>
-                  </div>
-                )}
+              {status === "rejected" && sitter.pet_sitter.admin_suggestion && (
+                <div className="bg-[#DCDFED] text-[#EA1010] p-3 rounded-lg flex items-center gap-[10px]">
+                  <Image
+                    src={exclamation}
+                    alt="exclamation"
+                    width={20}
+                    height={20}
+                    className="text-[#EA1010] flex-shrink-0"
+                  />
+                  <span>
+                    This request has not been approved: &lsquo;
+                    {sitter.pet_sitter.admin_suggestion}&rsquo;
+                  </span>
+                </div>
+              )}
             </div>
 
-            {/* ย้าย conditional rendering มาครอบ div ทั้งหมด */}
-            {sitter.pet_sitter.status === "waiting for approval" && (
+            {/* Action buttons - only for waiting status */}
+            {status === "waiting for approval" && (
               <div className="flex flex-col w-full lg:w-fit justify-center lg:justify-end md:self-center lg:self-start lg:flex-row gap-3">
                 <ButtonOrangeLight
                   text={rejectLoading ? "Rejecting..." : "Reject"}
@@ -350,45 +346,25 @@ export default function AdminPetSitterDetailPage() {
               </div>
             )}
           </div>
+
+          {/* Tabs */}
           <div>
-            {/* Tabs */}
             <div className="w-full mx-auto flex flex-col md:flex-row flex-wrap md:justify-start gap-0 md:gap-4">
-              <button
-                className={`min-w-[100px] py-3 px-4 md:px-8 font-semibold text-[16px] md:text-[20px] rounded-t-xl transition cursor-pointer
-                ${
-                  activeTab === "profile"
-                    ? "text-[#FF7037] bg-white"
-                    : "text-[#AEB1C3] bg-[#DCDFED] hover:text-[#FF7037]"
-                }
-              `}
+              <TabButton
+                isActive={activeTab === "profile"}
+                label="Profile"
                 onClick={() => setActiveTab("profile")}
-              >
-                Profile
-              </button>
-              <button
-                className={`min-w-[100px] py-3 px-4 md:px-8 font-semibold text-[16px] md:text-[20px] md:rounded-t-xl transition cursor-pointer
-                ${
-                  activeTab === "booking"
-                    ? "text-[#FF7037] bg-white"
-                    : "text-[#AEB1C3] bg-[#DCDFED] hover:text-[#FF7037]"
-                }
-              `}
+              />
+              <TabButton
+                isActive={activeTab === "booking"}
+                label="Booking"
                 onClick={() => setActiveTab("booking")}
-              >
-                Booking
-              </button>
-              <button
-                className={`min-w-[100px] py-3 px-4 md:px-8 font-semibold text-[16px] md:text-[20px] md:rounded-t-xl transition cursor-pointer
-                ${
-                  activeTab === "reviews"
-                    ? "text-[#FF7037] bg-white"
-                    : "text-[#AEB1C3] bg-[#DCDFED] hover:text-[#FF7037]"
-                }
-              `}
+              />
+              <TabButton
+                isActive={activeTab === "reviews"}
+                label="Reviews"
                 onClick={() => setActiveTab("reviews")}
-              >
-                Reviews
-              </button>
+              />
             </div>
 
             {/* Tab Content */}
