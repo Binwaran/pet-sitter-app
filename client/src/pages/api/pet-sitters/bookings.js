@@ -8,6 +8,35 @@ const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
+// เพิ่มฟังก์ชันสำหรับดึงข้อมูลสัตว์เลี้ยงจาก owner_id
+async function getPetsByOwners(ownerIds) {
+  const { data, error } = await supabase
+    .from("pets")
+    .select("*")
+    .in("owner_id", ownerIds);
+
+  if (error) {
+    console.error("Error fetching pets by owner:", error);
+    return {};
+  }
+
+  // จัดกลุ่มสัตว์เลี้ยงตาม owner_id
+  const petsByOwner = {};
+  if (data && data.length > 0) {
+    data.forEach((pet) => {
+      if (!petsByOwner[pet.owner_id]) {
+        petsByOwner[pet.owner_id] = [];
+      }
+      petsByOwner[pet.owner_id].push(pet);
+    });
+    console.log(`Found pets for ${Object.keys(petsByOwner).length} owners`);
+  } else {
+    console.log("No pets found for any owners");
+  }
+
+  return petsByOwner;
+}
+
 export default async function handler(req, res) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -103,11 +132,13 @@ export default async function handler(req, res) {
       });
     }
 
+    // ดึงข้อมูลสัตว์เลี้ยงทั้งหมดของเจ้าของแต่ละคน
+    const petsByOwner = await getPetsByOwners(ownerIds);
+
     // 4. Get pet information if we have pet IDs
     const { data: pets, error: petsError } = await supabase
       .from("pets")
-      .select("pet_id, pet_name, pet_image_url, owner_id, pet_type")
-      .in("pet_id", petIds);
+      .select("pet_id, pet_name, pet_image_url, owner_id, pet_type");
 
     if (petsError) {
       console.error("Error fetching pets:", petsError);
@@ -127,20 +158,42 @@ export default async function handler(req, res) {
         const owner = ownersMap[booking.owner_id] || null;
 
         // Get pet IDs for this booking
-        const bookingPetIds = bookingPetsMap[booking.booking_id] || [];
+        let bookingPetIds = bookingPetsMap[booking.booking_id] || [];
 
         // Check if booking has a pet_id field (legacy data)
         if (booking.pet_id && !bookingPetIds.includes(booking.pet_id)) {
           bookingPetIds.push(booking.pet_id);
         }
 
-        // Get pet data for this booking - less restrictive filtering
-        const bookingPetsData = bookingPetIds
-          .map((petId) => petsMap[petId])
-          .filter((pet) => pet); // Simply filter out undefined pets
+        // ถ้าไม่มีข้อมูลใน booking_pets และไม่มี pet_id ในตาราง booking
+        // ให้ใช้สัตว์เลี้ยงทั้งหมดของ owner คนนี้แทน
+        let bookingPetsData = [];
+
+        if (bookingPetIds.length > 0) {
+          // กรณีมีข้อมูล pet_id จาก booking_pets หรือจาก booking.pet_id
+          bookingPetsData = bookingPetIds
+            .map((petId) => petsMap[petId])
+            .filter((pet) => pet); // กรองเฉพาะข้อมูลที่มีจริง
+
+          console.log(
+            `Using specified pets for booking ${booking.booking_id}: ${bookingPetsData.length} pets found`
+          );
+        }
+
+        // ถ้าไม่มีข้อมูลสัตว์เลี้ยงเลย ให้ใช้สัตว์เลี้ยงทั้งหมดของ owner
+        if (
+          bookingPetsData.length === 0 &&
+          petsByOwner[booking.owner_id] &&
+          petsByOwner[booking.owner_id].length > 0
+        ) {
+          bookingPetsData = petsByOwner[booking.owner_id];
+          console.log(
+            `Using all owner's pets for booking ${booking.booking_id}: ${bookingPetsData.length} pets found from owner ${booking.owner_id}`
+          );
+        }
 
         console.log(
-          `Booking ${booking.booking_id} has ${bookingPetsData.length} pets`
+          `Booking ${booking.booking_id} final count: ${bookingPetsData.length} pets`
         ); // Debug log
 
         // Format dates
@@ -192,8 +245,8 @@ export default async function handler(req, res) {
           owner_id: booking.owner_id,
           owner_name: owner?.name || "Unknown Owner",
           owner_image: owner?.profile_image_url || null,
-          pet_count: bookingPetIds.length, // Correctly count pets
-          pets: formattedPets, // Include pet details
+          pet_count: bookingPetsData.length, // ใช้จำนวนสัตว์เลี้ยงที่มีข้อมูลจริง
+          pets: formattedPets, // รายละเอียดสัตว์เลี้ยง
           duration: durationHours,
           booked_date: bookedDate,
           start_time: booking.start_time,

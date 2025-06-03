@@ -1,0 +1,8 @@
+{
+  "[svg]": {
+    "editor.maxTokenizationLineLength": 50000
+  },
+  "[javascript]": {
+    "editor.maxTokenizationLineLength": 50000
+  }
+}

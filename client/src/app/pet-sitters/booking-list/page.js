@@ -164,50 +164,86 @@ const useBookings = () => {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [viewedBookings, setViewedBookings] = useState([]);
   const rowsPerPage = 8;
 
-  const fetchBookings = useCallback(async () => {
-  setLoading(true);
-  try {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      console.error("No token found");
-      setLoading(false);
-      return;
+  // โหลดข้อมูล viewedBookings จาก localStorage เมื่อ component โหลด
+  useEffect(() => {
+    try {
+      const storedViewedBookings = JSON.parse(
+        localStorage.getItem("sitterViewedBookings") || "[]"
+      );
+      setViewedBookings(storedViewedBookings);
+    } catch (e) {
+      console.error("Error loading viewed bookings:", e);
+      localStorage.removeItem("sitterViewedBookings");
     }
+  }, []);
 
-    // Fix: Use the correct API endpoint without needing sitterId
-    const res = await axios.get(`/api/pet-sitters/bookings`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+  // เพิ่มฟังก์ชันตรวจสอบว่า booking ได้ถูกดูแล้วหรือไม่
+  const isBookingViewed = useCallback(
+    (bookingId) => viewedBookings.includes(bookingId),
+    [viewedBookings]
+  );
 
-    // Sort bookings by date (newest first)
-    const sortedData = (res.data.data || []).sort((a, b) => {
-      const dateA = new Date(a.start_time || 0);
-      const dateB = new Date(b.start_time || 0);
-      return dateB - dateA;
-    });
+  // เพิ่มฟังก์ชันบันทึกการดู booking
+  const markBookingAsViewed = useCallback(
+    (bookingId) => {
+      if (!isBookingViewed(bookingId)) {
+        const newViewedBookings = [...viewedBookings, bookingId];
+        setViewedBookings(newViewedBookings);
+        localStorage.setItem(
+          "sitterViewedBookings",
+          JSON.stringify(newViewedBookings)
+        );
+      }
+    },
+    [viewedBookings, isBookingViewed]
+  );
 
-    setBookings(sortedData);
-  } catch (err) {
-    console.error("Error fetching bookings:", err);
-    setBookings([]);
-  } finally {
-    setLoading(false);
-  }
-}, []);
+  const fetchBookings = useCallback(async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("No token found");
+        setLoading(false);
+        return;
+      }
+
+      // Fix: Use the correct API endpoint without needing sitterId
+      const res = await axios.get(`/api/pet-sitters/bookings`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      // Sort bookings by date (newest first)
+      const sortedData = (res.data.data || []).sort((a, b) => {
+        const dateA = new Date(a.start_time || 0);
+        const dateB = new Date(b.start_time || 0);
+        return dateB - dateA;
+      });
+
+      setBookings(sortedData);
+    } catch (err) {
+      console.error("Error fetching bookings:", err);
+      setBookings([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   // Filter bookings based on search and status
   const filteredBookings = useMemo(() => {
     return bookings.filter((booking) => {
       const matchStatus =
         selectedStatus === "all" ? true : booking.status === selectedStatus;
-        
+
       const keyword = search.trim().toLowerCase();
       const matchSearch =
         !keyword ||
-        (booking.owner_name && booking.owner_name.toLowerCase().includes(keyword));
-        
+        (booking.owner_name &&
+          booking.owner_name.toLowerCase().includes(keyword));
+
       return matchStatus && matchSearch;
     });
   }, [bookings, selectedStatus, search]);
@@ -247,6 +283,8 @@ const useBookings = () => {
     handlePageChange,
     handleStatusChange,
     handleSearchChange,
+    isBookingViewed, // ส่งออกฟังก์ชันใหม่
+    markBookingAsViewed, // ส่งออกฟังก์ชันใหม่
   };
 };
 
@@ -263,6 +301,8 @@ const BookingPage = () => {
     handlePageChange,
     handleStatusChange,
     handleSearchChange,
+    isBookingViewed,
+    markBookingAsViewed,
   } = useBookings();
 
   useEffect(() => {
@@ -271,9 +311,10 @@ const BookingPage = () => {
 
   const handleBookingClick = useCallback(
     (bookingId) => {
+      markBookingAsViewed(bookingId); // เพิ่มบรรทัดนี้
       router.push(`/pet-sitters/booking-list/${bookingId}`);
     },
-    [router]
+    [router, markBookingAsViewed]
   );
 
   return (
@@ -304,11 +345,17 @@ const BookingPage = () => {
                   onChange={handleStatusChange}
                   statusOptions={[
                     { value: "all", label: "All status" },
-                    { value: "waiting for confirm", label: "Waiting for confirm" },
-                    { value: "waiting for service", label: "Waiting for service" },
+                    {
+                      value: "waiting for confirm",
+                      label: "Waiting for confirm",
+                    },
+                    {
+                      value: "waiting for service",
+                      label: "Waiting for service",
+                    },
                     { value: "in service", label: "In service" },
                     { value: "success", label: "Success" },
-                    { value: "cancelled", label: "Canceled" }
+                    { value: "cancelled", label: "Canceled" },
                   ]}
                   className="w-full h-[48px] bg-white border border-[#E4E4E7] rounded-lg"
                 />
@@ -323,11 +370,13 @@ const BookingPage = () => {
                     <th className="py-3 px-4 text-left rounded-tl-2xl font-medium">
                       Pet Owner Name
                     </th>
+                    <th className="py-3 px-4 text-left font-medium">Pet(s)</th>
                     <th className="py-3 px-4 text-left font-medium">
-                      Pet(s)
+                      Duration
                     </th>
-                    <th className="py-3 px-4 text-left font-medium">Duration</th>
-                    <th className="py-3 px-4 text-left font-medium">Booked Date</th>
+                    <th className="py-3 px-4 text-left font-medium">
+                      Booked Date
+                    </th>
                     <th className="py-3 px-4 text-left rounded-tr-2xl font-medium">
                       Status
                     </th>
@@ -354,19 +403,15 @@ const BookingPage = () => {
                         onClick={() => handleBookingClick(booking.id)}
                       >
                         <td className="py-6 px-4 gap-2.5 h-[92px] flex items-center">
-                          <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden">
-                            <img
-                              src={
-                                booking.owner_image ||
-                                "/assets/sidebar/profile.svg"
-                              }
-                              alt={booking.owner_name}
-                              className="w-full h-full object-cover bg-gray-100"
-                            />
+                          <div className="flex items-center gap-2.5">
+                            {/* เพิ่มจุดสีส้มสำหรับ booking ที่ยังไม่ถูกดู */}
+                            {!isBookingViewed(booking.id) && (
+                              <span className="inline-block w-[8px] h-[8px] rounded-full bg-[#FF7037]" />
+                            )}
+                            <span className="font-medium whitespace-nowrap">
+                              {booking.owner_name}
+                            </span>
                           </div>
-                          <span className="font-medium whitespace-nowrap">
-                            {booking.owner_name}
-                          </span>
                         </td>
                         <td className="font-medium py-6 px-4 gap-2.5 h-[92px]">
                           {booking.pet_count || 0}

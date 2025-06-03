@@ -86,7 +86,7 @@ const NavBarMobile = ({
                       <Link href="/pet-sitters/booking-list" className="block py-2 px-4 hover:bg-gray-100">
                         <div className="flex items-center gap-2">
                           <Image src="/assets/icon=pet.png" alt="Booking List" width={16} height={16} />
-                          <span>Booking list</span>
+                          <span>Booking</span>
                         </div>
                       </Link>
                       <Link href="/pet-sitters/calendar" className="block py-2 px-4 hover:bg-gray-100">
