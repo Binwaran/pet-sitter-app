@@ -8,6 +8,7 @@ import {
   ButtonOrange,
   ButtonOrangeLight,
 } from "@/components/buttons/OrangeButtons";
+import { useAuth } from "@/context/AuthContext"; // เพิ่มการนำเข้า useAuth
 
 // Pet type styles for tags
 const PET_TYPE_STYLES = {
@@ -97,6 +98,7 @@ const PetCard = ({ pet }) => (
 export default function BookingDetailPage() {
   const { id } = useParams();
   const router = useRouter();
+  const { user } = useAuth(); // ใช้ user จาก context
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -107,14 +109,14 @@ export default function BookingDetailPage() {
 
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      if (!token) {
+
+      if (!user?.id) {
         router.push("/login");
         return;
       }
 
       const res = await axios.get(`/api/pet-sitters/bookings/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true, // ส่ง cookie ไปกับ request
       });
 
       setBooking(res.data.data);
@@ -124,7 +126,7 @@ export default function BookingDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [id, router]);
+  }, [id, router, user?.id]); // เพิ่ม user?.id เป็น dependency
 
   useEffect(() => {
     fetchBookingDetails();
@@ -134,12 +136,11 @@ export default function BookingDetailPage() {
   const handleConfirmBooking = async () => {
     try {
       setActionLoading(true);
-      const token = localStorage.getItem("token");
       await axios.post(
         `/api/pet-sitters/bookings/${id}/confirm`,
         {},
         {
-          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true, // ส่ง cookie ไปกับ request
         }
       );
 
@@ -161,12 +162,11 @@ export default function BookingDetailPage() {
 
     try {
       setActionLoading(true);
-      const token = localStorage.getItem("token");
       await axios.post(
         `/api/pet-sitters/bookings/${id}/reject`,
         {},
         {
-          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true, // ส่ง cookie ไปกับ request
         }
       );
 
@@ -186,12 +186,11 @@ export default function BookingDetailPage() {
   const handleStartService = async () => {
     try {
       setActionLoading(true);
-      const token = localStorage.getItem("token");
       await axios.post(
         `/api/pet-sitters/bookings/${id}/start-service`,
         {},
         {
-          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true, // ส่ง cookie ไปกับ request
         }
       );
 
@@ -211,12 +210,11 @@ export default function BookingDetailPage() {
   const handleCompleteService = async () => {
     try {
       setActionLoading(true);
-      const token = localStorage.getItem("token");
       await axios.post(
         `/api/pet-sitters/bookings/${id}/complete`,
         {},
         {
-          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true, // ส่ง cookie ไปกับ request
         }
       );
 
@@ -348,10 +346,10 @@ export default function BookingDetailPage() {
           </div>
 
           {/* Main content */}
-          <main className="flex-1 flex flex-col w-full px-4 md:px-10 py-6 gap-6 relative mt-[123px] md:mt-[72px]">
+          <main className="flex-1 flex flex-col w-full bg-[#F6F6F9] gap-6 px-10 pb-20 pt-10 relative mt-[123px] md:mt-[72px]">
             {/* Header with back button and status */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 w-full">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-6">
                 <button
                   onClick={() => router.back()}
                   className="text-[#AEB1C3] hover:text-[#7B7E8F]"
@@ -370,7 +368,7 @@ export default function BookingDetailPage() {
                   {booking.owner_name || "Booking Detail"}
                 </h1>
                 <span
-                  className={`flex items-center gap-2 ml-2 font-medium ${statusInfo.color}`}
+                  className={`flex items-center gap-2 font-medium ${statusInfo.color}`}
                 >
                   • {statusInfo.text}
                 </span>
@@ -381,7 +379,7 @@ export default function BookingDetailPage() {
             </div>
 
             {/* Booking details card */}
-            <div className="bg-white rounded-2xl p-6 md:p-10 flex flex-col gap-8">
+            <div className="bg-white rounded-2xl px-20 py-10 gap-6 flex flex-col">
               {/* Pet Owner section */}
               <DetailField
                 label="Pet Owner Name"
@@ -402,7 +400,7 @@ export default function BookingDetailPage() {
                   <h3 className="text-xl font-bold text-[#AEB1C3]">
                     Pet Detail
                   </h3>
-                  <div className="flex flex-wrap gap-4 mt-4">
+                  <div className="flex flex-wrap gap-4">
                     {booking.pets.map((pet, index) => (
                       <PetCard key={pet.id || index} pet={pet} />
                     ))}

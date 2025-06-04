@@ -1,7 +1,16 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import {
+  MessageIcon,
+  BellIcon,
+  HamburgerIcon,
+  ProfileIcon,
+  PawIcon,
+  TabIcon,
+  CalendarIcon,
+  LogoutIcon,
+} from "@/components/icons";
 
 const NavBarMobile = ({
   user,
@@ -11,21 +20,31 @@ const NavBarMobile = ({
   open,
   toggleMobileMenu,
   handleLogout,
+  className,
 }) => {
   const role = user?.role;
 
   return (
-    <nav className="w-full flex justify-between items-center pb-0 px-5 lg:px-0 relative z-50">
-      <section className="sm:hidden flex justify-between items-center w-full relative">
+    <nav
+      className={`w-full flex justify-between items-center py-3 px-5 relative z-50 h-12 ${
+        className || ""
+      }`}
+    >
+      <section className="flex justify-between items-center w-full relative">
         <Link href="/">
-          <Image src="/assets/sitter-logo.svg" alt="sitter-logo" width={80} height={80} />
+          <Image
+            src="/assets/sitter-logo.svg"
+            alt="sitter-logo"
+            width={79.21}
+            height={24}
+          />
         </Link>
 
         {isLoggedIn ? (
           <div className="flex gap-6 items-center">
             {/* Notifications */}
-            <div className="relative">
-              <Image src="/assets/navbar/bell.svg" alt="bell" width={24} height={24}/>
+            <div className="relative cursor-pointer">
+              <BellIcon color="#7B7E8F" width={24} height={24} />
               {hasNewNotification && (
                 <span className="absolute top-0 right-0 w-2 h-2 bg-orange-500 rounded-full" />
               )}
@@ -34,7 +53,7 @@ const NavBarMobile = ({
             {/* Messages */}
             <div className="relative">
               <Link href="/messages">
-                <Image src="/assets/navbar/message.svg" alt="message" width={24} height={24} className="mr-1" />
+                <MessageIcon color="#7B7E8F" width={24} height={24} />
               </Link>
               {hasNewMessage && (
                 <span className="absolute top-0 right-0 w-2 h-2 bg-orange-500 rounded-full" />
@@ -42,56 +61,78 @@ const NavBarMobile = ({
             </div>
 
             {/* Dropdown Menu */}
-            <div className="relative">
+            <div className="relative h-6">
               <button
                 className="cursor-pointer"
                 onClick={toggleMobileMenu}
                 aria-label="Toggle menu"
                 type="button"
               >
-                <Image src="/assets/navbar/menu.svg" alt="menu" width={24} height={24} style={{ width: 'auto', height: 'auto', objectFit: 'contain' }} />
+                <HamburgerIcon color="#3A3B46" width={24} height={24} />
               </button>
 
               {open && (
-                <div className="absolute right-0 mt-2 w-36 bg-white rounded shadow-lg p-2 z-50">
+                <div className="absolute right-0 pt-4 w-36 bg-white text-[#5B5D6F] font-medium rounded shadow-lg pb-2 z-50">
                   {role === "owner" ? (
                     <>
-                      <Link href="/pet-owners/profile" className="block py-2 px-4 hover:bg-gray-100">
+                      <Link
+                        href="/pet-owners/profile"
+                        className="block py-2 px-4 hover:bg-gray-100"
+                      >
                         <div className="flex items-center gap-2">
-                          <Image src="/assets/icon=user.png" alt="Profile" width={16} height={16} />
+                          <ProfileIcon color="#AEB1C3" width={20} height={20} />
                           <span>Profile</span>
                         </div>
                       </Link>
-                      <Link href="/pet-owners/pets" className="block py-2 px-4 hover:bg-gray-100">
+                      <Link
+                        href="/pet-owners/pets"
+                        className="block py-2 px-4 hover:bg-gray-100"
+                      >
                         <div className="flex items-center gap-2">
-                          <Image src="/assets/icon=pet.png" alt="Your Pet" width={16} height={16} />
+                          <PawIcon color="#AEB1C3" width={20} height={20} />
                           <span>Your Pet</span>
                         </div>
                       </Link>
-                      <Link href="/pet-owners/booking-history" className="block py-2 px-4 hover:bg-gray-100">
+                      <Link
+                        href="/pet-owners/booking-history"
+                        className="block py-2 px-4 hover:bg-gray-100"
+                      >
                         <div className="flex items-center gap-2">
-                          <Image src="/assets/icon=list-ul.png" alt="History" width={16} height={16} />
+                          <TabIcon color="#AEB1C3" width={20} height={20} />
                           <span>History</span>
                         </div>
                       </Link>
                     </>
                   ) : role === "sitter" ? (
                     <>
-                      <Link href="/pet-sitters/profile" className="block py-2 px-4 hover:bg-gray-100">
+                      <Link
+                        href="/pet-sitters/profile"
+                        className="block py-2 px-4 hover:bg-gray-100"
+                      >
                         <div className="flex items-center gap-2">
-                          <Image src="/assets/icon=user.png" alt="Profile" width={16} height={16} />
+                          <ProfileIcon color="#AEB1C3" width={20} height={20} />
                           <span>Profile</span>
                         </div>
                       </Link>
-                      <Link href="/pet-sitters/booking-list" className="block py-2 px-4 hover:bg-gray-100">
+                      <Link
+                        href="/pet-sitters/booking-list"
+                        className="block py-2 px-4 hover:bg-gray-100"
+                      >
                         <div className="flex items-center gap-2">
-                          <Image src="/assets/icon=pet.png" alt="Booking List" width={16} height={16} />
+                          <TabIcon color="#AEB1C3" width={20} height={20} />
                           <span>Booking</span>
                         </div>
                       </Link>
-                      <Link href="/pet-sitters/calendar" className="block py-2 px-4 hover:bg-gray-100">
+                      <Link
+                        href="/pet-sitters/calendar"
+                        className="block py-2 px-4 hover:bg-gray-100"
+                      >
                         <div className="flex items-center gap-2">
-                          <Image src="/assets/icon=list-ul.png" alt="Calendar" width={16} height={16} />
+                          <CalendarIcon
+                            color="#AEB1C3"
+                            width={20}
+                            height={20}
+                          />
                           <span>Calendar</span>
                         </div>
                       </Link>
@@ -101,8 +142,8 @@ const NavBarMobile = ({
                     onClick={handleLogout}
                     className="block w-full text-left py-2 px-4 hover:bg-gray-100"
                   >
-                    <div className="flex items-center gap-2">
-                      <Image src="/assets/icon=logout.png" alt="Logout" width={16} height={16} />
+                    <div className="flex items-center gap-2 cursor-pointer">
+                      <LogoutIcon color="#AEB1C3" width={20} height={20} />
                       <span>Logout</span>
                     </div>
                   </button>
@@ -114,14 +155,14 @@ const NavBarMobile = ({
           <div className="flex gap-2 items-center">
             <Link
               href="/register/sitter"
-              className="py-4 px-2 text-[18px] font-bold"
+              className="font-medium text-lg leading-[26px] text-center px-1 py-2"
               onClick={() => toggleMobileMenu(false)}
             >
               Register
             </Link>
             <Link
               href="/login/sitter"
-              className="py-4 px-2 text-[18px] font-bold"
+              className="font-medium text-lg leading-[26px] text-center px-1 py-2"
               onClick={() => toggleMobileMenu(false)}
             >
               Login

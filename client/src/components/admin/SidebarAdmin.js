@@ -126,9 +126,25 @@ const Sidebar = memo(({ className = "" }) => {
   );
 
   const handleLogout = async () => {
-    await logout();
-    alert("Logout successful");
-    router.push("/");
+    try {
+      // เรียกใช้ logout API เพื่อล้าง cookie
+      await fetch("/api/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      // ล้าง localStorage เฉพาะส่วนที่ไม่เกี่ยวข้องกับ authentication
+      localStorage.removeItem("adminViewedItems"); // เก็บข้อมูล admin ที่ดูแล้ว
+
+      // เรียกใช้ฟังก์ชัน logout จาก context
+      await logout();
+
+      // รีโหลดเพจเพื่อรีเซ็ตสถานะทั้งหมด
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Logout error:", error);
+      alert("Logout failed. Please try again.");
+    }
   };
 
   // เพิ่ม useEffect สำหรับ wheel horizontal scroll
@@ -212,6 +228,7 @@ const Sidebar = memo(({ className = "" }) => {
   );
 });
 
+MenuItem.displayName = "MenuItem";
 Sidebar.displayName = "Sidebar";
 
 export default Sidebar;

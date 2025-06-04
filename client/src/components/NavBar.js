@@ -51,7 +51,7 @@ const NavBar = () => {
         open={mobileOpen}
         toggleMobileMenu={toggleMobileMenu}
         handleLogout={handleLogout}
-        className="block sm:hidden md:hidden lg:hidden"
+        className="block md:hidden"
       />
       <NavBarDesktop
         user={user}
@@ -61,7 +61,7 @@ const NavBar = () => {
         isDropdownOpen={isDropdownOpen}
         toggleDropdown={toggleDropdown}
         handleLogout={handleLogout}
-        className="hidden sm:hidden md:hidden lg:block"
+        className="hidden md:block"
       />
     </>
   );

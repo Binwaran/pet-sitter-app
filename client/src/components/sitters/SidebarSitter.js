@@ -4,7 +4,7 @@ import { useEffect, useRef, useCallback, useMemo, memo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
-import { createClient } from "@supabase/supabase-js"; // เพิ่มการนำเข้า Supabase client
+import { createClient } from "@supabase/supabase-js";
 
 // Import assets
 import {
@@ -33,12 +33,9 @@ const CheckUnreadBookings = memo(() => {
     // ฟังก์ชันเช็คการจองที่ยังไม่ได้อ่าน
     const checkUnreadBookings = async () => {
       try {
-        // 1. ดึงข้อมูลการจองทั้งหมด
-        const token = localStorage.getItem("token");
-        if (!token) return;
-
+        // 1. ดึงข้อมูลการจองทั้งหมด - ใช้ cookie แทน token จาก localStorage
         const res = await axios.get("/api/pet-sitters/bookings", {
-          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true, // ส่ง cookie ไปด้วย request
         });
 
         // 2. ดึงรายการ ID ที่เคยดูแล้วจาก localStorage
@@ -242,13 +239,12 @@ const Sidebar = memo(({ className = "" }) => {
 
     const checkUnreadBookings = async () => {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) return;
-
+        // เปลี่ยนจากการใช้ localStorage.getItem("token") เป็น credentials: 'include'
         const res = await axios.get("/api/pet-sitters/bookings", {
-          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true, // แทนที่จะใช้ headers: { Authorization: `Bearer ${token}` }
         });
 
+        // ส่วนที่ยังคงใช้ localStorage ตามปกติ เนื่องจากไม่เกี่ยวกับ authentication
         const viewedBookings = JSON.parse(
           localStorage.getItem("sitterViewedBookings") || "[]"
         );
@@ -331,10 +327,27 @@ const Sidebar = memo(({ className = "" }) => {
     [router]
   );
 
+  // ส่วน handleLogout
   const handleLogout = async () => {
-    await logout();
-    alert("Logout successful");
-    router.push("/");
+    try {
+      // เรียกใช้ logout API เพื่อล้าง cookie
+      await fetch("/api/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      // ไม่ต้องลบ sitterViewedBookings แล้ว เพราะเราเก็บข้อมูลในฐานข้อมูลแล้ว
+      // localStorage.removeItem("sitterViewedBookings"); // ลบบรรทัดนี้ออก
+
+      // เรียกใช้ฟังก์ชัน logout จาก context
+      await logout();
+
+      // รีโหลดเพจเพื่อรีเซ็ตสถานะทั้งหมด
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Logout error:", error);
+      alert("Logout failed. Please try again.");
+    }
   };
 
   // Setup horizontal scrolling for mobile
@@ -412,7 +425,7 @@ const Sidebar = memo(({ className = "" }) => {
             onClick={handleLogout}
             className="hidden md:flex flex-row items-center gap-4 px-6 py-3 w-full transition whitespace-nowrap border-t border-[#DCDFED] hover:bg-[#FFF1EC] md:h-[56px] text-[#5B5D6F] font-medium cursor-pointer"
           >
-            <LogoutIcon color="#AEB1C3" width={16} height={20} />
+            <LogoutIcon color="#AEB1C3" width={24} height={24} />
             Log Out
           </button>
         </div>

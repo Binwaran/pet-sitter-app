@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import formidable from "formidable";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
+import jwt from "jsonwebtoken"; // เพิ่ม import jwt ที่หายไป
 
 // Disable body parsing, we'll handle it ourselves with formidable
 export const config = {
@@ -16,17 +17,28 @@ const supabase = createClient(
 );
 
 export default async function handler(req, res) {
-  // Check for valid authentication
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+  // เปลี่ยนจากการตรวจสอบ Authorization header เป็นการตรวจสอบ cookie
+  const { token } = req.cookies;
+  if (!token) {
+    return res.status(401).json({ error: "Unauthorized: No token provided" });
   }
 
   try {
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // เพิ่มตรวจสอบว่า decoded มี id หรือไม่
+    if (!decoded || !decoded.id) {
+      return res
+        .status(401)
+        .json({ error: "Unauthorized: Invalid token format" });
+    }
+
+    // ดำเนินการต่อไปตามปกติ
+    if (req.method !== "POST") {
+      return res.status(405).json({ error: "Method not allowed" });
+    }
+
     const form = formidable({ multiples: true });
 
     // เพิ่ม debug log เพื่อตรวจสอบ request
@@ -65,6 +77,9 @@ export default async function handler(req, res) {
       const fileKeys = Object.keys(files);
       if (fileKeys.length > 0) {
         fileToProcess = files[fileKeys[0]];
+        if (Array.isArray(fileToProcess)) {
+          fileToProcess = fileToProcess[0];
+        }
       }
     }
 
@@ -104,7 +119,9 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ url: urlData.publicUrl });
   } catch (error) {
-    console.error("Server error:", error);
-    return res.status(500).json({ error: "Server error" });
+    console.error("Error processing upload:", error);
+    return res
+      .status(401)
+      .json({ error: "Authentication failed: " + error.message });
   }
 }

@@ -277,7 +277,7 @@ export default function AdminPetSitterDetailPage() {
               <div className="flex items-center gap-[10px] flex-row">
                 <button
                   onClick={() => window.history.back()}
-                  className="text-[#7B7E8F] text-[18px] font-bold hover:underline flex items-center cursor-pointer"
+                  className="text-[#7B7E8F] text-[18px] font-bold flex items-center cursor-pointer"
                 >
                   <svg
                     width="22"

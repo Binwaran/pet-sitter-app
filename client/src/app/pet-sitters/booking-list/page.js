@@ -6,6 +6,7 @@ import Topbar from "@/components/sitters/TopbarSitter";
 import StatusDropdown from "@/components/dropdown/StatusDropdown";
 import { useRouter } from "next/navigation";
 import { Pagination, PaginationItem } from "@mui/material";
+import { useAuth } from "@/context/AuthContext"; // เพิ่มการนำเข้า useAuth
 
 // Define status constants with appropriate colors matching the Figma
 const STATUS_MAP = {
@@ -159,6 +160,7 @@ const SearchInput = ({ value, onChange }) => (
 
 // Custom hook for managing booking data
 const useBookings = () => {
+  const { user } = useAuth(); // ใช้ user จาก context
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("all");
@@ -167,18 +169,52 @@ const useBookings = () => {
   const [viewedBookings, setViewedBookings] = useState([]);
   const rowsPerPage = 8;
 
-  // โหลดข้อมูล viewedBookings จาก localStorage เมื่อ component โหลด
+  // โหลดข้อมูล viewedBookings จาก localStorage และ API เมื่อ component โหลด
   useEffect(() => {
+    if (!user?.id) return;
+
     try {
+      // ยังคงใช้ localStorage เพื่อให้การแสดงผลเร็วขึ้น
       const storedViewedBookings = JSON.parse(
         localStorage.getItem("sitterViewedBookings") || "[]"
       );
       setViewedBookings(storedViewedBookings);
+
+      // ดึงข้อมูลการอ่านจากฐานข้อมูล
+      const fetchViewedBookings = async () => {
+        try {
+          const res = await axios.get("/api/pet-sitters/viewed-bookings", {
+            withCredentials: true,
+          });
+
+          if (res.data && Array.isArray(res.data.data)) {
+            const serverViewedBookings = res.data.data.map(
+              (item) => item.booking_id
+            );
+
+            // รวมข้อมูลจาก localStorage และ server แล้วกำจัดค่าซ้ำ
+            const combinedViewedBookings = [
+              ...new Set([...storedViewedBookings, ...serverViewedBookings]),
+            ];
+
+            // อัปเดต state และ localStorage
+            setViewedBookings(combinedViewedBookings);
+            localStorage.setItem(
+              "sitterViewedBookings",
+              JSON.stringify(combinedViewedBookings)
+            );
+          }
+        } catch (err) {
+          console.error("Error fetching viewed bookings:", err);
+        }
+      };
+
+      fetchViewedBookings();
     } catch (e) {
       console.error("Error loading viewed bookings:", e);
       localStorage.removeItem("sitterViewedBookings");
     }
-  }, []);
+  }, [user?.id]);
 
   // เพิ่มฟังก์ชันตรวจสอบว่า booking ได้ถูกดูแล้วหรือไม่
   const isBookingViewed = useCallback(
@@ -188,7 +224,7 @@ const useBookings = () => {
 
   // เพิ่มฟังก์ชันบันทึกการดู booking
   const markBookingAsViewed = useCallback(
-    (bookingId) => {
+    async (bookingId) => {
       if (!isBookingViewed(bookingId)) {
         const newViewedBookings = [...viewedBookings, bookingId];
         setViewedBookings(newViewedBookings);
@@ -196,6 +232,17 @@ const useBookings = () => {
           "sitterViewedBookings",
           JSON.stringify(newViewedBookings)
         );
+
+        // บันทึกการอ่านลงฐานข้อมูล
+        try {
+          await axios.post(
+            "/api/pet-sitters/mark-booking-viewed",
+            { bookingId },
+            { withCredentials: true }
+          );
+        } catch (err) {
+          console.error("Error marking booking as viewed:", err);
+        }
       }
     },
     [viewedBookings, isBookingViewed]
@@ -204,16 +251,15 @@ const useBookings = () => {
   const fetchBookings = useCallback(async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        console.error("No token found");
+      if (!user?.id) {
+        console.error("No user found");
         setLoading(false);
         return;
       }
 
-      // Fix: Use the correct API endpoint without needing sitterId
+      // เปลี่ยนเป็นใช้ cookie แทน token ผ่าน withCredentials
       const res = await axios.get(`/api/pet-sitters/bookings`, {
-        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true, // ส่ง cookie ไปกับ request
       });
 
       // Sort bookings by date (newest first)
@@ -230,7 +276,7 @@ const useBookings = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.id]); // เพิ่ม user?.id ใน dependency
 
   // Filter bookings based on search and status
   const filteredBookings = useMemo(() => {
@@ -283,13 +329,14 @@ const useBookings = () => {
     handlePageChange,
     handleStatusChange,
     handleSearchChange,
-    isBookingViewed, // ส่งออกฟังก์ชันใหม่
-    markBookingAsViewed, // ส่งออกฟังก์ชันใหม่
+    isBookingViewed,
+    markBookingAsViewed,
   };
 };
 
 const BookingPage = () => {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const {
     loading,
     paginatedBookings,
@@ -305,23 +352,35 @@ const BookingPage = () => {
     markBookingAsViewed,
   } = useBookings();
 
-  useEffect(() => {
-    fetchBookings();
-  }, [fetchBookings]);
-
+  // ย้าย handleBookingClick มาไว้ที่นี่ ก่อน conditional return
   const handleBookingClick = useCallback(
     (bookingId) => {
-      markBookingAsViewed(bookingId); // เพิ่มบรรทัดนี้
+      markBookingAsViewed(bookingId);
       router.push(`/pet-sitters/booking-list/${bookingId}`);
     },
     [router, markBookingAsViewed]
   );
 
+  useEffect(() => {
+    if (user?.id) {
+      fetchBookings();
+    }
+  }, [fetchBookings, user?.id]);
+
+  // Show loading state while auth is in progress
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-lg">Loading user information...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col min-h-screen bg-[#F9FAFB] relative">
-      <div className="flex md:flex-row flex-col min-w-0">
-        <Sidebar className="hidden md:flex" />
-        <div className="flex-1 flex flex-col">
+    <div className="flex flex-col max-h-screen bg-[#F6F6F9] w-full min-w-0">
+      <div className="flex w-full min-w-0">
+        <Sidebar className="hidden md:flex w-full" />
+        <div className="flex-1 flex flex-col w-full h-full min-w-0 bg-[#F6F6F9]">
           {/* Header container */}
           <div className="fixed top-0 left-0 right-0 z-50 md:left-[240px] flex flex-col">
             <Topbar className="w-full" />
@@ -331,7 +390,7 @@ const BookingPage = () => {
           </div>
 
           {/* Main content */}
-          <main className="flex-1 flex flex-col w-full px-4 md:px-10 py-6 gap-6 relative mt-[123px] md:mt-[72px]">
+          <main className="flex-1 flex flex-col w-full max-w-full gap-6 px-10 pb-20 pt-10 mt-[123px] md:mt-[72px] transition-all duration-300 relative h-full min-w-0">
             <div className="flex flex-col items-center lg:flex-row sm:justify-between gap-6 w-full">
               <h1 className="text-2xl font-bold whitespace-nowrap">
                 Booking List
@@ -367,7 +426,7 @@ const BookingPage = () => {
               <table className="min-w-[600px] w-full h-full">
                 <thead>
                   <tr className="bg-black text-white rounded-t-2xl">
-                    <th className="py-3 px-4 text-left rounded-tl-2xl font-medium">
+                    <th className="py-3 px-4 text-left rounded-tl-2xl font-medium whitespace-nowrap">
                       Pet Owner Name
                     </th>
                     <th className="py-3 px-4 text-left font-medium">Pet(s)</th>
@@ -416,10 +475,10 @@ const BookingPage = () => {
                         <td className="font-medium py-6 px-4 gap-2.5 h-[92px]">
                           {booking.pet_count || 0}
                         </td>
-                        <td className="font-medium py-6 px-4 gap-2.5 h-[92px]">
+                        <td className="font-medium py-6 px-4 gap-2.5 h-[92px] whitespace-nowrap">
                           {booking.duration || 0} hours
                         </td>
-                        <td className="font-medium py-6 px-4 gap-2.5 h-[92px]">
+                        <td className="font-medium py-6 px-4 gap-2.5 h-[92px] whitespace-nowrap">
                           {booking.booked_date || "N/A"}
                         </td>
                         <td className="py-6 px-4 gap-2.5 h-[92px]">

@@ -13,7 +13,11 @@ export default function RootLayout({ children }) {
   const pathname = usePathname();
   const noLayoutRoutes = [
     "/login",
+    "/login/sitter",
+    "/login/owner",
     "/register",
+    "/register/sitter",
+    "/register/owner",
     "/pet-sitters/profile",
     "/pet-sitters/booking-list",
     "/pet-sitters/calendar",

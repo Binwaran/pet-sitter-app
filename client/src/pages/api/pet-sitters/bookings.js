@@ -42,17 +42,15 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // Extract token from Authorization header
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res
-      .status(401)
-      .json({ error: "Unauthorized: Invalid token format" });
+  // แก้ไขส่วนนี้: ดึง token จาก cookie แทนจาก header
+  const { token } = req.cookies;
+
+  if (!token) {
+    return res.status(401).json({ error: "Unauthorized: No token provided" });
   }
 
   try {
-    // Get token and decode it
-    const token = authHeader.split(" ")[1];
+    // ตรวจสอบ token จาก cookie
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.id || decoded.user_id || decoded.sub;
 
