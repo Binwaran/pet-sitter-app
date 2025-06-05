@@ -22,6 +22,13 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Unauthorized: Invalid user ID" });
     }
 
+    // ตรวจสอบว่ามีการใช้ supabase ที่ถูกต้อง
+    if (!supabase) {
+      throw new Error("Supabase client is not initialized");
+    }
+
+    console.log("Fetching viewed bookings for user:", userId);
+
     // ดึงข้อมูลการอ่าน booking จากฐานข้อมูล
     const { data, error } = await supabase
       .from("viewed_bookings")
@@ -33,9 +40,11 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: error.message });
     }
 
-    return res.status(200).json({ data });
+    return res.status(200).json({ data: data || [] });
   } catch (err) {
     console.error("Server error:", err);
-    return res.status(500).json({ error: "Internal server error" });
+    return res
+      .status(500)
+      .json({ error: err.message || "Internal server error" });
   }
 }

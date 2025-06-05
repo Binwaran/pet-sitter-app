@@ -2,7 +2,6 @@
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext"; // เพิ่มการใช้ useAuth
 
@@ -55,6 +54,11 @@ export default function MapSitter({ addressDetails = {} }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { user } = useAuth(); // ใช้ user จาก context แทน localStorage
+
+  // เพิ่ม client-side CSS import
+  useEffect(() => {
+    import("leaflet/dist/leaflet.css");
+  }, []);
 
   // debounce address changes
   const debouncedAddress = useDebounce(addressDetails, 500);

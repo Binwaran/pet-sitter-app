@@ -138,6 +138,8 @@ const PaginationControls = ({ count, page, onChange }) => (
 const SearchInput = ({ value, onChange }) => (
   <div className="relative w-full sm:w-auto">
     <input
+      id="search-input"
+      name="search"
       type="text"
       placeholder="Search..."
       value={value}
