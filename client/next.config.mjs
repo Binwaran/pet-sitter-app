@@ -12,6 +12,11 @@ const nextConfig = {
       },
     ],
   },
+  transpilePackages: ["@tailwindcss/oxide"],
+  experimental: {
+    // Force Tailwind to use the JS implementation
+    forceSwcTransforms: true,
+  },
 };
 
 export default nextConfig;
