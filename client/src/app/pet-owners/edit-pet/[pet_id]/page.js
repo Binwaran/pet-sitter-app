@@ -4,14 +4,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
 const petTypes = [
-  "Dog",
-  "Cat",
-  "Bird",
-  "Rabbit",
-  "Mouse",
-  "Turtle",
-  "Snake",
-  "Other"
+  "Dog", "Cat", "Bird", "Rabbit", "Mouse", "Turtle", "Snake", "Other"
 ];
 const sexes = [
   { value: "เพศผู้", label: "เพศผู้" },
@@ -20,7 +13,7 @@ const sexes = [
 ];
 
 export default function EditPetPageInner() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, setRedirectPath } = useAuth();
   const router = useRouter();
   const params = useParams();
   const petId = params.pet_id === "new" ? null : params.pet_id;
@@ -42,7 +35,8 @@ export default function EditPetPageInner() {
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
-      setFetchLoading(false);
+      setRedirectPath(window.location.pathname); // เก็บ path ปัจจุบันไว้ใน context
+      router.replace("/login");
       return;
     }
     if (user.role !== "owner") {
@@ -50,7 +44,6 @@ export default function EditPetPageInner() {
       return;
     }
     if (!petId) {
-      // สร้างใหม่ ไม่ต้อง fetch
       setFetchLoading(false);
       return;
     }
@@ -82,7 +75,7 @@ export default function EditPetPageInner() {
       }
     };
     fetchPet();
-  }, [user, authLoading, router, petId]);
+  }, [user, authLoading, router, petId, setRedirectPath]);
 
   const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -98,12 +91,14 @@ export default function EditPetPageInner() {
     try {
       let res;
       if (petId) {
+        // แก้ไข ไม่ต้องส่ง owner_id
         res = await fetch(`/api/pets/${petId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
       } else {
+        // สร้างใหม่ ต้องส่ง owner_id
         res = await fetch(`/api/pets`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },

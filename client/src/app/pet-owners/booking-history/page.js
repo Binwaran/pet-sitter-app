@@ -44,13 +44,15 @@ export default function BookingHistoryPage() {
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
-      // ยังไม่ได้ login
-      const redirectPath = encodeURIComponent(window.location.pathname);
-      router.replace(`/login?redirect=${redirectPath}`);
+      // เก็บ path ปัจจุบันไว้ใน sessionStorage
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("redirectPath", window.location.pathname);
+      }
+      router.replace("/login");
       return;
     }
     if (user.role !== "owner") {
-      router.replace("/unauthorized");
+      router.replace("/"); // เปลี่ยนเส้นทางไปยังหน้าอื่นถ้าไม่ใช่ owner
       return;
     }
     if (!user.id) {

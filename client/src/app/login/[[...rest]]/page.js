@@ -2,7 +2,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import AuthIllustrations from "@/components/Auth/AuthIllustrations";
@@ -12,23 +12,25 @@ import LoginForm from "@/components/Auth/LoginForm";
 import { useAuth } from "@/context/AuthContext";
 
 export default function CustomLogin({ params }) {
-  // params.rest จะเป็น array ของ segment ที่ตามหลัง /login เช่น /login/xxx/yyy => params.rest = ['xxx', 'yyy']
-  // สามารถใช้ params.rest ได้ถ้าต้องการแยก logic ตาม path
-
-  const { user, login, loading } = useAuth(); // เพิ่ม user
+  const { user, login } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/";
 
-  // เช็คว่าถ้า login อยู่แล้ว ให้ redirect ไป profile ตาม role
   useEffect(() => {
     if (user) {
-      if (user.role === "owner") {
+      // อ่าน path จาก sessionStorage
+      let redirectPath = null;
+      if (typeof window !== "undefined") {
+        redirectPath = sessionStorage.getItem("redirectPath");
+      }
+      if (redirectPath && redirectPath !== "/login") {
+        router.replace(redirectPath);
+        sessionStorage.removeItem("redirectPath");
+      } else if (user.role === "owner") {
         router.replace("/pet-owners/profile");
       } else if (user.role === "sitter") {
         router.replace("/pet-sitters/profile");
       } else {
-        router.replace("/"); // fallback
+        router.replace("/");
       }
     }
   }, [user, router]);
@@ -66,9 +68,7 @@ export default function CustomLogin({ params }) {
 
     if (result.success) {
       toast.success("Login สำเร็จ!");
-      setTimeout(() => {
-        router.push(redirect); // ใช้ redirect ที่ได้จาก query
-      }, 1000);
+      // ไม่ต้อง redirect ที่นี่ ให้ useEffect จัดการ
     } else {
       // แสดง error
       if (result.errors) {
@@ -80,11 +80,9 @@ export default function CustomLogin({ params }) {
           setPasswordError(true);
           toast.error(result.errors.password);
         }
-
-        // หากไม่มี error แบบระบุช่อง ให้แจ้งรวม
         if (!result.errors.email && !result.errors.password) {
-          setEmailError(true); // 👈 เพิ่ม
-          setPasswordError(true); // 👈 เพิ่ม
+          setEmailError(true);
+          setPasswordError(true);
           toast.error("Login failed. Please try again.");
         }
       } else {
