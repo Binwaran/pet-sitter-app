@@ -5,6 +5,7 @@ import BookingSteps from '@/components/booking/BookingSteps';
 import { useRouter } from 'next/navigation';
 import BookingSummaryCard from '@/components/booking/BookingSummaryCard';
 import { AlertCircle } from 'lucide-react';
+import NavBar from '@/components/NavBar';
 
 export default function BookingInformationPage() {
   const [form, setForm] = useState({
@@ -54,6 +55,8 @@ export default function BookingInformationPage() {
   };
 
   return (
+    <>
+    <NavBar />
     <div className="flex flex-col min-h-screen bg-[#F9FAFB] p-4 md:p-6 lg:p-8 relative">
       <div className="container mx-auto flex flex-col lg:flex-row gap-6">
         <div className="flex-1 flex flex-col gap-6">
@@ -143,5 +146,6 @@ export default function BookingInformationPage() {
         className="hidden md:block absolute bottom-0 right-0 w-32 lg:w-48 xl:w-60"
       />
     </div>
+    </>
   );
 }

@@ -7,6 +7,7 @@ import BookingConfirmationModal from '@/components/booking/BookingConfirmationMo
 import { useRouter } from 'next/navigation';
 import { AlertCircle } from 'lucide-react'; // ✅ เพิ่มไอคอน
 import Image from 'next/image';
+import NavBar from '@/components/NavBar';
 
 export default function BookingPaymentPage() {
   const [form, setForm] = useState({
@@ -75,6 +76,8 @@ export default function BookingPaymentPage() {
   };
 
   return (
+    <>
+    < NavBar/>
     <div className="flex flex-col min-h-screen bg-[#F9FAFB] p-4 md:p-6 lg:p-8 relative">
       <div className="container mx-auto flex flex-col lg:flex-row gap-6">
         <div className="flex-1 flex flex-col gap-6">
@@ -212,11 +215,7 @@ export default function BookingPaymentPage() {
           </div>
         </div>
       </div>
-      <img
-        src="/assets/GraphicBookingPage.png"
-        alt="Booking Graphic"
-        className="hidden md:block absolute bottom-0 right-0 w-32 lg:w-48 xl:w-60"
-      />
     </div>
+    </>
   );
 }

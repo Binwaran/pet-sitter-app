@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import NavBar from '@/components/NavBar';
 
 export default function BookingThankYouPage() {
   const [booking, setBooking] = useState(null);
@@ -36,11 +37,12 @@ export default function BookingThankYouPage() {
   const data = booking || mockBooking;
 
   return (
-    <div className="relative min-h-screen bg-[#F9FAFB] flex flex-col items-center justify-center py-12">
+    <>
+    <NavBar/>
+    <div className="relative h-screen bg-gray-50 flex flex-col items-center justify-center">
       {/* BG Elements */}
-      {/* <Image src="/assets/element1.svg" alt="bg1" width={300} height={160} className="absolute left-0 top-24 z-0" /> */}
-      {/* <Image src="/assets/element2.svg" alt="bg2" width={120} height={120} className="absolute left-32 top-56 z-0" />
-      <Image src="/assets/element3.svg" alt="bg3" width={180} height={180} className="absolute right-0 bottom-0 z-0" /> */}
+      <Image src="/assets/booking8-left.png" alt="bg1" width={288} height={377} className="absolute left-8 top-0 z-0" />
+      <Image src="/assets/booking8-bottom.png" alt="bg2" width={311} height={465} className="absolute right-0 bottom-0 z-0" />
       {/* Main Card */}
       <div className="relative z-10 w-full max-w-lg mx-auto rounded-2xl overflow-hidden shadow-lg bg-white">
         <div className="bg-black text-white text-center py-7 px-6">
@@ -49,7 +51,7 @@ export default function BookingThankYouPage() {
         </div>
         <div className="p-8 pb-4">
           <div className="text-xs text-gray-400 mb-2">
-            Transaction Date: {data.transactionDate} <br />
+            Transaction Date: {data.transactionDate} <br/>
             Transaction No. : {data.transactionNo}
           </div>
           <div className="flex items-center justify-between mb-2">
@@ -92,13 +94,11 @@ export default function BookingThankYouPage() {
         </div>
        
       </div>
-      {/* Cat image bottom right */}
-      {/* <Image src="/assets/element3.svg" alt="catbg" width={320} height={320} className="absolute right-0 bottom-0 z-0" /> */}
-      {/* <Image src="/assets/mock/image3.webp" alt="cat" width={220} height={220} className="absolute right-10 bottom-0 z-10" /> */}
-     <div className="flex justify-center gap-4 py-6 bg-white">
+     <div className="flex justify-center gap-4 py-6 ">
           <button className="px-6 py-2 rounded-full bg-[#FFF6F0] text-orange-500 font-semibold hover:bg-orange-100 transition">Booking Detail</button>
           <button className="px-6 py-2 rounded-full bg-orange-500 text-white font-semibold hover:bg-orange-600 transition" onClick={() => router.push('/')}>Back To Home</button>
         </div>
     </div>
+    </>
   );
 }

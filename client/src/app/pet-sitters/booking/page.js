@@ -7,7 +7,7 @@ import BookingSummaryCard from '@/components/booking/BookingSummaryCard';
 import { PetSelectionList } from '@/components/booking/PetSelectionCard';
 import { useAuth } from '@/context/AuthContext';
 import axios from 'axios';
-import Footer from '@/components/Footer';
+
 
 export default function BookingPage() {
   const { user, loading: authLoading } = useAuth();
@@ -117,8 +117,6 @@ export default function BookingPage() {
           className="hidden md:block absolute bottom-0 right-0 w-32 lg:w-48 xl:w-60 pointer-events-none"
         />
       </div>
-
-      <Footer />
     </>
   );
 }
