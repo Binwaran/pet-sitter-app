@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import jwt from "jsonwebtoken";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -11,10 +12,19 @@ const handleError = (error, res, message = "Server error") => {
   return res.status(500).json({ error: error.message || message });
 };
 
-// ตรวจสอบ token
+// ตรวจสอบ token จาก cookie
 const validateAuth = (req) => {
-  const authHeader = req.headers.authorization;
-  return authHeader && authHeader.startsWith("Bearer ");
+  const { token } = req.cookies;
+  if (!token) return { valid: false };
+
+  try {
+    // ตรวจสอบและถอดรหัส token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return { valid: true, decoded };
+  } catch (error) {
+    console.error("Token validation error:", error);
+    return { valid: false };
+  }
 };
 
 // แปลง pending data
@@ -83,22 +93,40 @@ function preparePendingData(data) {
 }
 
 export default async function handler(req, res) {
-  // ตรวจสอบ authorization
-  if (!validateAuth(req)) {
+  // ตรวจสอบ authentication จาก cookie
+  const authResult = validateAuth(req);
+  if (!authResult.valid) {
     return res
       .status(401)
-      .json({ error: "Unauthorized - Invalid token format" });
+      .json({ error: "Unauthorized - Invalid or missing token" });
+  }
+
+  // ดึง user_id จาก token
+  const userId =
+    authResult.decoded.id ||
+    authResult.decoded.user_id ||
+    authResult.decoded.sub;
+  if (!userId) {
+    return res
+      .status(401)
+      .json({ error: "Unauthorized - Invalid user ID in token" });
   }
 
   // GET method - สำหรับดึงข้อมูลโปรไฟล์
   if (req.method === "GET") {
-    const { user_id } = req.query;
-    if (!user_id) {
-      return res.status(400).json({ error: "User ID is required" });
+    // ใช้ userId จาก token แทนที่จะรับเป็น query parameter
+    // หรือเปรียบเทียบค่าที่ได้จาก token กับ user_id ที่ส่งมา
+    const requestedUserId = req.query.user_id;
+
+    // ถ้ามีการระบุ user_id มา แต่ไม่ตรงกับใน token ให้ปฏิเสธการเข้าถึง
+    if (requestedUserId && requestedUserId !== userId) {
+      return res
+        .status(403)
+        .json({ error: "Forbidden - Cannot access another user's profile" });
     }
 
     try {
-      const userIdString = String(user_id);
+      const userIdString = String(userId);
 
       // ดึงข้อมูลจาก pet_sitter table
       const { data: petSitterData, error: petSitterError } = await supabase
@@ -169,12 +197,16 @@ export default async function handler(req, res) {
       ...otherData
     } = req.body;
 
-    if (!user_id) {
-      return res.status(400).json({ error: "User ID is required" });
+    // ตรวจสอบว่า user_id ที่ส่งมาตรงกับใน token
+    if (user_id && user_id !== userId) {
+      return res
+        .status(403)
+        .json({ error: "Forbidden - Cannot update another user's profile" });
     }
 
     try {
-      const userIdString = String(user_id);
+      // ใช้ userId จาก token
+      const userIdString = String(userId);
 
       // 1. อัพเดทข้อมูลพื้นฐานในตาราง users
       const { error: userError } = await supabase

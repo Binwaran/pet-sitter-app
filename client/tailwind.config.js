@@ -10,4 +10,7 @@ module.exports = {
     extend: {},
   },
   plugins: [],
+  future: {
+    disableColorOpacityUtilitiesByDefault: true,
+  }
 }

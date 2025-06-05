@@ -59,6 +59,7 @@ export default async function handler(req, res) {
   res.setHeader("Set-Cookie", `token=${token}; HttpOnly; Path=/; Max-Age=${60 * 60 * 24 * 7}; SameSite=Strict${process.env.NODE_ENV === "production" ? "; Secure" : ""}`);
 
   return res.status(200).json({
-    message: "Login successful"
+    message: "Login successful",
+    token: token
   });
 }

@@ -1,50 +1,74 @@
 "use client";
-import React, { useEffect, useRef, useCallback, memo } from "react";
+import React, { useEffect, useRef, useCallback, memo, useState } from "react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 // นำเข้าไฟล์รูปภาพ
+import {
+  ProfileIcon,
+  PawIcon,
+  ReportIcon,
+  LogoutIcon,
+} from "@/components/icons";
 import sitterlogo from "/public/assets/sitter-logo-white.svg";
-import ownerIcon from "/public/assets/sidebar/profile.svg";
-import sitterIcon from "/public/assets/sidebar/paw.svg";
-import reportIcon from "/public/assets/sidebar/report.svg";
-import logout from "/public/assets/sidebar/logout.svg";
 
 // ย้าย constants ออกมาด้านนอกเพื่อไม่ต้องสร้างใหม่ทุกครั้ง
 const MENU_ITEMS = [
-  { label: "Pet Owner", alt: "owner", icon: ownerIcon, value: "pet-owners" },
+  { label: "Pet Owner", alt: "owner", icon: ProfileIcon, value: "pet-owners" },
   {
     label: "Pet Sitter",
     alt: "sitter",
-    icon: sitterIcon,
+    icon: PawIcon,
     value: "pet-sitters",
   },
-  { label: "Report", alt: "report", icon: reportIcon, value: "report" },
+  { label: "Report", alt: "report", icon: ReportIcon, value: "report" },
 ];
 
 // สร้าง component ย่อยสำหรับ menu item
-const MenuItem = memo(({ item, isSelected, onClick }) => (
-  <button
-    type="button"
-    onClick={() => onClick(item.value)}
-    className={`
-      flex items-center px-6 py-4 gap-4 
-      md:text-left justify-center md:justify-start text-center 
-      transition whitespace-nowrap cursor-pointer 
-      w-full h-[51px] md:h-[56px]
-      ${
-        isSelected
-          ? "bg-[#3A3B46] text-white font-semibold"
-          : "hover:bg-[#3A3B46]"
-      }
-    `}
-  >
-    <Image src={item.icon} alt={item.label} width={24} height={24} />
-    {item.label}
-  </button>
-));
+const MenuItem = memo(({ item, isSelected, onClick, isMobile }) => {
+  const { icon: Icon, label } = item;
 
-MenuItem.displayName = "MenuItem";
+  // กำหนดสีของไอคอนตามสถานะการเลือกและขนาดหน้าจอ
+  let iconColor = "#AEB1C3"; // default color
+  let iconHoverClass = "";
+
+  if (isSelected) {
+    iconColor = "#FFFFFF";
+  } else {
+    // กำหนด class สำหรับ hover ตามประเภทอุปกรณ์
+    iconHoverClass = "group-hover:text-white";
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(item.value)}
+      className={`
+        group flex items-center px-6 py-4 gap-3 md:gap-4 
+        md:text-left justify-center md:justify-start text-center font-medium 
+        transition whitespace-nowrap cursor-pointer 
+        w-full h-[51px] md:h-[56px]
+        ${
+          isSelected
+            ? "bg-[#3A3B46] text-white font-medium"
+            : "hover:bg-[#3A3B46] hover:text-white text-[#AEB1C3]"
+        }
+      `}
+    >
+      <div
+        className={`${!isSelected ? `text-[#AEB1C3] ${iconHoverClass}` : ""}`}
+      >
+        <Icon
+          color={isSelected ? iconColor : "currentColor"}
+          width={24}
+          height={24}
+        />
+      </div>
+      <span>{label}</span>
+    </button>
+  );
+});
 
 // สร้าง component สำหรับปุ่ม Logout
 const LogoutButton = memo(({ onClick, isMobile = false }) => (
@@ -52,16 +76,19 @@ const LogoutButton = memo(({ onClick, isMobile = false }) => (
     type="button"
     onClick={onClick}
     className={`
-      flex items-center px-6 py-4 gap-4 text-white 
+      group flex items-center px-6 py-4 gap-3 md:gap-4 
       ${
         isMobile
-          ? "md:hidden justify-center text-center hover:bg-[#3A3B46] transition whitespace-nowrap cursor-pointer"
-          : "hidden md:flex hover:bg-[#3A3B46] transition whitespace-nowrap w-full border-t border-[#5B5D6F] h-[56px] cursor-pointer"
+          ? "md:hidden justify-center text-center hover:bg-[#3A3B46] transition whitespace-nowrap cursor-pointer font-medium"
+          : "hidden md:flex hover:bg-[#3A3B46] transition whitespace-nowrap w-full border-t border-[#5B5D6F] h-[56px] cursor-pointer font-medium"
       }
+      text-[#AEB1C3] hover:text-white
     `}
   >
-    <Image src={logout} alt="logout" width={24} height={24} />
-    Log Out
+    <div className="text-[#AEB1C3] group-hover:text-white">
+      <LogoutIcon color="currentColor" width={24} height={24} />
+    </div>
+    <span>Log Out</span>
   </button>
 ));
 
@@ -71,6 +98,19 @@ const Sidebar = memo(({ className = "" }) => {
   const router = useRouter();
   const pathname = usePathname();
   const navRef = useRef(null);
+  const { logout } = useAuth();
+  const [isMobile, setIsMobile] = useState(false);
+
+  // เพิ่มการตรวจสอบขนาดหน้าจอ
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // หา value ของเมนูที่เลือกจาก pathname
   const selectedValue = MENU_ITEMS.find((item) =>
@@ -85,10 +125,27 @@ const Sidebar = memo(({ className = "" }) => {
     [router]
   );
 
-  const handleLogout = useCallback(() => {
-    localStorage.removeItem("accessToken");
-    router.push("/login");
-  }, [router]);
+  const handleLogout = async () => {
+    try {
+      // เรียกใช้ logout API เพื่อล้าง cookie
+      await fetch("/api/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      // ล้าง localStorage เฉพาะส่วนที่ไม่เกี่ยวข้องกับ authentication
+      localStorage.removeItem("adminViewedItems"); // เก็บข้อมูล admin ที่ดูแล้ว
+
+      // เรียกใช้ฟังก์ชัน logout จาก context
+      await logout();
+
+      // รีโหลดเพจเพื่อรีเซ็ตสถานะทั้งหมด
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Logout error:", error);
+      alert("Logout failed. Please try again.");
+    }
+  };
 
   // เพิ่ม useEffect สำหรับ wheel horizontal scroll
   useEffect(() => {
@@ -140,7 +197,7 @@ const Sidebar = memo(({ className = "" }) => {
           <nav
             ref={navRef}
             className="
-              text-[16px] text-white
+              text-[16px] text-[#AEB1C3]
               flex flex-row md:flex-col
               overflow-x-auto md:overflow-visible
               w-full
@@ -155,6 +212,7 @@ const Sidebar = memo(({ className = "" }) => {
                 item={item}
                 isSelected={selectedValue === item.value}
                 onClick={handleMenuClick}
+                isMobile={isMobile}
               />
             ))}
 
@@ -170,6 +228,7 @@ const Sidebar = memo(({ className = "" }) => {
   );
 });
 
+MenuItem.displayName = "MenuItem";
 Sidebar.displayName = "Sidebar";
 
 export default Sidebar;

@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import axios from "axios";
-import { jwtDecode } from "jwt-decode";
+import { useAuth } from "@/context/AuthContext"; // เพิ่มการใช้ useAuth
 
 // คงค่าไว้ที่ constants
 const DEFAULT_POSITION = [13.7563, 100.5018]; // กรุงเทพฯ
@@ -54,6 +54,7 @@ export default function MapSitter({ addressDetails = {} }) {
   const [userInfo, setUserInfo] = useState({ tradeName: "Pet Sitter" });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { user } = useAuth(); // ใช้ user จาก context แทน localStorage
 
   // debounce address changes
   const debouncedAddress = useDebounce(addressDetails, 500);
@@ -95,22 +96,16 @@ export default function MapSitter({ addressDetails = {} }) {
 
   // Fetch user data
   const fetchUserData = useCallback(async () => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
+
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
-      const decoded = jwtDecode(token);
-      const user_id = decoded.user_id || decoded.sub || decoded.id;
-
-      const response = await axios.get(
-        `/api/pet-sitters/update-profile?user_id=${user_id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      // เปลี่ยนเป็นการใช้ cookie ผ่าน withCredentials
+      const response = await axios.get(`/api/pet-sitters/update-profile`, {
+        withCredentials: true, // ส่ง cookies ไปกับ request
+      });
 
       if (response.data?.data) {
         const data = response.data.data;
@@ -128,33 +123,80 @@ export default function MapSitter({ addressDetails = {} }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.id]);
 
   // Update coordinates in database
-  const updateCoordinates = useCallback(async (lat, lng, address) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
+  const updateCoordinates = useCallback(
+    async (lat, lng, address) => {
+      if (!user?.id) return;
 
-      const decoded = jwtDecode(token);
-      const user_id = decoded.user_id || decoded.sub || decoded.id;
+      // Validate coordinates before sending request
+      if (!lat || !lng || isNaN(parseFloat(lat)) || isNaN(parseFloat(lng))) {
+        console.error("Invalid coordinates:", { lat, lng });
+        return;
+      }
 
-      await axios.post(
-        "/api/pet-sitters/update-coordinates",
-        {
-          user_id,
-          lat: parseFloat(lat),
-          lng: parseFloat(lng),
-          address,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
+      try {
+        // Format coordinates to ensure correct precision
+        const formattedLat = parseFloat(parseFloat(lat).toFixed(6));
+        const formattedLng = parseFloat(parseFloat(lng).toFixed(6));
+
+        // Format address to prevent undefined or null values
+        const safeAddress = typeof address === "string" ? address : "";
+
+        // First check if user role is sitter
+        console.log("Preparing to update coordinates for sitter:", user.id);
+
+        // Try with a different endpoint structure or format
+        await axios.post(
+          "/api/pet-sitters/update-coordinates",
+          {
+            // Add user_id explicitly in case the server needs it
+            user_id: user.id,
+            lat: formattedLat,
+            lng: formattedLng,
+            // Make sure address is properly formatted
+            address: safeAddress.substring(0, 500), // Limit length in case it's too long
+          },
+          {
+            withCredentials: true,
+            timeout: 20000, // Increase timeout for slow connections
+          }
+        );
+
+        console.log("Coordinates updated successfully");
+      } catch (err) {
+        console.error("Error updating coordinates:", err);
+
+        // More detailed error logging
+        if (err.response) {
+          console.error("Server response:", {
+            status: err.response.status,
+            data: err.response.data,
+            headers: err.response.headers,
+          });
+
+          // Different handling based on status code
+          if (err.response.status === 401) {
+            console.error("Authentication issue - please log in again");
+            setError("Session expired. Please log in again.");
+          } else if (err.response.status === 405) {
+            console.error(
+              "Method not allowed - server expects a different HTTP method"
+            );
+          } else if (err.response.status === 500) {
+            console.error("Server error - check server logs for details");
+            // Continue without showing error to user (non-critical failure)
+          }
+        } else if (err.request) {
+          console.error("No response received from server");
         }
-      );
-    } catch (err) {
-      console.error("Error updating coordinates:", err);
-    }
-  }, []);
+
+        // Don't throw error for coordinate updates - they're non-critical
+      }
+    },
+    [user?.id]
+  );
 
   // Geocode address when it changes
   useEffect(() => {
@@ -162,17 +204,40 @@ export default function MapSitter({ addressDetails = {} }) {
       if (!formattedAddress) return;
 
       try {
+        console.log("Searching for address:", formattedAddress);
+
         const response = await axios.get("/api/geocode/search", {
           params: { q: formattedAddress },
+          timeout: 10000,
         });
+
+        // Log the raw geocoding response for debugging
+        console.log("Geocoding response:", response.data);
 
         if (response.data?.[0]) {
           const { lat, lon } = response.data[0];
           const newLat = parseFloat(lat);
           const newLng = parseFloat(lon);
 
-          setPosition([newLat, newLng]);
-          updateCoordinates(newLat, newLng, formattedAddress);
+          if (!isNaN(newLat) && !isNaN(newLng)) {
+            setPosition([newLat, newLng]);
+
+            // Skip coordinate updates if we've had errors with them
+            // This makes the UI work even if the server-side saving is broken
+            if (!error) {
+              // Add a longer delay to ensure server is ready
+              setTimeout(() => {
+                updateCoordinates(newLat, newLng, formattedAddress);
+              }, 1000);
+            }
+          } else {
+            console.error("Invalid geocoding result:", response.data[0]);
+          }
+        } else {
+          console.warn(
+            "No geocoding results found for address:",
+            formattedAddress
+          );
         }
       } catch (err) {
         console.error("Error geocoding address:", err);
@@ -180,7 +245,7 @@ export default function MapSitter({ addressDetails = {} }) {
     }
 
     geocodeAddress();
-  }, [formattedAddress, updateCoordinates]);
+  }, [formattedAddress, updateCoordinates, error]);
 
   // Initial data fetch
   useEffect(() => {

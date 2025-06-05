@@ -70,7 +70,14 @@ export default function FormField({
       <div className="relative">
         {renderField()}
         {hasError && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2">
+          <span
+            className={`absolute ${
+              component === "ExperienceDropdown" ||
+              component === "PetTypeMultiSelect"
+                ? "right-8"
+                : "right-3"
+            } top-1/2 -translate-y-1/2`}
+          >
             <Image src={exclamationcircle} alt="error" width={13} height={13} />
           </span>
         )}

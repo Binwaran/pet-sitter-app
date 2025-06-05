@@ -88,8 +88,8 @@ export default function CustomLogin({ params }) {
           toast.error("Login failed. Please try again.");
         }
       } else {
-          setEmailError(true);
-          setPasswordError(true);
+        setEmailError(true);
+        setPasswordError(true);
         toast.error("Login failed. Please try again.");
       }
     }
@@ -99,38 +99,42 @@ export default function CustomLogin({ params }) {
     <div className="flex flex-col md:flex-row min-h-screen relative bg-white">
       <AuthIllustrations />
 
-      <div className="z-10 flex flex-1 justify-center items-center p-6 md:p-16">
-        <div className="w-full max-w-md space-y-6">
+      <div className="z-10 flex flex-1 justify-center items-center w-full gap-10 px-4 py-15">
+        <div className="flex flex-col gap-14 max-w-[440px] w-full">
           <AuthHeader />
-          <LoginForm
-            email={email}
-            password={password}
-            setEmail={setEmail}
-            setPassword={setPassword}
-            handleLogin={handleLogin}
-            emailError={emailError}
-            passwordError={passwordError}
-          />
+          <div className="w-full flex flex-col gap-8">
+            <LoginForm
+              email={email}
+              password={password}
+              setEmail={setEmail}
+              setPassword={setPassword}
+              handleLogin={handleLogin}
+              emailError={emailError}
+              passwordError={passwordError}
+            />
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
+            <div className="flex items-center gap-3 w-full">
+              <div className="flex-grow border-t border-[#DCDFED]"></div>
+              <span className="text-lg text-[#7B7E8F]">Or Continue With</span>
+              <div className="flex-grow border-t border-[#DCDFED]"></div>
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-2 text-gray-600">
-                Or Continue With
-              </span>
+
+            <SocialLoginButtons />
+
+            <div className="flex flex-row justify-center items-center gap-2 w-full">
+              <p className="text-lg font-medium text-[#060D18] leading-6.5">
+                Don&apos;t have any account?{" "}
+              </p>
+              <div className="flex py-1 px-0.5 gap-1">
+                <Link
+                  href="/register"
+                  className="text-[#FF7037] hover:text-[#FF986F] active:text-[#E44A0C] font-bold w-[61px] hover:underline"
+                >
+                  Register
+                </Link>
+              </div>
             </div>
           </div>
-
-          <SocialLoginButtons />
-
-          <p className="text-center text-sm text-gray-600">
-            Don&apos;t have any account?{" "}
-            <Link href="/register" className="text-orange-500 hover:underline">
-              Register
-            </Link>
-          </p>
         </div>
       </div>
     </div>

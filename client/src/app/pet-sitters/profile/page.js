@@ -10,11 +10,11 @@ import ImageUpload from "@/components/profile/ImageUpload";
 import GalleryUpload from "@/components/profile/GalleryUpload";
 import exclamationcircle from "/public/assets/profile/exclamation-circle.svg";
 import axios from "axios";
-import { jwtDecode } from "jwt-decode";
 import { ButtonOrange } from "@/components/buttons/OrangeButtons";
 import { toast, Toaster } from "sonner";
 import dynamic from "next/dynamic";
 import subdistricts from "@/app/data/subdistricts.json";
+import { useAuth } from "@/context/AuthContext"; // เพิ่มการนำเข้า useAuth
 
 // Components
 import FormField from "@/components/form/FormField";
@@ -55,6 +55,7 @@ const LoadingSpinner = memo(({ text = "Loading..." }) => (
 LoadingSpinner.displayName = "LoadingSpinner";
 
 export default function PetSitterProfilePage() {
+  const { user } = useAuth(); // ใช้ user จาก context แทน localStorage
   const [initialValues, setInitialValues] = useState({
     full_name: "",
     experience: "",
@@ -81,20 +82,17 @@ export default function PetSitterProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       setIsLoading(true);
-      const token = localStorage.getItem("token");
 
-      if (!token) {
+      if (!user?.id) {
         setIsLoading(false);
         return;
       }
 
       try {
-        const decoded = jwtDecode(token);
-        const user_id = decoded.user_id || decoded.sub || decoded.id;
-        const res = await axios.get(
-          `/api/pet-sitters/update-profile?user_id=${user_id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        // เปลี่ยนเป็นใช้ cookie แทน token ผ่าน withCredentials
+        const res = await axios.get(`/api/pet-sitters/update-profile`, {
+          withCredentials: true,
+        });
 
         const data = res.data.data;
         if (data) {
@@ -151,7 +149,7 @@ export default function PetSitterProfilePage() {
     };
 
     fetchProfile();
-  }, []);
+  }, [user?.id]);
 
   const handleSubmit = async (
     values,
@@ -176,16 +174,9 @@ export default function PetSitterProfilePage() {
     setIsSubmitting(true);
 
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        toast.error("Authentication token not found");
-        return;
-      }
-
-      const decoded = jwtDecode(token);
-      const user_id = decoded.user_id || decoded.sub || decoded.id;
-      if (!user_id) {
-        toast.error("Invalid user ID in token");
+      if (!user?.id) {
+        toast.error("You need to be logged in");
+        setIsSubmitting(false);
         return;
       }
 
@@ -241,7 +232,7 @@ export default function PetSitterProfilePage() {
 
       // Create API payload
       const payload = {
-        user_id,
+        // User ID จะถูกดึงจาก cookie บน server
         full_name: values.full_name,
         email: values.email,
         phone_number: values.phone_number,
@@ -278,10 +269,7 @@ export default function PetSitterProfilePage() {
         "/api/pet-sitters/update-profile",
         payload,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+          withCredentials: true, // ส่ง cookie ไปกับ request
         }
       );
 
@@ -369,7 +357,7 @@ export default function PetSitterProfilePage() {
           </div>
 
           {/* Main content */}
-          <main className="flex-1 flex flex-col items-center w-full px-2 sm:px-4 md:px-8 py-6 relative mt-[123px] md:mt-[72px]">
+          <main className="flex-1 flex flex-col items-center w-full relative mt-[123px] md:mt-[72px] bg-[#F6F6F9]">
             <Formik
               initialValues={initialValues}
               enableReinitialize
@@ -377,7 +365,7 @@ export default function PetSitterProfilePage() {
               onSubmit={handleSubmit}
             >
               {({ values, setFieldValue, errors, touched }) => (
-                <Form className="w-full max-w-[1200px] flex flex-col gap-8 px-2 sm:px-4 md:px-8">
+                <Form className="w-full max-w-[1200px] flex flex-col gap-6 px-4 py-6 md:px-10 md:pb-20 md:pt-10">
                   <FormikErrorLogger />
 
                   {/* Header with status indicator */}

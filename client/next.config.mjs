@@ -1,16 +1,21 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: [
-      'images.pexels.com',
-      'cdn.pixabay.com',
-      'preview.redd.it',
-      'static.wixstatic.com',
-      's.isanook.com',
-      'www.technologychaoban.com',
-      'bexgbrkoynqhxbqrjlko.supabase.co', 
-      'www.bil-jac.com', 
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**", // รองรับทุก domain
+      },
+      {
+        protocol: "http",
+        hostname: "**", // รองรับทุก domain (http)
+      },
     ],
+  },
+  transpilePackages: ["@tailwindcss/oxide"],
+  experimental: {
+    // Force Tailwind to use the JS implementation
+    forceSwcTransforms: true,
   },
 };
 

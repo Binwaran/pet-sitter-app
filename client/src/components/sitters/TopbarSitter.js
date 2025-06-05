@@ -3,12 +3,14 @@
 import { memo, useEffect, useState, useMemo, useCallback } from "react";
 import Image from "next/image";
 import axios from "axios";
-import { jwtDecode } from "jwt-decode";
+import { useRouter } from "next/navigation"; // เพิ่ม import useRouter
 import avatar from "/public/assets/profile/profileimg.svg";
 import message from "/public/assets/sidebar/message.svg";
 
 // ใช้ memo เพื่อป้องกันการ re-render ที่ไม่จำเป็น
 const Topbar = memo(({ className }) => {
+  const router = useRouter(); // สร้าง router instance
+
   // รวม state เข้าด้วยกันเพื่อลดการ render
   const [state, setState] = useState({
     loading: true,
@@ -17,28 +19,34 @@ const Topbar = memo(({ className }) => {
     error: null,
   });
 
+  // ฟังก์ชันสำหรับ navigate ไปยังหน้า profile
+  const handleProfileClick = useCallback(() => {
+    router.push("/pet-sitters/profile");
+  }, [router]);
+
   // ใช้ useCallback เพื่อไม่ให้สร้างฟังก์ชันใหม่ทุกครั้งที่ render
   const fetchUserData = useCallback(async () => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
+      // แก้ไขส่วนนี้: ใช้ API /api/me ที่ตรวจสอบ token จาก cookie
+      const res = await axios.get("/api/me", {
+        withCredentials: true, // ส่ง cookie ไปด้วย
+      });
+
+      if (res.data && res.data.id) {
+        // ดึงข้อมูล user จาก API ที่ใช้ cookie แทน localStorage
+        const userRes = await axios.get(`/api/users/${res.data.id}`, {
+          withCredentials: true,
+        });
+
+        setState({
+          loading: false,
+          name: userRes.data?.name || "",
+          profile_image_url: userRes.data?.profile_image_url || null,
+          error: null,
+        });
+      } else {
         setState((prev) => ({ ...prev, loading: false }));
-        return;
       }
-
-      const decoded = jwtDecode(token);
-      const user_id = decoded.user_id || decoded.sub || decoded.id;
-
-      const res = await axios.get(`/api/users/${user_id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      setState({
-        loading: false,
-        name: res.data?.name || "",
-        profile_image_url: res.data?.profile_image_url || null,
-        error: null,
-      });
     } catch (error) {
       console.error("Error fetching user data:", error);
       setState((prev) => ({
@@ -73,16 +81,17 @@ const Topbar = memo(({ className }) => {
 
   return (
     <header
-      className={`flex items-center justify-between h-[72px] bg-white px-4 sm:px-6 md:px-8 py-4 border-b border-[#E4E7EC] ${className}`}
+      className={`flex items-center justify-between h-[72px] bg-white px-4 md:px-15 py-4 ${className}`}
     >
       <div className="flex flex-row items-center gap-2">
-        <div className="w-10 h-10 rounded-full overflow-hidden bg-[#DCDFED]">
+        <div className="relative w-10 h-10 rounded-full overflow-hidden bg-[#DCDFED]">
           <Image
             src={profileImage}
             alt="Avatar"
-            width={40}
-            height={40}
-            className="object-cover"
+            fill
+            sizes="40px"
+            onClick={handleProfileClick} // แก้เป็นใช้ฟังก์ชัน handleProfileClick
+            className="object-cover cursor-pointer rounded-full"
             onError={(e) => {
               e.target.onerror = null;
               e.target.src = avatar.src;
@@ -94,7 +103,11 @@ const Topbar = memo(({ className }) => {
         </span>
       </div>
       <div className="flex items-center gap-3">
-        <button className="w-10 h-10 rounded-full bg-[#F6F6F9] hover:bg-[#EDEDF2] flex items-center justify-center">
+        <button
+          onClick={() => alert("Feature coming soon!")}
+          className="w-10 h-10 rounded-full bg-[#F6F6F9] hover:bg-[#EDEDF2] flex items-center justify-center cursor-pointer transition-colors"
+          aria-label="Messages"
+        >
           <Image src={message} alt="Message" width={20} height={20} />
         </button>
       </div>

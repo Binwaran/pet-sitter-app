@@ -17,13 +17,13 @@ export default async function handler(req, res) {
   }
 
   try {
-    // ตรวจสอบ token และสิทธิ์การเข้าถึง
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "Unauthorized" });
+    // เปลี่ยนจากการตรวจสอบ Authorization header เป็นการตรวจสอบ cookie
+    const { token } = req.cookies;
+    if (!token) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: No token provided" });
     }
-
-    const token = authHeader.substring(7); // ตัด "Bearer " ออกไป
 
     // Use JWT verification instead of Supabase auth
     let userData;

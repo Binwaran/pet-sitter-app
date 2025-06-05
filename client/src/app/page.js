@@ -21,7 +21,7 @@ import better from "/public/assets/home/better.svg";
 
 export default function Home() {
   return (
-    <section className="w-full flex-col items-center pt-20">
+    <section className="w-full flex-col items-center pt-12 lg:pt-20">
       <header className="max-w-[1440px] mx-auto w-full md:flex flex-col items-center justify-center md:h-[441px] h-[565] gap-5 relative">
         <div>
           <p className="lg:text-[88px] sm:text-[68px] text-[48px] lg:leading-[96px] md:leading-[76px] leading-[56px] font-[900] text-center break-words max-w-[90vw] mx-auto text-shadow-lg text-shadow-gray-700/30">

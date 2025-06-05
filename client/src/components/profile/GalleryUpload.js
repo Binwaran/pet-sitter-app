@@ -27,6 +27,7 @@ const ImageItem = memo(({ file, index, onRemove }) => {
           src={imageUrl}
           alt={`gallery-${index}`}
           fill
+          sizes="167px"
           className="object-cover overflow-hidden rounded-lg"
         />
       )}
