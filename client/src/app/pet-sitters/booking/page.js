@@ -91,8 +91,10 @@ export default function BookingPage() {
                   className="px-6 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors font-medium disabled:opacity-50"
                   onClick={() => {
                     if (selectedPetIds.length > 0) {
-                      // Save selected pets to localStorage or context if needed
+                      // Save selected pets and ids to localStorage
                       localStorage.setItem('selectedPetIds', JSON.stringify(selectedPetIds));
+                      const selectedPets = pets.filter((pet) => selectedPetIds.includes(pet.pet_id));
+                      localStorage.setItem('bookingPets', JSON.stringify(selectedPets));
                       window.location.href = '/pet-sitters/booking/information';
                     }
                   }}

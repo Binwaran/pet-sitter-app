@@ -36,7 +36,18 @@ export default function BookingInformationPage() {
       setErrors(validationErrors);
       return;
     }
-    localStorage.setItem('bookingDetails', JSON.stringify(form));
+    // Merge pets info from localStorage
+    const selectedPetIds = JSON.parse(localStorage.getItem('selectedPetIds') || '[]');
+    const bookingPets = JSON.parse(localStorage.getItem('bookingPets') || '[]');
+    const bookingDetails = {
+      ...form,
+      selectedPetIds,
+      pets: bookingPets,
+    };
+    localStorage.setItem('bookingDetails', JSON.stringify(bookingDetails));
+    // Optionally clear temp pet selection
+    localStorage.removeItem('selectedPetIds');
+    localStorage.removeItem('bookingPets');
     router.push('/pet-sitters/booking/payment');
   };
 
