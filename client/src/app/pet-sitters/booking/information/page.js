@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import BookingSteps from '@/components/booking/BookingSteps';
 import { useRouter } from 'next/navigation';
 import BookingSummaryCard from '@/components/booking/BookingSummaryCard';
@@ -14,7 +14,14 @@ export default function BookingInformationPage() {
     message: '',
   });
   const [errors, setErrors] = useState({});
+  const [selectedPets, setSelectedPets] = useState([]);
   const router = useRouter();
+
+  useEffect(() => {
+    // Load selected pets from localStorage
+    const pets = JSON.parse(localStorage.getItem('bookingPets') || '[]');
+    setSelectedPets(pets);
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -37,16 +44,11 @@ export default function BookingInformationPage() {
       return;
     }
     // Merge pets info from localStorage
-    const selectedPetIds = JSON.parse(localStorage.getItem('selectedPetIds') || '[]');
-    const bookingPets = JSON.parse(localStorage.getItem('bookingPets') || '[]');
     const bookingDetails = {
       ...form,
-      selectedPetIds,
-      pets: bookingPets,
+      pets: selectedPets,
     };
     localStorage.setItem('bookingDetails', JSON.stringify(bookingDetails));
-    // Optionally clear temp pet selection
-    localStorage.removeItem('selectedPetIds');
     localStorage.removeItem('bookingPets');
     router.push('/pet-sitters/booking/payment');
   };
@@ -131,7 +133,7 @@ export default function BookingInformationPage() {
         </div>
         <div className="w-full lg:w-1/3">
           <div className="lg:sticky lg:top-24 z-10">
-            <BookingSummaryCard bookingDetails={form} />
+            <BookingSummaryCard bookingDetails={{ ...form, pets: selectedPets }} />
           </div>
         </div>
       </div>
