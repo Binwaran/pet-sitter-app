@@ -24,7 +24,7 @@ const SearchBar = () => {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-4 w-full max-w-6xl mx-auto px-4 pb-4 rounded-lg ">
+    <div className="flex flex-wrap items-center gap-4 w-full max-w-6xl mx-auto rounded-lg ">
       <FilterFields
         filters={filters}
         onChange={handleChange}

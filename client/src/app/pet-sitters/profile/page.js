@@ -89,9 +89,11 @@ export default function PetSitterProfilePage() {
       }
 
       try {
-        // เปลี่ยนเป็นใช้ cookie แทน token ผ่าน withCredentials
-        const res = await axios.get(`/api/pet-sitters/update-profile`, {
+        console.log("Fetching pet sitter profile...");
+
+        const res = await axios.get("/api/pet-sitters/update-profile", {
           withCredentials: true,
+          timeout: 10000,
         });
 
         const data = res.data.data;
@@ -143,6 +145,22 @@ export default function PetSitterProfilePage() {
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
+
+        // แสดง error details ให้ละเอียดขึ้น
+        if (error.response) {
+          console.error("API Response:", {
+            status: error.response.status,
+            data: error.response.data,
+          });
+
+          // ถ้า unauthorized ให้ redirect ไปหน้า login
+          if (error.response.status === 401) {
+            window.location.href = "/login";
+          }
+        }
+
+        // แสดงการแจ้งเตือน
+        toast.error("ไม่สามารถโหลดข้อมูลโปรไฟล์ได้ กรุณาลองใหม่อีกครั้ง");
       } finally {
         setIsLoading(false);
       }
@@ -296,7 +314,8 @@ export default function PetSitterProfilePage() {
   const FormikErrorLogger = () => {
     const formik = useFormikContext();
     useEffect(() => {
-      if (formik && Object.keys(formik.errors).length > 0) {
+      // ตรวจสอบว่า formik.errors มีค่าและไม่ใช่ object ว่าง
+      if (formik?.errors && Object.keys(formik.errors).length > 0) {
         console.error("Form validation errors:", formik.errors);
       }
     }, [formik?.errors]);

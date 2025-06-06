@@ -138,7 +138,7 @@ const NavBarDesktop = ({
 
               {/* Profile Dropdown */}
               <div className="relative">
-                <div className="w-12 h-12 rounded-full overflow-hidden bg-[#F6F6F9]">
+                <div className="w-12 h-12 rounded-full overflow-hidden bg-[#F6F6F9] relative">
                   <Image
                     src={profileImage}
                     alt="Profile"
