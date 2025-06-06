@@ -55,18 +55,20 @@ export default async function handler(req, res) {
         email: userData?.email || "",
         phone_number: userData?.phone || "",
         profile_image_url: userData?.profile_image_url || null,
+        // เพิ่มข้อมูลสำหรับการตรวจสอบว่ามีรูปที่รออนุมัติหรือไม่
+        display_profile_image_url:
+          petSitter?.pending_profile_image_url ||
+          userData?.profile_image_url ||
+          null,
+        display_gallery_image_url:
+          petSitter?.pending_gallery_image_url ||
+          petSitter?.gallery_image_url ||
+          [],
+        has_pending_profile: !!petSitter?.pending_profile_image_url,
+        has_pending_gallery:
+          Array.isArray(petSitter?.pending_gallery_image_url) &&
+          petSitter.pending_gallery_image_url.length > 0,
       };
-
-      if (error && error.code !== "PGRST116") {
-        // PGRST116 คือ not found ซึ่งยอมรับได้
-        console.error("Database error:", error);
-        return res.status(500).json({ error: error.message });
-      }
-
-      if (!petSitter && !userData) {
-        console.log("No data found for user ID:", userId);
-        return res.status(404).json({ error: "Profile not found" });
-      }
 
       console.log("Profile data retrieved successfully");
       return res.status(200).json({ data: combinedData });
@@ -82,7 +84,8 @@ export default async function handler(req, res) {
         name: updateData.full_name,
         email: updateData.email,
         phone: updateData.phone_number,
-        profile_image_url: updateData.profile_image_url,
+        // ไม่อัพเดทรูปโปรไฟล์โดยตรง ให้ใช้ pending_profile_image_url แทน
+        // profile_image_url: updateData.profile_image_url,
       };
 
       // ตรวจสอบว่ามีโปรไฟล์ pet_sitter อยู่แล้วหรือไม่
@@ -99,19 +102,21 @@ export default async function handler(req, res) {
 
       // ลบข้อมูลที่ไปอัปเดตที่ users table แล้ว
       const petSitterData = { ...updateData };
-      delete petSitterData.full_name; // ใช้ trade_name แทน
+      delete petSitterData.full_name;
       delete petSitterData.email;
       delete petSitterData.profile_image_url;
       delete petSitterData.phone_number;
 
-      // สร้าง pending_data ที่เก็บข้อมูลทั้งหมดที่รออนุมัติ
+      // สร้าง pending_data ที่เก็บข้อมูลทั้งหมดที่รออนุมัติ (คงเอาไว้เพื่อ backward compatibility)
       const pendingData = {
-        user_data: userUpdateData, // ข้อมูลสำหรับ users table
+        user_data: {
+          ...userUpdateData,
+          profile_image_url: updateData.profile_image_url, // เก็บรูปใน pending_data ด้วย
+        },
         pet_sitter_data: petSitterData, // ข้อมูลสำหรับ pet_sitter table
       };
 
       if (!existingProfile) {
-        console.log("No existing profile found, creating new one...");
         // สร้างโปรไฟล์ใหม่ถ้าไม่มี
         const { data: newProfile, error: createError } = await supabase
           .from("pet_sitter")
@@ -119,7 +124,10 @@ export default async function handler(req, res) {
             {
               user_id: userId,
               status: "waiting for approval",
-              pending_data: pendingData, // เก็บข้อมูลที่รอการอนุมัติ
+              pending_data: pendingData,
+              // เพิ่มคอลัมน์ใหม่สำหรับรูปที่รออนุมัติ
+              pending_profile_image_url: updateData.profile_image_url,
+              pending_gallery_image_url: updateData.gallery_image_url,
             },
           ])
           .select()
@@ -145,12 +153,14 @@ export default async function handler(req, res) {
       }
 
       // อัปเดตข้อมูล pet_sitter เฉพาะสถานะและ pending_data
-      console.log("Updating existing profile for approval...");
       const { data: updatedProfile, error: updateError } = await supabase
         .from("pet_sitter")
         .update({
           status: "waiting for approval",
-          pending_data: pendingData, // เก็บข้อมูลที่รอการอนุมัติทั้งหมด
+          pending_data: pendingData,
+          // เพิ่มคอลัมน์ใหม่สำหรับรูปที่รออนุมัติ
+          pending_profile_image_url: updateData.profile_image_url,
+          pending_gallery_image_url: updateData.gallery_image_url,
         })
         .eq("user_id", userId)
         .select()
@@ -167,7 +177,8 @@ export default async function handler(req, res) {
         full_name: userUpdateData.name,
         email: userUpdateData.email,
         phone_number: userUpdateData.phone,
-        profile_image_url: userUpdateData.profile_image_url,
+        profile_image_url: updatedProfile.profile_image_url, // แสดงรูปเดิมที่อนุมัติแล้ว
+        pending_profile_image_url: updateData.profile_image_url, // เพิ่มข้อมูลรูปที่รออนุมัติ
       };
 
       return res.status(200).json({
