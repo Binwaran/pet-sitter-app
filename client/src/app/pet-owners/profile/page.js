@@ -8,22 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import ImageUpload from "@/components/profile/ImageUpload";
 import Sidebar from "@/components/profile/Sidebar";
 import profileimg from "public/assets/profile/profileimg.svg";
-
-// เปลี่ยนฟังก์ชันนี้ให้เรียก API upload ของคุณ
-const uploadToStorage = async (file) => {
-  const formData = new FormData();
-  formData.append("file", file);
-
-  const res = await fetch("/api/upload/profile-image", {
-    method: "POST",
-    body: formData,
-  });
-
-  if (!res.ok) throw new Error("Upload failed");
-
-  const data = await res.json();
-  return data.url; // สมมติ API คืน { url: "..." }
-};
+import { uploadFile } from "@/utils/fileUpload"; // นำเข้าฟังก์ชัน uploadFile
 
 export default function OwnerProfilePage() {
   const router = useRouter();
@@ -85,9 +70,8 @@ export default function OwnerProfilePage() {
 
     if (profileImageFile) {
       try {
-        imageUrl = await uploadToStorage(profileImageFile);
+        imageUrl = await uploadFile(profileImageFile);
 
-        // ✅ อัปเดต state ให้รูปใหม่แสดงทันที
         setProfile((prev) => ({
           ...prev,
           profile_image_url: imageUrl,
