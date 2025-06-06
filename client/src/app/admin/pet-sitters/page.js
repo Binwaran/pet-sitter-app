@@ -330,20 +330,17 @@ export default function AdminPetSittersPage() {
     fetchSitters();
   }, [fetchSitters]);
 
-  const handleSitterClick = useCallback(
-    (sitterId) => {
-      // แก้ไขการ navigate เพื่อป้องกันการ auto-scroll
-      const handleNavigation = () => {
-        router.push(`/admin/pet-sitters/${sitterId}`, {
-          scroll: false, // ปิดการ scroll อัตโนมัติ
-        });
-      };
-
-      // หน่วงเวลาเล็กน้อยเพื่อให้แน่ใจว่า event handler ทั้งหมดทำงานเสร็จก่อน navigate
-      setTimeout(handleNavigation, 0);
-    },
-    [router]
-  );
+  const handleSitterClick = useCallback((sitterId) => {
+  // แก้ไขการ navigate เพื่อป้องกันการ auto-scroll
+  const handleNavigation = () => {
+    router.push(`/admin/pet-sitters/${sitterId}`, { 
+      scroll: false // ปิดการ scroll อัตโนมัติ
+    });
+  };
+  
+  // หน่วงเวลาเล็กน้อยเพื่อให้แน่ใจว่า event handler ทั้งหมดทำงานเสร็จก่อน navigate
+  setTimeout(handleNavigation, 0);
+}, [router]);
 
   return (
     <div className="flex flex-col max-h-screen bg-[#F6F6F9] w-full min-w-0">
