@@ -327,8 +327,6 @@ export default function BookingTab({ bookings, bookingsLoading }) {
   // บันทึกข้อมูลว่า booking ได้ถูกดูแล้ว และเปิด modal
   const openBookingDetail = useCallback(
     (booking) => {
-      console.log("Booking data:", booking); // เพิ่มบรรทัดนี้
-      console.log("Pets data:", booking.pets); // เพิ่มบรรทัดนี้
       if (!isBookingViewed(booking.id)) {
         const newViewedBookings = [...viewedBookings, booking.id];
         setViewedBookings(newViewedBookings);
