@@ -85,21 +85,10 @@ export default async function handler(req, res) {
         profile_image_url: updateData.profile_image_url,
       };
 
-      // อัปเดตข้อมูลในตาราง users ก่อน
-      const { error: userUpdateError } = await supabase
-        .from("users")
-        .update(userUpdateData)
-        .eq("id", userId);
-
-      if (userUpdateError) {
-        console.error("Error updating user data:", userUpdateError);
-        return res.status(500).json({ error: userUpdateError.message });
-      }
-
       // ตรวจสอบว่ามีโปรไฟล์ pet_sitter อยู่แล้วหรือไม่
       const { data: existingProfile, error: profileError } = await supabase
         .from("pet_sitter")
-        .select("id")
+        .select("user_id")
         .eq("user_id", userId)
         .single();
 
@@ -111,8 +100,15 @@ export default async function handler(req, res) {
       // ลบข้อมูลที่ไปอัปเดตที่ users table แล้ว
       const petSitterData = { ...updateData };
       delete petSitterData.full_name; // ใช้ trade_name แทน
-      delete petSitterData.email; // อยู่ใน users table
-      delete petSitterData.profile_image_url; // อยู่ใน users table
+      delete petSitterData.email;
+      delete petSitterData.profile_image_url;
+      delete petSitterData.phone_number;
+
+      // สร้าง pending_data ที่เก็บข้อมูลทั้งหมดที่รออนุมัติ
+      const pendingData = {
+        user_data: userUpdateData, // ข้อมูลสำหรับ users table
+        pet_sitter_data: petSitterData, // ข้อมูลสำหรับ pet_sitter table
+      };
 
       if (!existingProfile) {
         console.log("No existing profile found, creating new one...");
@@ -121,9 +117,9 @@ export default async function handler(req, res) {
           .from("pet_sitter")
           .insert([
             {
-              ...petSitterData,
               user_id: userId,
               status: "waiting for approval",
+              pending_data: pendingData, // เก็บข้อมูลที่รอการอนุมัติ
             },
           ])
           .select()
@@ -143,17 +139,20 @@ export default async function handler(req, res) {
 
         return res.status(201).json({
           success: true,
-          message: "Profile created successfully",
+          message: "Profile created successfully, waiting for approval",
           data: completeProfile,
         });
       }
 
-      // อัปเดตข้อมูล pet_sitter
-      console.log("Updating existing profile...");
+      // อัปเดตข้อมูล pet_sitter เฉพาะสถานะและ pending_data
+      console.log("Updating existing profile for approval...");
       const { data: updatedProfile, error: updateError } = await supabase
         .from("pet_sitter")
-        .update({ ...petSitterData, status: "waiting for approval" })
-        .eq("id", existingProfile.id)
+        .update({
+          status: "waiting for approval",
+          pending_data: pendingData, // เก็บข้อมูลที่รอการอนุมัติทั้งหมด
+        })
+        .eq("user_id", userId)
         .select()
         .single();
 
@@ -165,13 +164,15 @@ export default async function handler(req, res) {
       // รวมข้อมูลทั้งหมดสำหรับส่งกลับ
       const completeProfile = {
         ...updatedProfile,
-        ...userUpdateData,
         full_name: userUpdateData.name,
+        email: userUpdateData.email,
+        phone_number: userUpdateData.phone,
+        profile_image_url: userUpdateData.profile_image_url,
       };
 
       return res.status(200).json({
         success: true,
-        message: "Profile updated successfully",
+        message: "Profile update request submitted, waiting for approval",
         data: completeProfile,
       });
     }

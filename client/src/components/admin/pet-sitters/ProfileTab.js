@@ -54,24 +54,29 @@ const PetTypeTag = memo(({ type }) => {
 PetTypeTag.displayName = "PetTypeTag";
 
 // Dynamic import MapSitter component
-const MapSitterWithNoSSR = dynamic(
+export const MapSitterWithNoSSR = dynamic(
   () => import("@/components/profile/MapSitter"),
   {
     ssr: false,
-    loading: () => (
-      <div className="w-full h-full flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block w-8 h-8 border-4 border-[#FF7C43] border-t-transparent rounded-full animate-spin"></div>
-          <p className="mt-2 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    ),
+    loading: () => <LoadingSpinner text="กำลังโหลดแผนที่..." />,
   }
 );
 
+// Loading spinner component
+const LoadingSpinner = memo(({ text = "Loading..." }) => (
+  <div className="flex items-center justify-center w-full h-full">
+    <div className="text-center">
+      <div className="inline-block w-8 h-8 border-4 border-[#FF7C43] border-t-transparent rounded-full animate-spin"></div>
+      <p className="mt-2 text-gray-600">{text}</p>
+    </div>
+  </div>
+));
+
+LoadingSpinner.displayName = "LoadingSpinner";
+
 // รายชื่อ field ที่จะตรวจสอบการเปลี่ยนแปลง
 const ADDRESS_FIELDS = [
-  "house_number",
+  "address_detail",
   "village",
   "sub_district",
   "district",
@@ -89,6 +94,9 @@ const PROFILE_FIELDS = [
 ];
 const SPECIAL_FIELDS = ["pet_type", "gallery_image_url", "profile_image_url"];
 
+// User data fields ที่อยู่ในตาราง users
+const USER_FIELDS = ["full_name", "email", "phone_number", "profile_image_url"];
+
 // Validate URL helper function
 const isValidImageUrl = (url) => {
   if (!url) return false;
@@ -99,6 +107,19 @@ const ProfileTab = memo(({ sitter }) => {
   const pendingData = sitter.pet_sitter.pending_data || {};
   const isPending = sitter.pet_sitter.status === "waiting for approval";
   const galleryRef = useRef(null);
+
+  // ตรวจสอบว่า pending_data มีโครงสร้างใหม่หรือไม่
+  const hasNewStructure = useMemo(() => {
+    return isPending && (pendingData.user_data || pendingData.pet_sitter_data);
+  }, [isPending, pendingData]);
+
+  // Debug log
+  useEffect(() => {
+    if (isPending) {
+      console.log("Pending data structure:", pendingData);
+      console.log("Using new structure:", hasNewStructure);
+    }
+  }, [isPending, pendingData, hasNewStructure]);
 
   // Handle gallery scroll touch events
   useEffect(() => {
@@ -117,41 +138,94 @@ const ProfileTab = memo(({ sitter }) => {
     }
   }, []);
 
+  // ฟังก์ชันแปลงชื่อฟิลด์ฝั่ง frontend เป็นชื่อฟิลด์ในฐานข้อมูล
+  const mapFieldToDbName = useMemo(() => {
+    return (fieldName) => {
+      const mapping = {
+        full_name: "name",
+        phone_number: "phone",
+      };
+      return mapping[fieldName] || fieldName;
+    };
+  }, []);
+
+  // ฟังก์ชันสำหรับดึงค่าปัจจุบันของฟิลด์
+  const getCurrentValue = useMemo(() => {
+    return (fieldName) => {
+      // ตรวจสอบว่าฟิลด์อยู่ใน users หรือ pet_sitter
+      if (USER_FIELDS.includes(fieldName)) {
+        // ข้อมูลจาก users table
+        switch (fieldName) {
+          case "full_name":
+            return sitter.users.name;
+          case "phone_number":
+            return sitter.users.phone;
+          default:
+            return sitter.users[fieldName];
+        }
+      } else {
+        // ข้อมูลจาก pet_sitter table
+        return sitter.pet_sitter[fieldName];
+      }
+    };
+  }, [sitter]);
+
+  // ฟังก์ชันสำหรับดึงค่าจาก pending_data ตามโครงสร้างใหม่
+  const getPendingValue = useMemo(() => {
+    return (fieldName) => {
+      if (!isPending || !pendingData) return undefined;
+
+      if (hasNewStructure) {
+        // โครงสร้างใหม่ (แบบแยก user_data และ pet_sitter_data)
+        if (USER_FIELDS.includes(fieldName)) {
+          // ฟิลด์อยู่ใน user_data
+          const dbFieldName = mapFieldToDbName(fieldName);
+          return pendingData.user_data?.[dbFieldName];
+        } else {
+          // ฟิลด์อยู่ใน pet_sitter_data
+          return pendingData.pet_sitter_data?.[fieldName];
+        }
+      } else {
+        // โครงสร้างเดิม (แบบ flat)
+        return pendingData[fieldName];
+      }
+    };
+  }, [isPending, pendingData, hasNewStructure, mapFieldToDbName]);
+
   // ฟังก์ชันตรวจสอบว่าฟิลด์มีการเปลี่ยนแปลงหรือไม่
-  const hasFieldChanged = useMemo(
-    () => (fieldName) => {
+  const hasFieldChanged = useMemo(() => {
+    return (fieldName) => {
+      if (!isPending) return false;
+
+      const pendingValue = getPendingValue(fieldName);
+      if (pendingValue === undefined) return false;
+
+      const currentValue = getCurrentValue(fieldName);
+
       // กรณีพิเศษสำหรับรูปภาพ
       if (fieldName === "profile_image_url") {
-        return (
-          isPending &&
-          pendingData[fieldName] !== undefined &&
-          pendingData[fieldName] !== null &&
-          pendingData[fieldName] !== sitter.pet_sitter[fieldName]
-        );
+        return pendingValue !== null && pendingValue !== currentValue;
       }
 
       // สำหรับฟิลด์อื่นๆ
-      return (
-        isPending &&
-        pendingData[fieldName] !== undefined &&
-        String(pendingData[fieldName] || "") !==
-          String(sitter.pet_sitter[fieldName] || "")
-      );
-    },
-    [isPending, pendingData, sitter.pet_sitter]
-  );
+      return String(pendingValue || "") !== String(currentValue || "");
+    };
+  }, [isPending, getPendingValue, getCurrentValue]);
 
   // ฟังก์ชันเพื่อแสดงค่าที่เหมาะสม (ค่าที่รอการอนุมัติหรือค่าปัจจุบัน)
-  const getDisplayValue = useMemo(
-    () =>
-      (fieldName, defaultValue = "") => {
-        if (isPending && pendingData[fieldName] !== undefined) {
-          return pendingData[fieldName];
-        }
-        return sitter.pet_sitter[fieldName] || defaultValue;
-      },
-    [isPending, pendingData, sitter.pet_sitter]
-  );
+  const getDisplayValue = useMemo(() => {
+    return (fieldName, defaultValue = "") => {
+      const pendingValue = getPendingValue(fieldName);
+
+      // ถ้ามีค่าใน pending_data ให้ใช้ค่านั้น
+      if (pendingValue !== undefined) {
+        return pendingValue;
+      }
+
+      // ถ้าไม่มีค่าใน pending_data ให้ใช้ค่าปัจจุบัน
+      return getCurrentValue(fieldName) || defaultValue;
+    };
+  }, [getPendingValue, getCurrentValue]);
 
   // แปลงข้อมูล array จาก string ถ้าจำเป็น
   const petTypes = useMemo(() => {
@@ -175,7 +249,7 @@ const ProfileTab = memo(({ sitter }) => {
   // ตรวจสอบว่ามีการเปลี่ยนแปลงในกลุ่มของฟิลด์ที่อยู่หรือไม่
   const hasAddressChanged = useMemo(
     () => ADDRESS_FIELDS.some((field) => hasFieldChanged(field)),
-    [hasFieldChanged, ADDRESS_FIELDS]
+    [hasFieldChanged]
   );
 
   // ฟังก์ชันสำหรับสร้างที่อยู่เต็มรูปแบบ
@@ -185,9 +259,7 @@ const ProfileTab = memo(({ sitter }) => {
       address[field] = getDisplayValue(field);
     });
 
-    const buildingDetails = [address.house_number, address.village]
-      .filter(Boolean)
-      .join(", ");
+    const buildingDetails = address.address_detail;
 
     const locationDetails = [
       address.sub_district,
@@ -234,7 +306,7 @@ const ProfileTab = memo(({ sitter }) => {
     const district = getDisplayValue("district");
     const subDistrict = getDisplayValue("sub_district");
     const postCode = getDisplayValue("post_code");
-    const addressDetail = getDisplayValue("house_number");
+    const addressDetail = getDisplayValue("address_detail");
 
     if (province && district) {
       return (

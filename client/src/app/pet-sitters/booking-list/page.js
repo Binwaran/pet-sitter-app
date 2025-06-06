@@ -171,6 +171,33 @@ const useBookings = () => {
   const [viewedBookings, setViewedBookings] = useState([]);
   const rowsPerPage = 8;
 
+  // เพิ่ม state สำหรับการเรียงลำดับ
+  const [sortConfig, setSortConfig] = useState({
+    key: "default", // เริ่มต้นใช้การเรียงลำดับเดิม
+    direction: "desc",
+  });
+
+  // เพิ่มฟังก์ชันสำหรับการเรียงลำดับ
+  const handleSort = useCallback((key) => {
+    setSortConfig((prev) => {
+      // ถ้าคลิกที่คอลัมน์เดิม
+      if (prev.key === key) {
+        // ถ้าเป็น desc อยู่แล้ว เปลี่ยนเป็น asc
+        if (prev.direction === "desc") {
+          return { key, direction: "asc" };
+        }
+        // ถ้าเป็น asc อยู่แล้ว เปลี่ยนกลับไปเป็น default (ยกเลิกการเรียง)
+        else {
+          return { key: "default", direction: "desc" };
+        }
+      }
+      // ถ้าคลิกที่คอลัมน์ใหม่ เริ่มด้วย desc
+      else {
+        return { key, direction: "desc" };
+      }
+    });
+  }, []);
+
   // โหลดข้อมูล viewedBookings จาก localStorage และ API เมื่อ component โหลด
   useEffect(() => {
     if (!user?.id) return;
@@ -260,18 +287,11 @@ const useBookings = () => {
       }
 
       // เปลี่ยนเป็นใช้ cookie แทน token ผ่าน withCredentials
-      const res = await axios.get(`/api/pet-sitters/bookings`, {
+      const res = await axios.get(`/api/pet-sitters/booking-list`, {
         withCredentials: true, // ส่ง cookie ไปกับ request
       });
 
-      // Sort bookings by date (newest first)
-      const sortedData = (res.data.data || []).sort((a, b) => {
-        const dateA = new Date(a.start_time || 0);
-        const dateB = new Date(b.start_time || 0);
-        return dateB - dateA;
-      });
-
-      setBookings(sortedData);
+      setBookings(res.data.data || []);
     } catch (err) {
       console.error("Error fetching bookings:", err);
       setBookings([]);
@@ -296,14 +316,50 @@ const useBookings = () => {
     });
   }, [bookings, selectedStatus, search]);
 
+  // เพิ่มการเรียงลำดับตาม sortConfig
+  const sortedBookings = useMemo(() => {
+    if (filteredBookings.length === 0 || sortConfig.key === "default") {
+      return filteredBookings;
+    }
+
+    const sortable = [...filteredBookings];
+
+    if (sortConfig.key === "booked_date") {
+  return sortable.sort((a, b) => {
+    // แปลงวันที่และเวลาให้เป็น Date object ที่สมบูรณ์
+    const startTimeA = a.start_time ? new Date(a.start_time) : new Date(0);
+    const startTimeB = b.start_time ? new Date(b.start_time) : new Date(0);
+    
+    // เปรียบเทียบ start_time ตรงๆ ด้วย Date object
+    const startComparison = sortConfig.direction === "asc"
+      ? startTimeA - startTimeB // น้อยไปมาก (เก่าไปใหม่)
+      : startTimeB - startTimeA; // มากไปน้อย (ใหม่ไปเก่า)
+    
+    // ถ้า start_time เท่ากัน ให้เรียงตาม end_time
+    if (startComparison === 0) {
+      const endTimeA = a.end_time ? new Date(a.end_time) : new Date(0);
+      const endTimeB = b.end_time ? new Date(b.end_time) : new Date(0);
+      
+      return sortConfig.direction === "asc"
+        ? endTimeA - endTimeB
+        : endTimeB - endTimeA;
+    }
+    
+    return startComparison;
+  });
+}
+
+    return sortable;
+  }, [filteredBookings, sortConfig]);
+
   const totalPages = useMemo(
-    () => Math.ceil(filteredBookings.length / rowsPerPage),
-    [filteredBookings.length, rowsPerPage]
+    () => Math.ceil(sortedBookings.length / rowsPerPage),
+    [sortedBookings.length, rowsPerPage]
   );
 
   const paginatedBookings = useMemo(
-    () => filteredBookings.slice((page - 1) * rowsPerPage, page * rowsPerPage),
-    [filteredBookings, page, rowsPerPage]
+    () => sortedBookings.slice((page - 1) * rowsPerPage, page * rowsPerPage),
+    [sortedBookings, page, rowsPerPage]
   );
 
   const handlePageChange = useCallback((_, value) => {
@@ -333,6 +389,8 @@ const useBookings = () => {
     handleSearchChange,
     isBookingViewed,
     markBookingAsViewed,
+    sortConfig, // เพิ่มค่า sortConfig
+    handleSort, // เพิ่มฟังก์ชัน handleSort
   };
 };
 
@@ -352,6 +410,8 @@ const BookingPage = () => {
     handleSearchChange,
     isBookingViewed,
     markBookingAsViewed,
+    sortConfig, // รับค่า sortConfig
+    handleSort, // รับฟังก์ชัน handleSort
   } = useBookings();
 
   // ย้าย handleBookingClick มาไว้ที่นี่ ก่อน conditional return
@@ -435,8 +495,18 @@ const BookingPage = () => {
                     <th className="py-3 px-4 text-left font-medium">
                       Duration
                     </th>
-                    <th className="py-3 px-4 text-left font-medium">
+                    {/* เพิ่ม cursor-pointer และ onClick handler */}
+                    <th
+                      className="py-3 px-4 text-left font-medium cursor-pointer hover:text-[#FF7037] transition-colors"
+                      onClick={() => handleSort("booked_date")}
+                    >
                       Booked Date
+                      {/* แสดงลูกศรตามทิศทางการเรียง */}
+                      {sortConfig.key === "booked_date" && (
+                        <span className="ml-1 inline-block">
+                          {sortConfig.direction === "asc" ? "↑" : "↓"}
+                        </span>
+                      )}
                     </th>
                     <th className="py-3 px-4 text-left rounded-tr-2xl font-medium">
                       Status
