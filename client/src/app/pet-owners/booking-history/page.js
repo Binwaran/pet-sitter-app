@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Sidebar from "@/components/profile/Sidebar";
 import BookingCard from "@/components/profile/BookingCard";
+import BookingDetailModal from "@/components/profile/BookingDetailModal"; // ✅ import modal
 
 export default function BookingHistoryPage() {
   const { user, loading: authLoading } = useAuth();
@@ -11,6 +12,7 @@ export default function BookingHistoryPage() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedBooking, setSelectedBooking] = useState(null); // ✅ state modal
 
   function getStatusDate(booking) {
     const status = booking.status;
@@ -86,25 +88,40 @@ export default function BookingHistoryPage() {
   if (authLoading || loading) return <div>Loading...</div>;
   if (error) return <div className="text-red-500">{error}</div>;
 
-  return (
-    <div className="bg-gray-100 min-h-screen">
-      <div className="px-20 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6">
-          <Sidebar />
-          <div className="self-start">
-            <div className="bg-white p-6 rounded-2xl shadow-md">
-              <h1 className="text-2xl font-bold mb-14">Booking History</h1>
-              {bookings.length === 0 ? (
-                <p className="text-gray-500">No bookings found.</p>
-              ) : (
-                bookings.map((booking, index) => (
-                  <BookingCard key={booking.booking_id || index} booking={booking} />
-                ))
-              )}
-            </div>
+ return (
+  <div className="bg-gray-100 min-h-screen">
+    <div className="px-20 py-8">
+      <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6">
+        <Sidebar />
+        <div className="self-start">
+          <div className="bg-white p-6 rounded-2xl shadow-md">
+            <h1 className="text-2xl font-bold mb-14">Booking History</h1>
+            {bookings.length === 0 ? (
+              <p className="text-gray-500">No bookings found.</p>
+            ) : (
+              bookings.map((booking, index) => {
+                console.log("Booking:", booking); // ✅ ถูกต้อง
+                return (
+                  <BookingCard
+                    key={booking.booking_id || index}
+                    booking={booking}
+                    onClick={() => setSelectedBooking(booking)}
+                  />
+                );
+              })
+            )}
           </div>
         </div>
       </div>
     </div>
-  );
+
+    {/* ✅ Booking Detail Modal */}
+    {selectedBooking && (
+      <BookingDetailModal
+        booking={selectedBooking}
+        onClose={() => setSelectedBooking(null)}
+      />
+    )}
+  </div>
+);
 }

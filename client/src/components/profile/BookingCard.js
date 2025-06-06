@@ -1,4 +1,6 @@
-export default function BookingCard({ booking }) {
+import Image from "next/image";
+
+export default function BookingCard({ booking, onClick }) {
   const {
     pet_name,
     service_name,
@@ -6,7 +8,7 @@ export default function BookingCard({ booking }) {
     status,
     statusDate,
     booking_id,
-    image = "/assets/pet-sitter.jpg", // fallback ชั่วคราว
+    image = "/assets/pet-sitter.jpg",
     title = service_name || "Service",
     sitter_name = "John Doe",
     date = "1 Jan 2025",
@@ -29,7 +31,7 @@ export default function BookingCard({ booking }) {
               Send Message
             </button>
             <button className="w-10 h-10 flex items-center justify-center rounded-full border border-orange-200 text-orange-500 hover:text-orange-600 cursor-pointer">
-              <img src="/assets/icon-phone.svg" className="w-4 h-4" />
+              <Image alt="Phone" src="/assets/icon-phone.svg" className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -47,7 +49,7 @@ export default function BookingCard({ booking }) {
               Send Message
             </button>
             <button className="w-10 h-10 flex items-center justify-center rounded-full border border-orange-200 text-orange-500 hover:text-orange-600 cursor-pointer">
-              <img src="/assets/icon-phone.svg" className="w-4 h-4" />
+              <Image alt="phone" src="/assets/icon-phone.svg" className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -82,11 +84,16 @@ export default function BookingCard({ booking }) {
   };
 
   return (
-    <div className="border border-gray-200 rounded-xl bg-white mb-6 overflow-hidden">
+    <div
+      className={`border border-gray-200 rounded-xl bg-white mb-6 overflow-hidden transition hover:shadow-lg ${
+        onClick ? "cursor-pointer" : ""
+      }`}
+      onClick={() => onClick?.(booking.booking_id)} // ✅ ส่งเฉพาะ booking_id
+    >
       {/* Header */}
       <div className="flex justify-between items-start p-4">
         <div className="flex gap-4 items-center">
-          <img
+          <Image
             src={image}
             alt="Pet sitter"
             className="w-16 h-16 rounded-full object-cover"
@@ -97,7 +104,9 @@ export default function BookingCard({ booking }) {
           </div>
         </div>
         <div className="text-right text-sm text-gray-500">
-          <div>{statusDate?.label || "Transaction date"}: {statusDate?.value}</div>
+          <div>
+            {statusDate?.label || "Transaction date"}: {statusDate?.value}
+          </div>
           <div
             className={`font-medium ${
               status === "Success"
@@ -117,7 +126,6 @@ export default function BookingCard({ booking }) {
 
       {/* Booking Info */}
       <div className="grid grid-cols-4 gap-4 text-sm p-4">
-        {/* Date & Time */}
         <div className="col-span-2 flex flex-col">
           <span className="text-gray-500 font-medium mb-1">Date & Time:</span>
           <div>
@@ -126,13 +134,11 @@ export default function BookingCard({ booking }) {
           </div>
         </div>
 
-        {/* Duration */}
         <div className="flex flex-col border-l border-gray-300 pl-4">
           <span className="text-gray-500 font-medium mb-1">Duration:</span>
           <div>{duration}</div>
         </div>
 
-        {/* Pet */}
         <div className="flex flex-col border-l border-gray-300 pl-4">
           <span className="text-gray-500 font-medium mb-1">Pet:</span>
           <div>{pet}</div>
