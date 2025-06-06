@@ -9,22 +9,20 @@ import ImageUpload from "@/components/profile/ImageUpload";
 import Sidebar from "@/components/profile/Sidebar";
 import profileimg from "public/assets/profile/profileimg.svg";
 
+// เปลี่ยนฟังก์ชันนี้ให้เรียก API upload ของคุณ
 const uploadToStorage = async (file) => {
-  const fileExt = file.name.split(".").pop();
-  const fileName = `${Date.now()}.${fileExt}`;
-  const filePath = `avatars/${fileName}`;
+  const formData = new FormData();
+  formData.append("file", file);
 
-  const { error } = await supabase.storage
-    .from("profile-images") // เปลี่ยนชื่อ bucket ตามจริง
-    .upload(filePath, file);
+  const res = await fetch("/api/upload/profile-image", {
+    method: "POST",
+    body: formData,
+  });
 
-  if (error) throw error;
+  if (!res.ok) throw new Error("Upload failed");
 
-  const { data } = supabase.storage
-    .from("profile-images")
-    .getPublicUrl(filePath);
-
-  return data.publicUrl;
+  const data = await res.json();
+  return data.url; // สมมติ API คืน { url: "..." }
 };
 
 export default function OwnerProfilePage() {
