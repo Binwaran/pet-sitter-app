@@ -51,6 +51,7 @@ export default async function handler(req, res) {
       .update({
         status: "rejected",
         admin_suggestion: reason,
+        pending_data: null, // เพิ่มการล้าง pending_data เมื่อ reject เพื่อให้สอดคล้องกับ approve.js
       })
       .eq("user_id", userId)
       .select();
@@ -73,6 +74,7 @@ export default async function handler(req, res) {
               ...checkData[0],
               status: "rejected",
               admin_suggestion: reason,
+              pending_data: null, // เพิ่มให้สอดคล้องกับการอัพเดทข้างบน
             },
     });
   } catch (err) {

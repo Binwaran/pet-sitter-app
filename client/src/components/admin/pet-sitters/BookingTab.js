@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, memo } from "react";
+import React, { useState, useEffect, useCallback, memo, useMemo } from "react";
 
 // แยก constants สำหรับสถานะการจองเพื่อลดการซ้ำซ้อน
 const STATUS_CONFIG = {
@@ -200,6 +200,69 @@ export default function BookingTab({ bookings, bookingsLoading }) {
   const [viewedBookings, setViewedBookings] = useState([]);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // เพิ่ม state สำหรับการเรียงลำดับ
+  const [sortConfig, setSortConfig] = useState({
+    key: "default", // เริ่มต้นใช้การเรียงลำดับเดิมตามที่ API ส่งมา
+    direction: "desc",
+  });
+
+  // ฟังก์ชันจัดการการเรียงลำดับ
+  const handleSort = useCallback((key) => {
+    setSortConfig((prev) => {
+      // ถ้าคลิกที่คอลัมน์เดิม
+      if (prev.key === key) {
+        // ถ้าเป็น desc อยู่แล้ว เปลี่ยนเป็น asc
+        if (prev.direction === "desc") {
+          return { key, direction: "asc" };
+        }
+        // ถ้าเป็น asc อยู่แล้ว เปลี่ยนกลับไปเป็น default (ยกเลิกการเรียง)
+        else {
+          return { key: "default", direction: "desc" };
+        }
+      }
+      // ถ้าคลิกที่คอลัมน์ใหม่ เริ่มด้วย desc
+      else {
+        return { key, direction: "desc" };
+      }
+    });
+  }, []);
+
+  // เรียงลำดับข้อมูล bookings
+  const sortedBookings = useMemo(() => {
+    if (!bookings || bookings.length === 0) return [];
+
+    if (sortConfig.key === "default") return bookings;
+
+    const sortableItems = [...bookings];
+
+    if (sortConfig.key === "booked_date") {
+      return sortableItems.sort((a, b) => {
+        // แปลงวันที่และเวลาให้เป็น Date object ที่สมบูรณ์
+        const startTimeA = a.start_time ? new Date(a.start_time) : new Date(0);
+        const startTimeB = b.start_time ? new Date(b.start_time) : new Date(0);
+
+        // เปรียบเทียบ start_time ตรงๆ ด้วย Date object
+        const startComparison =
+          sortConfig.direction === "asc"
+            ? startTimeA - startTimeB // น้อยไปมาก (เก่าไปใหม่)
+            : startTimeB - startTimeA; // มากไปน้อย (ใหม่ไปเก่า)
+
+        // ถ้า start_time เท่ากัน ให้เรียงตาม end_time
+        if (startComparison === 0) {
+          const endTimeA = a.end_time ? new Date(a.end_time) : new Date(0);
+          const endTimeB = b.end_time ? new Date(b.end_time) : new Date(0);
+
+          return sortConfig.direction === "asc"
+            ? endTimeA - endTimeB
+            : endTimeB - endTimeA;
+        }
+
+        return startComparison;
+      });
+    }
+
+    return sortableItems;
+  }, [bookings, sortConfig]);
 
   // โหลดข้อมูลการดูจาก localStorage เมื่อ component ถูกโหลด
   useEffect(() => {
@@ -223,8 +286,6 @@ export default function BookingTab({ bookings, bookingsLoading }) {
   // บันทึกข้อมูลว่า booking ได้ถูกดูแล้ว และเปิด modal
   const openBookingDetail = useCallback(
     (booking) => {
-      console.log("Booking data:", booking); // เพิ่มบรรทัดนี้
-      console.log("Pets data:", booking.pets); // เพิ่มบรรทัดนี้
       if (!isBookingViewed(booking.id)) {
         const newViewedBookings = [...viewedBookings, booking.id];
         setViewedBookings(newViewedBookings);
@@ -260,8 +321,18 @@ export default function BookingTab({ bookings, bookingsLoading }) {
                 <th className="py-3 px-4 sm:px-6 text-left font-medium">
                   Duration
                 </th>
-                <th className="py-3 px-4 sm:px-6 text-left font-medium whitespace-nowrap">
+                {/* เพิ่ม cursor-pointer และ onClick handler สำหรับการเรียงลำดับ */}
+                <th
+                  className="py-3 px-4 sm:px-6 text-left font-medium whitespace-nowrap cursor-pointer"
+                  onClick={() => handleSort("booked_date")}
+                >
                   Booked Date
+                  {/* แสดงลูกศรตามทิศทางการเรียง */}
+                  {sortConfig.key === "booked_date" && (
+                    <span className="ml-1 inline-block">
+                      {sortConfig.direction === "asc" ? "↑" : "↓"}
+                    </span>
+                  )}
                 </th>
                 <th className="py-3 px-4 sm:px-6 text-left rounded-tr-2xl font-medium">
                   Status
@@ -275,14 +346,14 @@ export default function BookingTab({ bookings, bookingsLoading }) {
                     Loading bookings...
                   </td>
                 </tr>
-              ) : bookings.length === 0 ? (
+              ) : sortedBookings.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="text-center py-6">
                     No booking history found.
                   </td>
                 </tr>
               ) : (
-                bookings.map((booking) => (
+                sortedBookings.map((booking) => (
                   <tr
                     key={booking.id}
                     className="cursor-pointer border-b border-[#DCDFED] last:border-0 hover:bg-gray-50 transition"

@@ -60,7 +60,7 @@ export const profileSchema = Yup.object().shape({
     .test("fileSize", "File size must be less than 2MB", validateFileSize),
 
   trade_name: Yup.string().required("Trade name is required"),
-  pet_types: Yup.array()
+  pet_type: Yup.array()
     .min(1, "Please select at least one pet type")
     .required("Pet type is required"),
 
