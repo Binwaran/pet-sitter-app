@@ -183,6 +183,8 @@ const Sidebar = memo(({ className = "" }) => {
               src={sitterlogo}
               alt="sitter-logo"
               width={132}
+              height={40}
+              priority={true}
               className="cursor-pointer"
             />
           </button>

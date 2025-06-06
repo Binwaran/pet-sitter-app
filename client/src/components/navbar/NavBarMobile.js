@@ -35,8 +35,9 @@ const NavBarMobile = ({
           <Image
             src="/assets/sitter-logo.svg"
             alt="sitter-logo"
-            width={79.21}
+            width={80}
             height={24}
+            priority={true}
           />
         </Link>
 

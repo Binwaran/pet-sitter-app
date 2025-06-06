@@ -4,7 +4,6 @@ import { useEffect, useRef, useCallback, useMemo, memo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
-import { createClient } from "@supabase/supabase-js";
 
 // Import assets
 import {
@@ -377,7 +376,7 @@ const Sidebar = memo(({ className = "" }) => {
             type="button"
             onClick={() => router.push("/")}
           >
-            <Image src={sitterlogo} alt="sitter-logo" width={132} />
+            <Image src={sitterlogo} alt="sitter-logo" width={132} height={40} priority={true} />
           </button>
         </div>
 

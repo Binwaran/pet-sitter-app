@@ -69,10 +69,8 @@ const PetTypeTag = memo(({ type }) => {
   const style = PET_TYPE_STYLES[type] || PET_TYPE_STYLES.default;
 
   return (
-    <span
-      className={`rounded-full border px-3 md:px-4 py-1 text-[15px] md:text-[16px] font-medium ${style}`}
-    >
-      {type || "Pet"}
+    <span className={`px-2 py-1 text-sm border rounded-full ${style}`}>
+      {type || "Unknown"}
     </span>
   );
 });
@@ -90,14 +88,18 @@ const DetailField = memo(({ label, value }) => (
 DetailField.displayName = "DetailField";
 
 // Component แสดงข้อมูลสัตว์เลี้ยง
-const PetCard = memo(({ pet }) => (
+const PetCard = memo(({ pet = {} }) => (
   <div className="text-center border border-[#DCDFED] p-6 gap-4 rounded-2xl bg-white w-[207px] h-[240px] flex flex-col items-center">
-    <div className="w-26 h-26 rounded-full overflow-hidden border-gray-200">
-      {pet.image ? (
+    <div className="w-24 h-24 rounded-full overflow-hidden border border-gray-200">
+      {pet?.image ? (
         <img
           src={pet.image}
-          alt={pet.name}
+          alt={pet?.name || "Pet"}
           className="w-full h-full object-cover"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = "/client/public/assets/profile/profileimg.svg"; // เปลี่ยนเป็น path ที่ถูกต้อง
+          }}
         />
       ) : (
         <div className="w-full h-full bg-gray-200 flex items-center justify-center">
@@ -106,8 +108,10 @@ const PetCard = memo(({ pet }) => (
       )}
     </div>
     <div className="flex flex-col items-center gap-2">
-      <p className="font-bold text-black text-xl">{pet.name}</p>
-      <PetTypeTag type={pet.type} />
+      <p className="font-bold text-black text-xl">
+        {pet?.name || "Unknown Pet"}
+      </p>
+      <PetTypeTag type={pet?.type} />
     </div>
   </div>
 ));
@@ -143,14 +147,19 @@ const BookingDetailModal = memo(({ booking, onClose }) => {
           <DetailField label="Pet(s)" value={booking.pet_count || "N/A"} />
 
           {/* Pet Detail */}
-          {booking.pets?.length > 0 && (
+          {Array.isArray(booking.pets) && booking.pets.length > 0 ? (
             <div className="flex flex-col gap-1">
               <h3 className="text-xl font-bold text-[#AEB1C3]">Pet Detail</h3>
               <div className="flex flex-wrap gap-4">
-                {booking.pets.map((pet) => (
-                  <PetCard key={pet.id} pet={pet} />
+                {booking.pets.map((pet, index) => (
+                  <PetCard key={pet.id || index} pet={pet} />
                 ))}
               </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1">
+              <h3 className="text-xl font-bold text-[#AEB1C3]">Pet Detail</h3>
+              <p className="text-black font-medium">No pet details available</p>
             </div>
           )}
 
@@ -214,6 +223,8 @@ export default function BookingTab({ bookings, bookingsLoading }) {
   // บันทึกข้อมูลว่า booking ได้ถูกดูแล้ว และเปิด modal
   const openBookingDetail = useCallback(
     (booking) => {
+      console.log("Booking data:", booking); // เพิ่มบรรทัดนี้
+      console.log("Pets data:", booking.pets); // เพิ่มบรรทัดนี้
       if (!isBookingViewed(booking.id)) {
         const newViewedBookings = [...viewedBookings, booking.id];
         setViewedBookings(newViewedBookings);
