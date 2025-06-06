@@ -29,7 +29,7 @@ const CheckUnreadBookings = memo(() => {
     // ฟังก์ชันเช็คการจองที่ยังไม่ได้อ่าน
     const checkUnreadBookings = async () => {
       try {
-        const res = await axios.get("/api/pet-sitters/bookings", {
+        const res = await axios.get("/api/pet-sitters/booking-list", {
           withCredentials: true,
         });
 
@@ -263,7 +263,7 @@ const Sidebar = memo(({ className = "" }) => {
 
     const checkUnreadBookings = async () => {
       try {
-        const res = await axios.get("/api/pet-sitters/bookings", {
+        const res = await axios.get("/api/pet-sitters/booking-list", {
           withCredentials: true,
         });
 

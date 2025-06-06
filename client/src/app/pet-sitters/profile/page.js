@@ -64,7 +64,7 @@ export default function PetSitterProfilePage() {
     introduction: "",
     trade_name: "",
     services: "",
-    place_description: "",
+    my_place: "",
     address_detail: "",
     district: "",
     sub_district: "",
@@ -72,7 +72,7 @@ export default function PetSitterProfilePage() {
     post_code: "",
     profile_image: null,
     gallery: [],
-    pet_types: [],
+    pet_type: [],
   });
   const [sitterStatus, setSitterStatus] = useState(null);
   const [adminSuggestion, setAdminSuggestion] = useState("");
@@ -106,8 +106,8 @@ export default function PetSitterProfilePage() {
             introduction: data.introduction ?? "",
             trade_name: data.trade_name ?? "",
             services: data.services ?? "",
-            place_description: data.my_place ?? "",
-            address_detail: data.house_number ?? "",
+            my_place: data.my_place ?? "",
+            address_detail: data.address_detail ?? "",
             province: data.province
               ? {
                   value:
@@ -138,7 +138,7 @@ export default function PetSitterProfilePage() {
             post_code: data.post_code ?? "",
             profile_image: data.profile_image_url ?? null,
             gallery: data.gallery_image_url ?? [],
-            pet_types: data.pet_type ?? [],
+            pet_type: data.pet_type ?? [],
           });
           setSitterStatus(data.status);
           setAdminSuggestion(data.admin_suggestion);
@@ -259,10 +259,10 @@ export default function PetSitterProfilePage() {
         introduction: values.introduction,
         trade_name: values.trade_name,
         services: values.services,
-        pet_types: values.pet_types,
-        place_description: values.place_description,
-        my_place: values.place_description,
-        house_number: values.address_detail,
+        pet_type: values.pet_type,
+        my_place: values.my_place,
+        my_place: values.my_place,
+        address_detail: values.address_detail,
         province:
           typeof values.province === "object"
             ? values.province.label
@@ -538,13 +538,13 @@ const PetSitterInfoSection = memo(
 
         <FormField
           label="Pet type*"
-          name="pet_types"
+          name="pet_type"
           type="dropdown"
           component="PetTypeMultiSelect"
           touched={touched}
           errors={errors}
-          onChange={(val) => setFieldValue("pet_types", val)}
-          value={values.pet_types}
+          onChange={(val) => setFieldValue("pet_type", val)}
+          value={values.pet_type}
         />
 
         <FormTextArea
@@ -556,7 +556,7 @@ const PetSitterInfoSection = memo(
 
         <FormTextArea
           label="My Place (Describe you place)"
-          name="place_description"
+          name="my_place"
           touched={touched}
           errors={errors}
         />
