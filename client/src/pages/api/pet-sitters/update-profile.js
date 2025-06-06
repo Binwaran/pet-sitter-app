@@ -1,318 +1,184 @@
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/utils/supabase";
 import jwt from "jsonwebtoken";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
-
-// สร้างฟังก์ชันสำหรับจัดการ error เพื่อลดโค้ดซ้ำซ้อน
-const handleError = (error, res, message = "Server error") => {
-  console.error(`Error: ${message}`, error);
-  return res.status(500).json({ error: error.message || message });
-};
-
-// ตรวจสอบ token จาก cookie
-const validateAuth = (req) => {
-  const { token } = req.cookies;
-  if (!token) return { valid: false };
+export default async function handler(req, res) {
+  // รองรับเฉพาะ GET และ POST (สำหรับการอัปเดต)
+  if (req.method !== "GET" && req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
   try {
-    // ตรวจสอบและถอดรหัส token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    return { valid: true, decoded };
-  } catch (error) {
-    console.error("Token validation error:", error);
-    return { valid: false };
-  }
-};
+    // ดึง token จาก cookie
+    const token = req.cookies.token;
+    console.log("Token exists:", !!token);
 
-// แปลง pending data
-function preparePendingData(data) {
-  const {
-    full_name,
-    email,
-    phone_number,
-    profile_image_url,
-    experience,
-    introduction,
-    trade_name,
-    pet_types,
-    services,
-    place_description,
-    my_place,
-    province,
-    district,
-    sub_district,
-    house_number,
-    village,
-    post_code,
-    gallery_image_url,
-    gallery,
-    ...otherData
-  } = data;
-
-  // จัดการกับ gallery images
-  const galleryImages = Array.isArray(gallery_image_url || gallery)
-    ? (gallery_image_url || gallery).filter((url) => typeof url === "string")
-    : [];
-
-  return {
-    // ข้อมูลส่วนตัว
-    profile_info: {
-      full_name,
-      email,
-      phone_number,
-      profile_image_url:
-        typeof profile_image_url === "string" ? profile_image_url : null,
-    },
-    // ข้อมูลอาชีพ
-    experience,
-    introduction,
-    // ข้อมูลธุรกิจ
-    trade_name,
-    // ข้อมูลบริการ
-    pet_type: pet_types,
-    services,
-    my_place: place_description || my_place,
-    // ข้อมูลสถานที่
-    province: typeof province === "object" ? province.label : province,
-    district: typeof district === "object" ? district.label : district,
-    sub_district:
-      typeof sub_district === "object" ? sub_district.label : sub_district,
-    house_number,
-    village,
-    post_code,
-    // รูปภาพแกลเลอรี่
-    gallery_image_url: galleryImages,
-    // ข้อมูลอื่นๆ
-    ...otherData,
-    // เวลาที่ส่งข้อมูล
-    updated_at: new Date().toISOString(),
-  };
-}
-
-export default async function handler(req, res) {
-  // ตรวจสอบ authentication จาก cookie
-  const authResult = validateAuth(req);
-  if (!authResult.valid) {
-    return res
-      .status(401)
-      .json({ error: "Unauthorized - Invalid or missing token" });
-  }
-
-  // ดึง user_id จาก token
-  const userId =
-    authResult.decoded.id ||
-    authResult.decoded.user_id ||
-    authResult.decoded.sub;
-  if (!userId) {
-    return res
-      .status(401)
-      .json({ error: "Unauthorized - Invalid user ID in token" });
-  }
-
-  // GET method - สำหรับดึงข้อมูลโปรไฟล์
-  if (req.method === "GET") {
-    // ใช้ userId จาก token แทนที่จะรับเป็น query parameter
-    // หรือเปรียบเทียบค่าที่ได้จาก token กับ user_id ที่ส่งมา
-    const requestedUserId = req.query.user_id;
-
-    // ถ้ามีการระบุ user_id มา แต่ไม่ตรงกับใน token ให้ปฏิเสธการเข้าถึง
-    if (requestedUserId && requestedUserId !== userId) {
-      return res
-        .status(403)
-        .json({ error: "Forbidden - Cannot access another user's profile" });
+    if (!token) {
+      return res.status(401).json({ error: "Unauthorized: No token provided" });
     }
 
-    try {
-      const userIdString = String(userId);
+    // ตรวจสอบ token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id || decoded.user_id || decoded.sub;
+    console.log("User ID from token:", userId);
 
-      // ดึงข้อมูลจาก pet_sitter table
-      const { data: petSitterData, error: petSitterError } = await supabase
-        .from("pet_sitter")
-        .select("*")
-        .eq("user_id", userIdString)
-        .single();
+    if (!userId) {
+      return res.status(401).json({ error: "Invalid token: No user ID" });
+    }
 
-      if (petSitterError && petSitterError.code !== "PGRST116") {
-        return handleError(
-          petSitterError,
-          res,
-          "Error fetching pet sitter data"
-        );
-      }
+    // สำหรับ GET request - ดึงข้อมูล pet sitter และ users
+    if (req.method === "GET") {
+      console.log("Processing GET request for user ID:", userId);
 
-      // ดึงข้อมูลจาก users table
+      // 1. ดึงข้อมูลจากตาราง users ก่อน
       const { data: userData, error: userError } = await supabase
         .from("users")
-        .select("id, name, email, phone, profile_image_url")
-        .eq("id", userIdString)
+        .select("name, email, phone, profile_image_url")
+        .eq("id", userId)
         .single();
 
       if (userError) {
-        return handleError(userError, res, "Error fetching user data");
+        console.error("Error fetching user data:", userError);
+        return res.status(500).json({ error: userError.message });
       }
 
-      // รวมข้อมูล user กับ pet sitter และส่งกลับ
-      return res.status(200).json({
-        data: {
-          ...petSitterData,
-          full_name: userData.name,
-          email: userData.email,
-          phone_number: userData.phone,
-          profile_image_url: userData.profile_image_url,
-        },
-      });
-    } catch (error) {
-      return handleError(error, res);
-    }
-  }
-
-  // POST method - สำหรับอัพเดทข้อมูลโปรไฟล์
-  else if (req.method === "POST") {
-    const {
-      user_id,
-      // ข้อมูลส่วนตัว
-      full_name,
-      email,
-      phone_number,
-      profile_image_url,
-      // ข้อมูล pet sitter
-      experience,
-      introduction,
-      trade_name,
-      pet_types,
-      services,
-      place_description,
-      my_place,
-      province,
-      district,
-      sub_district,
-      house_number,
-      village,
-      post_code,
-      gallery_image_url,
-      gallery,
-      ...otherData
-    } = req.body;
-
-    // ตรวจสอบว่า user_id ที่ส่งมาตรงกับใน token
-    if (user_id && user_id !== userId) {
-      return res
-        .status(403)
-        .json({ error: "Forbidden - Cannot update another user's profile" });
-    }
-
-    try {
-      // ใช้ userId จาก token
-      const userIdString = String(userId);
-
-      // 1. อัพเดทข้อมูลพื้นฐานในตาราง users
-      const { error: userError } = await supabase
-        .from("users")
-        .update({
-          name: full_name,
-          email: email,
-          phone: phone_number,
-          profile_image_url: profile_image_url,
-        })
-        .eq("id", userIdString);
-
-      if (userError) {
-        return handleError(userError, res, "Error updating user data");
-      }
-
-      // 2. เตรียมข้อมูลที่รอการอนุมัติ
-      const pendingData = preparePendingData({
-        full_name,
-        email,
-        phone_number,
-        profile_image_url,
-        experience,
-        introduction,
-        trade_name,
-        pet_types,
-        services,
-        place_description,
-        my_place,
-        province,
-        district,
-        sub_district,
-        house_number,
-        village,
-        post_code,
-        gallery_image_url,
-        gallery,
-        ...otherData,
-      });
-
-      // 3. ตรวจสอบว่ามีข้อมูล pet_sitter อยู่แล้วหรือไม่
-      const { data: existingData, error: checkError } = await supabase
+      // 2. ดึงข้อมูลจากตาราง pet_sitter
+      const { data: petSitter, error } = await supabase
         .from("pet_sitter")
-        .select("user_id, status")
-        .eq("user_id", userIdString)
+        .select("*")
+        .eq("user_id", userId)
         .single();
 
-      if (checkError && checkError.code !== "PGRST116") {
-        return handleError(
-          checkError,
-          res,
-          "Error checking existing pet sitter data"
-        );
-      }
-
-      // 4. อัพเดทหรือสร้างข้อมูลใน pet_sitter
-      const petSitterData = {
-        status: "waiting for approval",
-        admin_suggestion: null,
-        pending_data: pendingData,
+      // รวมข้อมูลจากทั้งสองตาราง
+      const combinedData = {
+        ...(petSitter || {}),
+        full_name: userData?.name || "",
+        email: userData?.email || "",
+        phone_number: userData?.phone || "",
+        profile_image_url: userData?.profile_image_url || null,
       };
 
-      let petSitterResult;
-
-      // Update หรือ Insert ขึ้นอยู่กับว่ามีข้อมูลอยู่แล้วหรือไม่
-      if (existingData) {
-        const { data, error } = await supabase
-          .from("pet_sitter")
-          .update(petSitterData)
-          .eq("user_id", userIdString)
-          .select();
-
-        if (error) {
-          return handleError(error, res, "Error updating pet sitter data");
-        }
-
-        petSitterResult = data;
-      } else {
-        const { data, error } = await supabase
-          .from("pet_sitter")
-          .insert({
-            user_id: userIdString,
-            ...petSitterData,
-          })
-          .select();
-
-        if (error) {
-          return handleError(error, res, "Error creating pet sitter data");
-        }
-
-        petSitterResult = data;
+      if (error && error.code !== "PGRST116") {
+        // PGRST116 คือ not found ซึ่งยอมรับได้
+        console.error("Database error:", error);
+        return res.status(500).json({ error: error.message });
       }
 
-      // 5. ส่งผลลัพธ์กลับไปที่ client
+      if (!petSitter && !userData) {
+        console.log("No data found for user ID:", userId);
+        return res.status(404).json({ error: "Profile not found" });
+      }
+
+      console.log("Profile data retrieved successfully");
+      return res.status(200).json({ data: combinedData });
+    }
+
+    // สำหรับ POST request (จาก client) - อัปเดตข้อมูล
+    if (req.method === "POST") {
+      console.log("Processing POST request for user ID:", userId);
+      const updateData = req.body;
+
+      // แยกข้อมูลสำหรับตาราง users และ pet_sitter
+      const userUpdateData = {
+        name: updateData.full_name,
+        email: updateData.email,
+        phone: updateData.phone_number,
+        profile_image_url: updateData.profile_image_url,
+      };
+
+      // อัปเดตข้อมูลในตาราง users ก่อน
+      const { error: userUpdateError } = await supabase
+        .from("users")
+        .update(userUpdateData)
+        .eq("id", userId);
+
+      if (userUpdateError) {
+        console.error("Error updating user data:", userUpdateError);
+        return res.status(500).json({ error: userUpdateError.message });
+      }
+
+      // ตรวจสอบว่ามีโปรไฟล์ pet_sitter อยู่แล้วหรือไม่
+      const { data: existingProfile, error: profileError } = await supabase
+        .from("pet_sitter")
+        .select("id")
+        .eq("user_id", userId)
+        .single();
+
+      if (profileError && profileError.code !== "PGRST116") {
+        console.error("Error finding profile:", profileError);
+        return res.status(500).json({ error: profileError.message });
+      }
+
+      // ลบข้อมูลที่ไปอัปเดตที่ users table แล้ว
+      const petSitterData = { ...updateData };
+      delete petSitterData.full_name; // ใช้ trade_name แทน
+      delete petSitterData.email; // อยู่ใน users table
+      delete petSitterData.profile_image_url; // อยู่ใน users table
+
+      if (!existingProfile) {
+        console.log("No existing profile found, creating new one...");
+        // สร้างโปรไฟล์ใหม่ถ้าไม่มี
+        const { data: newProfile, error: createError } = await supabase
+          .from("pet_sitter")
+          .insert([
+            {
+              ...petSitterData,
+              user_id: userId,
+              status: "waiting for approval",
+            },
+          ])
+          .select()
+          .single();
+
+        if (createError) {
+          console.error("Error creating profile:", createError);
+          return res.status(500).json({ error: createError.message });
+        }
+
+        // รวมข้อมูลทั้งหมดสำหรับส่งกลับ
+        const completeProfile = {
+          ...newProfile,
+          ...userUpdateData,
+          full_name: userUpdateData.name,
+        };
+
+        return res.status(201).json({
+          success: true,
+          message: "Profile created successfully",
+          data: completeProfile,
+        });
+      }
+
+      // อัปเดตข้อมูล pet_sitter
+      console.log("Updating existing profile...");
+      const { data: updatedProfile, error: updateError } = await supabase
+        .from("pet_sitter")
+        .update({ ...petSitterData, status: "waiting for approval" })
+        .eq("id", existingProfile.id)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error("Update error:", updateError);
+        return res.status(500).json({ error: updateError.message });
+      }
+
+      // รวมข้อมูลทั้งหมดสำหรับส่งกลับ
+      const completeProfile = {
+        ...updatedProfile,
+        ...userUpdateData,
+        full_name: userUpdateData.name,
+      };
+
       return res.status(200).json({
         success: true,
-        message: "Profile submitted and waiting for admin approval",
-        data: petSitterResult?.[0] || null,
+        message: "Profile updated successfully",
+        data: completeProfile,
       });
-    } catch (error) {
-      return handleError(error, res, "Error updating profile");
     }
-  }
-
-  // สำหรับ method อื่นๆที่ไม่รองรับ
-  else {
-    return res.status(405).json({ error: "Method not allowed" });
+  } catch (err) {
+    console.error("Server error:", err);
+    return res
+      .status(500)
+      .json({ error: err.message || "Internal server error" });
   }
 }

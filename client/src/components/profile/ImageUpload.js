@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, memo } from "react";
 import Image from "next/image";
 import plus from "/public/assets/profile/plus.svg";
-import avatar from "/public/assets/profile/profileimg.svg";
+import profileImg from "/public/assets/profile/profileimg.svg";
 
 // ใช้ memo เพื่อป้องกันการ re-render ที่ไม่จำเป็น
 const ImageUpload = memo(({ value, onChange, error }) => {
@@ -44,7 +44,7 @@ const ImageUpload = memo(({ value, onChange, error }) => {
   return (
     <div>
       <div className="relative w-[160px] h-[160px] sm:w-[200px] sm:h-[200px] md:w-[240px] md:h-[240px] rounded-full bg-[#DCDFED] flex items-center justify-center mx-auto">
-        {/* แสดงรูปภาพหรือ avatar เริ่มต้น */}
+        {/* แสดงรูปภาพหรือ Profile เริ่มต้น */}
         {preview ? (
           <img
             src={preview}
@@ -54,10 +54,11 @@ const ImageUpload = memo(({ value, onChange, error }) => {
           />
         ) : (
           <Image
-            src={avatar}
-            alt="Default Avatar"
+            src={profileImg}
+            alt="Profile"
             width={104}
             height={104}
+            priority={true}
             className="w-[104px] h-[104px]"
           />
         )}
