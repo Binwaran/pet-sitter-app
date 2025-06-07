@@ -16,27 +16,32 @@ export default function ChatWindow({
   const [imageFile, setImageFile] = useState(null);
 
   useEffect(() => {
-    if (!currentUser?.id || !user?.id) return
+  if (!currentUser?.id || !user?.id) return;
 
-    const channel = supabase
-      .channel('chat-room')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `receiver_id=eq.${currentUser.id}`,
-        },
-        (payload) => {
-          const newMessage = payload.new
+  const channelName = `chat-room:${[currentUser.id, user.id].sort().join('-')}`;
 
-          // แสดงเฉพาะข้อความที่เกี่ยวข้องกับการแชทนี้
-          if (
-            newMessage.sender_id === user.id &&
-            newMessage.receiver_id === currentUser.id
-          ) {
-            setMessages((prev) => [
+  const channel = supabase
+    .channel(channelName)
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+      },
+      (payload) => {
+        const newMessage = payload.new;
+
+        const isCurrentChat =
+          (newMessage.sender_id === user.id && newMessage.receiver_id === currentUser.id) ||
+          (newMessage.sender_id === currentUser.id && newMessage.receiver_id === user.id);
+
+        if (isCurrentChat) {
+          setMessages((prev) => {
+            const exists = prev.some((msg) => msg.id === newMessage.id);
+            if (exists) return prev;
+
+            return [
               ...prev,
               {
                 id: newMessage.id,
@@ -44,16 +49,17 @@ export default function ChatWindow({
                 content: newMessage.content,
                 image_url: newMessage.image_url,
               },
-            ])
-          }
+            ];
+          });
         }
-      )
-      .subscribe()
+      }
+    )
+    .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [user?.id, currentUser?.id])
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [user?.id, currentUser?.id]);
 
   // ✅ ฟังก์ชันส่งข้อความ
   const handleSend = async () => {
@@ -69,9 +75,9 @@ export default function ChatWindow({
       const fileExt = imageFile.name.split('.').pop()
       const filename = `${currentUser.id}/${Date.now()}-${uuidv4()}.${fileExt}`
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('chat-images')
-        .upload(filename, imageFile)
+      const { error: uploadError } = await supabase.storage
+      .from('chat-images')
+      .upload(filename, imageFile)
 
       if (uploadError) {
         console.error('❌ Image upload failed:', uploadError.message)
@@ -102,22 +108,37 @@ export default function ChatWindow({
       return
     }
 
-    // แสดงข้อความทันทีฝั่ง sender
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        senderId: currentUser.id,
-        content: input.trim(),
-        image_url: imageUrl,
-      },
-    ])
-
     setInput('')
     setImageFile(null)
   }
 
+  useEffect(() => {
+  const fetchMessages = async () => {
+    if (!currentUser?.id || !user?.id) return;
 
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${user.id}),and(sender_id.eq.${user.id},receiver_id.eq.${currentUser.id})`)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('❌ Failed to fetch messages:', error.message);
+      return;
+    }
+
+    setMessages(
+      data.map((msg) => ({
+        id: msg.id,
+        senderId: msg.sender_id,
+        content: msg.content,
+        image_url: msg.image_url,
+      }))
+    );
+  };
+
+  fetchMessages();
+}, [currentUser?.id, user?.id]);
 
   return (
     <div className="flex-1 flex flex-col h-full">

@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 
 const NavBar = () => {
   const { user, loading, logout } = useAuth();
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [hasNewNotification, setHasNewNotification] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -38,24 +39,21 @@ const NavBar = () => {
     checkLoginStatus();
   }, []);
 
-  //useEffect(() => {        *รอมีหน้าเพจสำหรับแสดงข้อความใหม่ก่อน
-  //  if (!isLoggedIn) return;
-  //  fetch("/api/unread-messages", { credentials: "include" })
-  //    .then((res) => res.json())
-  //   .then((data) => setHasNewMessage(data.unread > 0))
-  //    .catch((err) => console.error("message error", err));
-  //}, [isLoggedIn]);
+  useEffect(() => {        
+    if (!isLoggedIn) return;
+    fetch("/api/unread-messages", { credentials: "include" })
+      .then((res) => res.json())
+     .then((data) => setHasNewMessage(data.unread > 0))
+      .catch((err) => console.error("message error", err));
+  }, [isLoggedIn]);
 
-  //useEffect(() => {
-  //  if (!user) return;
-  //  fetch("/api/unread-notifications", { credentials: "include" })
-  //    .then((res) => res.json())
-  //    .then((data) => setHasNewNotification(data.unread > 0))
-  //    .catch((err) => console.error("notification error", err));
-  //}, [user]);
-
-  // กำหนดสถานะ login จาก context
-  const isLoggedIn = !!user;
+  useEffect(() => {
+    if (!user) return;
+    fetch("/api/unread-notifications", { credentials: "include" })
+      .then((res) => res.json())
+      .then((data) => setHasNewNotification(data.unread > 0))
+      .catch((err) => console.error("notification error", err));
+  }, [user]);
 
   return (
     <>

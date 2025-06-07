@@ -108,7 +108,7 @@ const Topbar = memo(({ className }) => {
       </div>
       <div className="flex items-center gap-3">
         <button
-          onClick={() => router.push(`/messages/${state.user_id}`)}
+          onClick={() => router.push('/messages')}
           className="w-10 h-10 rounded-full bg-[#F6F6F9] hover:bg-[#EDEDF2] flex items-center justify-center cursor-pointer transition-colors"
           aria-label="Messages"
         >
