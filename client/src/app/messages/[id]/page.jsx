@@ -19,36 +19,54 @@ export default function MessagesPage() {
 
 
   useEffect(() => {
-    if (!user || !id) return
+  if (!user || !id) return;
 
-    const fetchChatData = async () => {
+  const fetchData = async () => {
+    // ดึง messages ทั้งหมด
+    const { data: messagesData } = await supabase
+      .from('messages')
+      .select('*')
+      .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+      .order('created_at', { ascending: true });
+
+    setMessages(messagesData);
+
+    // หา user id ของฝั่งตรงข้าม
+    const chatWithId = messagesData?.find(
+      (msg) =>
+        msg.sender_id.toString() === id.toString() ||
+        msg.receiver_id.toString() === id.toString()
+    );
+
+    const otherUserId =
+      chatWithId?.sender_id === user.id
+        ? chatWithId.receiver_id
+        : chatWithId?.sender_id;
+
+    if (otherUserId) {
       const { data: userData } = await supabase
         .from('users')
         .select('id, name, profile_image_url')
-        .eq('id', id)
-        .single()
-      setOtherUser(userData)
+        .eq('id', otherUserId)
+        .single();
 
-      const { data: messagesData } = await supabase
-        .from('messages')
-        .select('*')
-        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
-        .order('created_at', { ascending: true })
-      setMessages(messagesData)
+      setOtherUser(userData);
     }
 
-    const fetchChatList = async () => {
-      const { data } = await supabase
-        .from('messages')
-        .select('id, sender_id, receiver_id')
-        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
-      // ดึง list ผู้ใช้จาก messages ทั้งหมดไปใช้ได้
-      setChatList(data || [])
-    }
+    // โหลด chatList ด้านซ้าย
+    const { data: chatListData } = await supabase
+      .from('messages')
+      .select('id, sender_id, receiver_id')
+      .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`);
 
-    fetchChatList()
-    fetchChatData()
-  }, [id, user])
+    setChatList(chatListData || []);
+  };
+
+  fetchData();
+}, [id, user]);
+
+
+    
 
   return (
     <div className="flex h-screen overflow-hidden">

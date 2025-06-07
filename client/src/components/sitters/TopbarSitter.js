@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation"; // เพิ่ม import useRouter
 import avatar from "/public/assets/profile/profileimg.svg";
 import message from "/public/assets/sidebar/message.svg";
 
+
+
 // ใช้ memo เพื่อป้องกันการ re-render ที่ไม่จำเป็น
 const Topbar = memo(({ className }) => {
   const router = useRouter(); // สร้าง router instance
@@ -16,6 +18,7 @@ const Topbar = memo(({ className }) => {
     loading: true,
     name: "",
     profile_image_url: null,
+    user_id: null,
     error: null,
   });
 
@@ -42,6 +45,7 @@ const Topbar = memo(({ className }) => {
           loading: false,
           name: userRes.data?.name || "",
           profile_image_url: userRes.data?.profile_image_url || null,
+          user_id: res.data.id,
           error: null,
         });
       } else {
@@ -104,7 +108,7 @@ const Topbar = memo(({ className }) => {
       </div>
       <div className="flex items-center gap-3">
         <button
-          onClick={() => alert("Feature coming soon!")}
+          onClick={() => router.push(`/messages/${state.user_id}`)}
           className="w-10 h-10 rounded-full bg-[#F6F6F9] hover:bg-[#EDEDF2] flex items-center justify-center cursor-pointer transition-colors"
           aria-label="Messages"
         >
