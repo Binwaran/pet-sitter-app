@@ -1,110 +1,140 @@
-# pet-sitter-app
+🐾 Pet Sitter App
+A full-stack web application that connects pet owners with trusted pet sitters for reliable, secure, and convenient pet care. The platform supports real-time messaging, booking management, sitter availability, and more.
 
-A pet sitting web application that connects **pet owners** with trusted **pet sitters**, allowing for convenient and secure pet care arrangements.  
-Users can register, browse sitters, book services, communicate via chat, and review their experiences.
+📌 Project Overview
+This project was built as part of the TechUp Bootcamp Final Project, designed to simulate a real-world full-stack SaaS product. It supports both pet owners and sitters with features like:
 
-## 📌 Project Description
+Email/password login
 
-This project aims to provide a reliable platform for connecting **pet owners** and **pet sitters**.  
-It includes features like:
+Pet profile management
 
-- User & Pet Sitter Authentication (Email login, validation)
-- Pet Profiles & Account Management
-- Pet Sitter Listings & Advanced Search
-- Booking System
-- Chat between owner & sitter
-- Reviews & Ratings
-- Secure Payment Integration (future phase)
+Pet sitter discovery via filters
 
-## 🚀 Tech Stack
+Booking and schedule handling
 
-| Frontend     | Backend        | Database     | Styling     | Others           |
-|--------------|----------------|--------------|-------------|------------------|
-| Next.js      | Node.js + Express | MongoDB Atlas | Tailwind CSS | Axios, ESLint    |
-| App Router   | JWT (for Auth) | Mongoose     | Custom Theme | Font: Satoshi    |
+Real-time chat
 
-## 🧩 Features
+Reviews & ratings system
 
-### ✅ User Management
-- Register with email, tel, and password validation
-- Login / Logout
-- Reset password (optional)
-- Social Login (Google/Facebook - optional)
+(Coming soon) Payment & sitter payouts
 
-### 🐶 Pet Owner
-- Dashboard for pet & booking management
-- Create/update/delete pet profiles
-- Search pet sitters by location & filters
-- Book services with sitters
-- Leave reviews & ratings
-- Chat with sitters
+🔧 Tech Stack
+Frontend	Backend	Database	Styling	Others
+Next.js (App Router)	Node.js + Express	Supabase (Postgres)	Tailwind CSS	Clerk Auth, Satoshi Font
+TypeScript	RESTful API	Supabase Realtime	Custom Theme	Supabase Storage (images)
 
-### 🧑‍🦱 Pet Sitter
-- Dashboard for schedule & booking management
-- Set availability, accept/reject bookings
-- Calendar view for appointments
-- Withdraw earnings (future)
+🧩 Core Features
+👤 Authentication & User Roles
+Email/password authentication via Clerk
 
-### 💸 Payments (Planned)
-- Booking payments & sitter payouts
-- View invoice & transaction history
+Separate roles for Pet Owners and Pet Sitters
 
-### 🔎 Search & Filter
-- Filter by pet type, rating, experience
-- Map view of available sitters (optional)
+Dashboard routing based on user role
 
-## 📂 Folder Structure
+🐕 Pet Owner
+Create/update/delete pet profiles
 
+Browse and search sitters by filters
+
+Book available sitters
+
+Leave reviews and ratings
+
+Real-time chat with sitters
+
+👩‍⚕️ Pet Sitter
+Create profile with availability and experience
+
+Manage bookings (Accept/Reject)
+
+Set holidays/unavailable days
+
+View calendar with upcoming appointments
+
+(Future) Withdraw earnings
+
+💬 Messaging System
+Real-time chat between owner and sitter
+
+Chat list with unread count
+
+Upload images in chat
+
+Message scrollback (infinite load)
+
+📆 Booking System
+Time-slot based booking (1+ hr min)
+
+Unavailable time blocks for confirmed bookings
+
+Automatic blocking on sitter’s holiday
+
+Booking modal with validation and error handling
+
+🔍 Advanced Search & Filter
+Search by keyword
+
+Filter by pet type, rating, experience
+
+Mobile + Desktop friendly filter UI
+
+🗂 Folder Structure
 bash
-pet-sitter-app/
-├── client/             # Next.js frontend
-│   ├── src/
-│   │   ├── components/
-│   │   ├── app/
-│   │   ├── styles/
-│   │   ├── services/   # Axios API calls
-│   │   └── fonts/      # Satoshi font
-├── server/             # Node.js backend (WIP)
-
-
-## 🧪 How to Run Locally
-
+Copy
+Edit
+pet-sitter-app-dev/
+├── client/               # Next.js Frontend
+│   ├── app/              # App Router pages
+│   ├── components/       # Reusable components
+│   ├── services/         # Supabase/Clerk helpers
+│   ├── styles/           # Tailwind config & global styles
+│   ├── public/assets/    # Icons & illustrations
+│   └── middleware.js     # Clerk middleware
+├── server/ (optional)    # For future Node.js/Express backend
+🧪 Getting Started Locally
 bash
-# Clone project
-git clone https://github.com/<your-username>/pet-sitter-app.git
-cd pet-sitter-app/client
+Copy
+Edit
+# 1. Clone the repository
+git clone https://github.com/<your-username>/pet-sitter-app-dev.git
+cd pet-sitter-app-dev/client
 
-# Install dependencies
+# 2. Install dependencies
 npm install
 
-# Run development server
+# 3. Run development server
 npm run dev
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+# 4. Visit in browser
+http://localhost:3000
+🖼️ Screenshots
+(Include key screenshots such as: landing page, dashboard, booking modal, chat window)
 
-![Screenshot 2025-05-13 214708](https://github.com/user-attachments/assets/e77a799f-fc61-44df-83f2-2defdc006292)
+👩‍💻 Team Members
+Nofffie (Binwaran) – Product Owner, Frontend Dev, UI/UX, Project Lead
 
+Earth (MisaterE) – Backend & Database
 
+Tin (Tin.Tnk) – Realtime Messaging
 
+Big (B1GOT) – Booking Logic
 
-## 👨‍👩‍👧 Team Members
+Mac (wutt S) – Search & Filter
 
-- Nofffie 👑 (Project Owner / Frontend / Designer)
-- Member A
-- Member B
-- Member C
-- Member D
+📅 Project Status
+✅ Initial Setup + Tailwind Theme
 
-## 📅 Current Status
-- [x] Project setup with Tailwind + Satoshi font
-- [x] Custom color theme configured
-- [ ] Landing Page
-- [ ] Auth (Register / Login)
-- [ ] Dashboard (Owner / Sitter)
-- [ ] Booking System
-- [ ] Chat / Review
-- [ ] Payment integration
+✅ Auth System with Clerk
 
-## 📌 License
+✅ Pet Sitter Profile & Dashboard
 
-MIT License — for educational use under TechUp Bootcamp.
+✅ Booking Modal with Validation
+
+✅ Realtime Chat with Images
+
+🚧 Payment Integration (Next Phase)
+
+🚧 Notifications & Email (Planned)
+
+📜 License
+MIT License — built for educational purposes under TechUp Bootcamp 🚀
