@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import Image from 'next/image';
-<<<<<<< HEAD
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/utils/supabase';
 
@@ -11,47 +10,12 @@ export default function ChatWindow({
   onClose = () => {},
   currentUser,
   messages: initialMessages = [],
-=======
-
-// MOCK MODE: ลบออกเมื่อเชื่อมระบบจริง
-const mockUser = {
-  id: 'mock-sitter-1',
-  name: 'Ploy the Pet Sitter',
-  profile_image_url: '/sitter.jpg',
-};
-
-const mockCurrentUser = {
-  id: 'mock-owner-1',
-  name: 'Nofffie',
-  role: 'owner',
-  profileImage: '/user.jpg',
-};
-
-const mockMessages = [
-  {
-    id: 1,
-    senderId: 'mock-owner-1',
-    content: 'Hello! I’d like to book you.',
-  },
-  {
-    id: 2,
-    senderId: 'mock-sitter-1',
-    content: 'Sure! When do you need me?',
-  },
-];
-
-export default function ChatWindow({
-  user,
-  onClose = () => {},
-  currentUser = mockCurrentUser,
-  messages: initialMessages = mockMessages,
->>>>>>> 5ca3f8f (fix: Desktop UI and Logic for message page)
 }) {
   const [messages, setMessages] = useState(initialMessages);
   const [input, setInput] = useState('');
   const [imageFile, setImageFile] = useState(null);
+  
 
-<<<<<<< HEAD
   useEffect(() => {
   if (!currentUser?.id || !user?.id) return;
 
@@ -67,6 +31,7 @@ export default function ChatWindow({
         table: 'messages',
       },
       (payload) => {
+        console.log('📦 Realtime payload', payload)
         const newMessage = payload.new;
 
         const isCurrentChat =
@@ -75,19 +40,15 @@ export default function ChatWindow({
 
         if (isCurrentChat) {
           setMessages((prev) => {
-            const exists = prev.some((msg) => msg.id === newMessage.id);
-            if (exists) return prev;
-
-            return [
-              ...prev,
-              {
-                id: newMessage.id,
-                senderId: newMessage.sender_id,
-                content: newMessage.content,
-                image_url: newMessage.image_url,
-              },
-            ];
-          });
+            const exists = prev.some((msg) => msg.id === newMessage.id)
+            if (exists) return prev
+            return [...prev, {
+              id: newMessage.id,
+              senderId: newMessage.sender_id,
+              content: newMessage.content,
+              image_url: newMessage.image_url,
+            }]
+          })
         }
       }
     )
@@ -112,9 +73,9 @@ export default function ChatWindow({
       const fileExt = imageFile.name.split('.').pop()
       const filename = `${currentUser.id}/${Date.now()}-${uuidv4()}.${fileExt}`
 
-      const { error: uploadError } = await supabase.storage
-      .from('chat-images')
-      .upload(filename, imageFile)
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('chat-images')
+        .upload(filename, imageFile)
 
       if (uploadError) {
         console.error('❌ Image upload failed:', uploadError.message)
@@ -158,10 +119,6 @@ export default function ChatWindow({
       .select('*')
       .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${user.id}),and(sender_id.eq.${user.id},receiver_id.eq.${currentUser.id})`)
       .order('created_at', { ascending: true });
-=======
-  const handleSend = () => {
-    if (!input.trim()) return;
->>>>>>> 5ca3f8f (fix: Desktop UI and Logic for message page)
 
     if (error) {
       console.error('❌ Failed to fetch messages:', error.message);
@@ -178,12 +135,9 @@ export default function ChatWindow({
     );
   };
 
-<<<<<<< HEAD
   fetchMessages();
 }, [currentUser?.id, user?.id]);
 
-=======
->>>>>>> 5ca3f8f (fix: Desktop UI and Logic for message page)
   return (
     <div className="flex-1 flex flex-col h-full">
       {/* Header */}
@@ -200,15 +154,7 @@ export default function ChatWindow({
         </div>
         <div>
           <button onClick={onClose}>
-<<<<<<< HEAD
-<<<<<<< HEAD
             <X className="w-7 h-7 text-gray-500" />
-=======
-            <X className="w-6 h-6" />
->>>>>>> 5ca3f8f (fix: Desktop UI and Logic for message page)
-=======
-            <X className="w-7 h-7 text-gray-500" />
->>>>>>> 02b8c34 (fix: deco on message page)
           </button>
         </div>
 
@@ -240,7 +186,6 @@ export default function ChatWindow({
                   : 'self-start bg-white border text-gray-700'
               }`}
             >
-<<<<<<< HEAD
               <div>{msg.content}</div>
               {msg.image_url && (
                 <img
@@ -249,9 +194,6 @@ export default function ChatWindow({
                   className="mt-2 max-w-xs rounded-lg"
                 />
               )}
-=======
-              {msg.content}
->>>>>>> 5ca3f8f (fix: Desktop UI and Logic for message page)
             </div>
           ))
         )}
@@ -266,7 +208,6 @@ export default function ChatWindow({
                   width={70}
                   height={70}
                 />
-<<<<<<< HEAD
           <input
             type="file"
             id="image"
@@ -274,9 +215,6 @@ export default function ChatWindow({
             accept="image/*"
             onChange={(e) => setImageFile(e.target.files[0])}
           />
-=======
-          <input type="file" id="image" className="hidden" />
->>>>>>> 5ca3f8f (fix: Desktop UI and Logic for message page)
         </label>
 
         <input
@@ -289,7 +227,7 @@ export default function ChatWindow({
 
         <button
           onClick={handleSend}
-          className="text-white px-4 py-2 disabled:opacity-50"
+          className="text-white px-4 py-2 disabled:opacity-50 cursor-pointer"
         >
           <Image
                   src="/assets/send-button.png"

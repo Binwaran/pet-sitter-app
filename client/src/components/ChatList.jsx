@@ -7,104 +7,78 @@ import { useAuth } from '@/context/AuthContext'
 export default function ChatList({ selectedUserId, onSelectUser }) {
   const { user } = useAuth()
   const [chatPreviewList, setChatPreviewList] = useState([])
+  const [unreadCountMap, setUnreadCountMap] = useState(new Map())
 
-  // 🔁 โหลดข้อความล่าสุด + count unread
-  const fetchChatPreviews = async () => {
+ useEffect(() => {
     if (!user?.id) return
 
-    const { data: messages, error } = await supabase
-      .from('messages')
-      .select('*')
-      .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
-      .order('created_at', { ascending: false })
+    const fetchChatPreviews = async () => {
+      const { data: messages, error } = await supabase
+        .from('messages')
+        .select('*, sender_id, receiver_id, is_read')
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .order('created_at', { ascending: false })
 
-    if (error) {
-      console.error('❌ error fetching messages:', error)
-      return
+      if (error) {
+        console.error('❌ error fetching messages:', error)
+        return
+      }
+
+      const latestMap = new Map()
+      const unreadMap = new Map()
+
+      messages.forEach((msg) => {
+        const otherId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id
+
+        // เก็บข้อความล่าสุดของแต่ละคู่แชท
+        if (!latestMap.has(otherId)) {
+          latestMap.set(otherId, msg)
+        }
+
+        // นับ unread ถ้าเราเป็น receiver และยังไม่ได้อ่าน
+        if (msg.receiver_id === user.id && msg.is_read === false) {
+          unreadMap.set(otherId, (unreadMap.get(otherId) || 0) + 1)
+        }
+      })
+
+      const otherUserIds = Array.from(latestMap.keys())
+      if (otherUserIds.length === 0) return
+
+      const { data: users, error: userError } = await supabase
+        .from('users')
+        .select('id, name, profile_image_url')
+        .in('id', otherUserIds)
+
+      if (userError) {
+        console.error('❌ error fetching user info:', userError)
+        return
+      }
+
+      const chatList = users.map((u) => {
+        const latestMessage = latestMap.get(u.id) || null
+        return {
+          user: u,
+          message: latestMessage
+        }
+      })
+
+      setChatPreviewList(chatList)
+      setUnreadCountMap(unreadMap)
     }
 
-    const latestMap = new Map()
-    const unreadCountMap = new Map()
-
-    messages.forEach((msg) => {
-      const otherId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id
-
-      if (!latestMap.has(otherId)) {
-        latestMap.set(otherId, msg)
-      }
-
-      if (msg.receiver_id === user.id && msg.is_read === false) {
-        unreadCountMap.set(otherId, (unreadCountMap.get(otherId) || 0) + 1)
-      }
-    })
-
-    const otherUserIds = Array.from(latestMap.keys())
-    if (otherUserIds.length === 0) return
-
-    const { data: users, error: userError } = await supabase
-      .from('users')
-      .select('id, name, profile_image_url')
-      .in('id', otherUserIds)
-
-    if (userError) {
-      console.error('❌ error fetching user info:', userError)
-      return
-    }
-
-    const chatList = users.map((u) => {
-      const latestMessage = latestMap.get(u.id) || null
-      const unreadCount = unreadCountMap.get(u.id) || 0
-      return {
-        user: u,
-        message: latestMessage,
-        unreadCount,
-      }
-    })
-
-    setChatPreviewList(chatList)
-  }
-
-  // 📌 โหลดตอน mount
-  useEffect(() => {
     fetchChatPreviews()
   }, [user])
 
-  // 🔔 subscribe realtime insert
-  useEffect(() => {
-    if (!user?.id) return
-
-    const channel = supabase
-      .channel(`chat-preview-${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-        },
-        (payload) => {
-          const msg = payload.new
-          if (msg.receiver_id === user.id || msg.sender_id === user.id) {
-            fetchChatPreviews()
-          }
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [user?.id])
 
   return (
-    <div className="w-[300px] bg-black text-white p-4 min-h-0 overflow-y-auto">
-      <h2 className="text-xl mb-4">Messages</h2>
-      {chatPreviewList.map(({ user: chatUser, message, unreadCount }) => (
+    <div className="divide-y divide-gray-700">
+      {chatPreviewList.map(({ user: chatUser, message }) => (
         <div
           key={chatUser.id}
-          className={`flex items-center justify-between mb-3 cursor-pointer p-2 rounded-lg ${
-            selectedUserId === chatUser.id ? 'bg-[#2c2c2c]' : ''
-          }`}
+          className={`p-4 cursor-pointer hover:bg-gray-800 ${
+            selectedUserId === chatUser.id ? 'bg-gray-900' : ''
+          }`} 
+
           onClick={() => onSelectUser(chatUser)}
         >
           <div className="flex items-center space-x-3">
@@ -116,13 +90,14 @@ export default function ChatList({ selectedUserId, onSelectUser }) {
             <div className="flex-1">
               <div className="text-white font-medium">{chatUser.name || 'No Name'}</div>
             </div>
-          </div>
+            {/* 🔥 แจ้งเตือน New ถ้ายังไม่ได้อ่าน และไม่ใช่ข้อความของตัวเอง */}
+            {message?.sender_id !== user.id && message?.is_read === false && (
+                <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                  {unreadCountMap.get(chatUser.id) || 0}
+                </span>
+              )}
 
-          {message?.sender_id !== user.id && unreadCount > 0 && (
-            <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-              {unreadCount}
-            </span>
-          )}
+          </div>
         </div>
       ))}
     </div>
