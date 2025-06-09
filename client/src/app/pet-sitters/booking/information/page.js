@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import BookingSteps from '@/components/booking/BookingSteps';
 import { useRouter } from 'next/navigation';
 import BookingSummaryCard from '@/components/booking/BookingSummaryCard';
 import { AlertCircle } from 'lucide-react';
+import NavBar from '@/components/NavBar';
 
 export default function BookingInformationPage() {
   const [form, setForm] = useState({
@@ -14,7 +15,14 @@ export default function BookingInformationPage() {
     message: '',
   });
   const [errors, setErrors] = useState({});
+  const [selectedPets, setSelectedPets] = useState([]);
   const router = useRouter();
+
+  useEffect(() => {
+    // Load selected pets from localStorage
+    const pets = JSON.parse(localStorage.getItem('bookingPets') || '[]');
+    setSelectedPets(pets);
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -34,14 +42,21 @@ export default function BookingInformationPage() {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      alert('Please fill in all required fields.');
       return;
     }
-    localStorage.setItem('bookingDetails', JSON.stringify(form));
+    // Merge pets info from localStorage
+    const bookingDetails = {
+      ...form,
+      pets: selectedPets,
+    };
+    localStorage.setItem('bookingDetails', JSON.stringify(bookingDetails));
+    localStorage.removeItem('bookingPets');
     router.push('/pet-sitters/booking/payment');
   };
 
   return (
+    <>
+    <NavBar />
     <div className="flex flex-col min-h-screen bg-[#F9FAFB] p-4 md:p-6 lg:p-8 relative">
       <div className="container mx-auto flex flex-col lg:flex-row gap-6">
         <div className="flex-1 flex flex-col gap-6">
@@ -121,7 +136,7 @@ export default function BookingInformationPage() {
         </div>
         <div className="w-full lg:w-1/3">
           <div className="lg:sticky lg:top-24 z-10">
-            <BookingSummaryCard bookingDetails={form} />
+            <BookingSummaryCard bookingDetails={{ ...form, pets: selectedPets }} />
           </div>
         </div>
       </div>
@@ -131,5 +146,6 @@ export default function BookingInformationPage() {
         className="hidden md:block absolute bottom-0 right-0 w-32 lg:w-48 xl:w-60"
       />
     </div>
+    </>
   );
 }

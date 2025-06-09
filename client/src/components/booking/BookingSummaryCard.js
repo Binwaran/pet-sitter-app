@@ -9,19 +9,27 @@ const BookingSummaryCard = ({ bookingDetails }) => {
     );
   }
 
-  const {
-    name = 'N/A',
-    email = 'N/A',
-    phone = 'N/A',
-    message = '-',
-    sitterName = 'Unknown',
-    sitterHouse = 'Unknown',
-    date = 'Not set',
-    time = 'Not set',
-    duration = '-',
-    pet = '-',
-    total = '฿0',
-  } = bookingDetails;
+  // Use real data from bookingDetails, fallback if missing
+  const name = bookingDetails.name || 'N/A';
+  const email = bookingDetails.email || 'N/A';
+  const phone = bookingDetails.phone || 'N/A';
+  const message = bookingDetails.message || '-';
+  // Sitter info: try both possible field names
+  const sitterName = bookingDetails.sitterName || bookingDetails.sitter || 'Unknown';
+  const sitterHouse = bookingDetails.sitterHouse || bookingDetails.sitterHouseName || '';
+  // Date & Time
+  const date = bookingDetails.date || '-';
+  const time = bookingDetails.time || '-';
+  const duration = bookingDetails.duration || '-';
+  // Pet: show names if pets is array, else fallback
+  let petDisplay = '-';
+  if (Array.isArray(bookingDetails.pets) && bookingDetails.pets.length > 0) {
+    petDisplay = bookingDetails.pets.map(p => p.pet_name || p.name || p).join(', ');
+  } else if (bookingDetails.pet) {
+    petDisplay = bookingDetails.pet;
+  }
+  // Total
+  const total = bookingDetails.total ? `${parseFloat(bookingDetails.total).toLocaleString(undefined, { minimumFractionDigits: 2 })} THB` : '฿0';
 
   return (
     <div className="bg-white rounded-2xl shadow-md p-6">
@@ -46,7 +54,7 @@ const BookingSummaryCard = ({ bookingDetails }) => {
         <hr className="my-2 border-gray-200" />
         <div className="text-sm">
           <p className="font-medium">Pet Sitter:</p>
-          <p className="ml-2">{sitterHouse} by {sitterName}</p>
+          <p className="ml-2">{sitterHouse ? `${sitterHouse} by ${sitterName}` : sitterName}</p>
         </div>
         <div className="text-sm">
           <p className="font-medium">Date & Time:</p>
@@ -58,7 +66,7 @@ const BookingSummaryCard = ({ bookingDetails }) => {
         </div>
         <div className="text-sm">
           <p className="font-medium">Pet:</p>
-          <p className="ml-2">{pet}</p>
+          <p className="ml-2">{petDisplay}</p>
         </div>
       </div>
       <div className="border-t border-gray-200 my-4 pt-4 flex justify-between items-center">

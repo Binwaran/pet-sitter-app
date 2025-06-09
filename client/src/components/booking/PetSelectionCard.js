@@ -13,12 +13,11 @@ import { useAuth } from '@/context/AuthContext';
 
 
 const PetSelectionCard = ({ pet, isSelected, onSelect }) => {
-  // debug log
   if (typeof window !== 'undefined') {
     console.log('PetSelectionCard received pet:', pet);
   }
   const router = useRouter();
-  const { user } = useAuth(); // <--- เพิ่มบรรทัดนี้
+  const { user } = useAuth();
   if (!pet) {
     return (
       <div className="w-full h-40 bg-red-100 text-red-700 rounded-xl flex items-center justify-center">
