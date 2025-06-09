@@ -1,87 +1,77 @@
-🐾 Pet Sitter App
+# 🐾 Pet Sitter App
+
 A full-stack web application that connects pet owners with trusted pet sitters for reliable, secure, and convenient pet care. The platform supports real-time messaging, booking management, sitter availability, and more.
 
-📌 Project Overview
-This project was built as part of the TechUp Bootcamp Final Project, designed to simulate a real-world full-stack SaaS product. It supports both pet owners and sitters with features like:
+## 📌 Project Overview
 
-Email/password login
+This project was built as part of the **TechUp Bootcamp Final Project**, designed to simulate a real-world full-stack SaaS product. It supports both pet owners and sitters with features like:
 
-Pet profile management
+* Email/password login
+* Pet profile management
+* Pet sitter discovery via filters
+* Booking and schedule handling
+* Real-time chat
+* Reviews & ratings system
+* (Coming soon) Payment & sitter payouts
 
-Pet sitter discovery via filters
+## 🔧 Tech Stack
 
-Booking and schedule handling
+| Frontend             | Backend           | Database            | Styling      | Others                    |
+| -------------------- | ----------------- | ------------------- | ------------ | ------------------------- |
+| Next.js (App Router) | Node.js + Express | Supabase (Postgres) | Tailwind CSS | Clerk Auth, Satoshi Font  |
+| TypeScript           | RESTful API       | Supabase Realtime   | Custom Theme | Supabase Storage (images) |
 
-Real-time chat
+---
 
-Reviews & ratings system
+## 🧩 Core Features
 
-(Coming soon) Payment & sitter payouts
+### 👤 Authentication & User Roles
 
-🔧 Tech Stack
-Frontend	Backend	Database	Styling	Others
-Next.js (App Router)	Node.js + Express	Supabase (Postgres)	Tailwind CSS	Clerk Auth, Satoshi Font
-TypeScript	RESTful API	Supabase Realtime	Custom Theme	Supabase Storage (images)
+* Email/password authentication via Clerk
+* Separate roles for Pet Owners and Pet Sitters
+* Dashboard routing based on user role
 
-🧩 Core Features
-👤 Authentication & User Roles
-Email/password authentication via Clerk
+### 🐕 Pet Owner
 
-Separate roles for Pet Owners and Pet Sitters
+* Create/update/delete pet profiles
+* Browse and search sitters by filters
+* Book available sitters
+* Leave reviews and ratings
+* Real-time chat with sitters
 
-Dashboard routing based on user role
+### 👩‍⚕️ Pet Sitter
 
-🐕 Pet Owner
-Create/update/delete pet profiles
+* Create profile with availability and experience
+* Manage bookings (Accept/Reject)
+* Set holidays/unavailable days
+* View calendar with upcoming appointments
+* (Future) Withdraw earnings
 
-Browse and search sitters by filters
+### 💬 Messaging System
 
-Book available sitters
+* Real-time chat between owner and sitter
+* Chat list with unread count
+* Upload images in chat
+* Message scrollback (infinite load)
 
-Leave reviews and ratings
+### 📆 Booking System
 
-Real-time chat with sitters
+* Time-slot based booking (1+ hr min)
+* Unavailable time blocks for confirmed bookings
+* Automatic blocking on sitter’s holiday
+* Booking modal with validation and error handling
 
-👩‍⚕️ Pet Sitter
-Create profile with availability and experience
+### 🔍 Advanced Search & Filter
 
-Manage bookings (Accept/Reject)
+* Search by keyword
+* Filter by pet type, rating, experience
+* Mobile + Desktop friendly filter UI
 
-Set holidays/unavailable days
+---
 
-View calendar with upcoming appointments
+## 🗂 Folder Structure
 
-(Future) Withdraw earnings
-
-💬 Messaging System
-Real-time chat between owner and sitter
-
-Chat list with unread count
-
-Upload images in chat
-
-Message scrollback (infinite load)
-
-📆 Booking System
-Time-slot based booking (1+ hr min)
-
-Unavailable time blocks for confirmed bookings
-
-Automatic blocking on sitter’s holiday
-
-Booking modal with validation and error handling
-
-🔍 Advanced Search & Filter
-Search by keyword
-
-Filter by pet type, rating, experience
-
-Mobile + Desktop friendly filter UI
-
-🗂 Folder Structure
-bash
-Copy
-Edit
+```
 pet-sitter-app-dev/
 ├── client/               # Next.js Frontend
 │   ├── app/              # App Router pages
@@ -91,10 +81,13 @@ pet-sitter-app-dev/
 │   ├── public/assets/    # Icons & illustrations
 │   └── middleware.js     # Clerk middleware
 ├── server/ (optional)    # For future Node.js/Express backend
-🧪 Getting Started Locally
-bash
-Copy
-Edit
+```
+
+---
+
+## 🧪 Getting Started Locally
+
+```bash
 # 1. Clone the repository
 git clone https://github.com/<your-username>/pet-sitter-app-dev.git
 cd pet-sitter-app-dev/client
@@ -107,34 +100,38 @@ npm run dev
 
 # 4. Visit in browser
 http://localhost:3000
-🖼️ Screenshots
+```
+
+---
+
+## 🖼️ Screenshots
+
 (Include key screenshots such as: landing page, dashboard, booking modal, chat window)
 
-👩‍💻 Team Members
-Nofffie (Binwaran) – Product Owner, Frontend Dev, UI/UX, Project Lead
+---
 
-Earth (MisaterE) – Backend & Database
+## 👩‍💻 Team Members
 
-Tin (Tin.Tnk) – Realtime Messaging
+* **Nofffie (Binwaran)** – Product Owner, Frontend Dev, UI/UX, Project Lead
+* **Earth (MisaterE)** – Backend & Database
+* **Tin (Tin.Tnk)** – Realtime Messaging
+* **Big (B1GOT)** – Booking Logic
+* **Mac (wutt S)** – Search & Filter
 
-Big (B1GOT) – Booking Logic
+---
 
-Mac (wutt S) – Search & Filter
+## 📅 Project Status
 
-📅 Project Status
-✅ Initial Setup + Tailwind Theme
+* ✅ Initial Setup + Tailwind Theme
+* ✅ Auth System with Clerk
+* ✅ Pet Sitter Profile & Dashboard
+* ✅ Booking Modal with Validation
+* ✅ Realtime Chat with Images
+* 🚧 Payment Integration (Next Phase)
+* 🚧 Notifications & Email (Planned)
 
-✅ Auth System with Clerk
+---
 
-✅ Pet Sitter Profile & Dashboard
+## 📜 License
 
-✅ Booking Modal with Validation
-
-✅ Realtime Chat with Images
-
-🚧 Payment Integration (Next Phase)
-
-🚧 Notifications & Email (Planned)
-
-📜 License
 MIT License — built for educational purposes under TechUp Bootcamp 🚀
