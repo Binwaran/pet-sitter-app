@@ -26,7 +26,7 @@ export default function BookingConfirmationModal({ open, onClose, onConfirm }) {
             className="flex-1 px-4 py-2 rounded-full bg-orange-500 text-white font-medium hover:bg-orange-600 transition"
             onClick={onConfirm}
           >
-            Yes, I'm sure
+            Yes, I&apos;m sure
           </button>
         </div>
       </div>
