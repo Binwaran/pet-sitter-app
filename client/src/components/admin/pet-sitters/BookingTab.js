@@ -227,7 +227,7 @@ export default function BookingTab({ bookings, bookingsLoading }) {
     });
   }, []);
 
-  // เรียงลำดับข้อมูล bookings
+  // 2. ปรับฟังก์ชัน sortedBookings ให้รองรับการเรียงลำดับทุกคอลัมน์
   const sortedBookings = useMemo(() => {
     if (!bookings || bookings.length === 0) return [];
 
@@ -235,33 +235,74 @@ export default function BookingTab({ bookings, bookingsLoading }) {
 
     const sortableItems = [...bookings];
 
-    if (sortConfig.key === "booked_date") {
-      return sortableItems.sort((a, b) => {
-        // แปลงวันที่และเวลาให้เป็น Date object ที่สมบูรณ์
-        const startTimeA = a.start_time ? new Date(a.start_time) : new Date(0);
-        const startTimeB = b.start_time ? new Date(b.start_time) : new Date(0);
+    return sortableItems.sort((a, b) => {
+      // ตัวแปรสำหรับเก็บค่าที่จะนำมาเปรียบเทียบ
+      let valueA, valueB;
 
-        // เปรียบเทียบ start_time ตรงๆ ด้วย Date object
-        const startComparison =
-          sortConfig.direction === "asc"
-            ? startTimeA - startTimeB // น้อยไปมาก (เก่าไปใหม่)
-            : startTimeB - startTimeA; // มากไปน้อย (ใหม่ไปเก่า)
+      // ดึงค่าตามคอลัมน์ที่ต้องการเรียง
+      switch (sortConfig.key) {
+        case "owner_name":
+          valueA = (a.owner_name || "").toLowerCase();
+          valueB = (b.owner_name || "").toLowerCase();
+          break;
 
-        // ถ้า start_time เท่ากัน ให้เรียงตาม end_time
-        if (startComparison === 0) {
-          const endTimeA = a.end_time ? new Date(a.end_time) : new Date(0);
-          const endTimeB = b.end_time ? new Date(b.end_time) : new Date(0);
+        case "pet_count":
+          valueA = parseInt(a.pet_count || 0);
+          valueB = parseInt(b.pet_count || 0);
+          break;
 
-          return sortConfig.direction === "asc"
-            ? endTimeA - endTimeB
-            : endTimeB - endTimeA;
+        case "duration":
+          valueA = parseInt(a.duration || 0);
+          valueB = parseInt(b.duration || 0);
+          break;
+
+        case "booked_date":
+          // กรณีวันที่ ใช้โค้ดเดิม
+          const startTimeA = a.start_time
+            ? new Date(a.start_time)
+            : new Date(0);
+          const startTimeB = b.start_time
+            ? new Date(b.start_time)
+            : new Date(0);
+
+          const startComparison =
+            sortConfig.direction === "asc"
+              ? startTimeA - startTimeB
+              : startTimeB - startTimeA;
+
+          // ถ้า start_time เท่ากัน ให้เรียงตาม end_time
+          if (startComparison === 0) {
+            const endTimeA = a.end_time ? new Date(a.end_time) : new Date(0);
+            const endTimeB = b.end_time ? new Date(b.end_time) : new Date(0);
+
+            return sortConfig.direction === "asc"
+              ? endTimeA - endTimeB
+              : endTimeB - endTimeA;
+          }
+
+          return startComparison;
+
+        case "status":
+          valueA = (a.status || "").toLowerCase();
+          valueB = (b.status || "").toLowerCase();
+          break;
+
+        default:
+          return 0; // ไม่มีการเรียงลำดับ
+      }
+
+      // เรียงลำดับตาม valueA และ valueB ยกเว้นกรณี booked_date
+      // (ที่ได้ return ไปแล้วข้างบน)
+      if (sortConfig.key !== "booked_date") {
+        if (valueA < valueB) {
+          return sortConfig.direction === "asc" ? -1 : 1;
         }
-
-        return startComparison;
-      });
-    }
-
-    return sortableItems;
+        if (valueA > valueB) {
+          return sortConfig.direction === "asc" ? 1 : -1;
+        }
+        return 0;
+      }
+    });
   }, [bookings, sortConfig]);
 
   // โหลดข้อมูลการดูจาก localStorage เมื่อ component ถูกโหลด
@@ -312,30 +353,60 @@ export default function BookingTab({ bookings, bookingsLoading }) {
           <table className="min-w-[600px] w-full h-full">
             <thead>
               <tr className="bg-black text-white rounded-t-2xl">
-                <th className="py-3 px-4 sm:px-6 text-left rounded-tl-2xl font-medium whitespace-nowrap">
-                  Pet Owner Name
-                </th>
-                <th className="py-3 px-4 sm:px-6 text-left font-medium">
-                  Pet(s)
-                </th>
-                <th className="py-3 px-4 sm:px-6 text-left font-medium">
-                  Duration
-                </th>
-                {/* เพิ่ม cursor-pointer และ onClick handler สำหรับการเรียงลำดับ */}
                 <th
-                  className="py-3 px-4 sm:px-6 text-left font-medium whitespace-nowrap cursor-pointer"
+                  className="py-3 px-4 sm:px-6 text-left rounded-tl-2xl font-medium whitespace-nowrap cursor-pointer hover:text-[#FF7037] transition-colors"
+                  onClick={() => handleSort("owner_name")}
+                >
+                  Pet Owner Name
+                  {sortConfig.key === "owner_name" && (
+                    <span className="ml-1 inline-block">
+                      {sortConfig.direction === "asc" ? "↑" : "↓"}
+                    </span>
+                  )}
+                </th>
+                <th
+                  className="py-3 px-4 sm:px-6 text-left font-medium cursor-pointer hover:text-[#FF7037] transition-colors"
+                  onClick={() => handleSort("pet_count")}
+                >
+                  Pet(s)
+                  {sortConfig.key === "pet_count" && (
+                    <span className="ml-1 inline-block">
+                      {sortConfig.direction === "asc" ? "↑" : "↓"}
+                    </span>
+                  )}
+                </th>
+                <th
+                  className="py-3 px-4 sm:px-6 text-left font-medium cursor-pointer hover:text-[#FF7037] transition-colors"
+                  onClick={() => handleSort("duration")}
+                >
+                  Duration
+                  {sortConfig.key === "duration" && (
+                    <span className="ml-1 inline-block">
+                      {sortConfig.direction === "asc" ? "↑" : "↓"}
+                    </span>
+                  )}
+                </th>
+                <th
+                  className="py-3 px-4 sm:px-6 text-left font-medium whitespace-nowrap cursor-pointer hover:text-[#FF7037] transition-colors"
                   onClick={() => handleSort("booked_date")}
                 >
                   Booked Date
-                  {/* แสดงลูกศรตามทิศทางการเรียง */}
                   {sortConfig.key === "booked_date" && (
                     <span className="ml-1 inline-block">
                       {sortConfig.direction === "asc" ? "↑" : "↓"}
                     </span>
                   )}
                 </th>
-                <th className="py-3 px-4 sm:px-6 text-left rounded-tr-2xl font-medium">
+                <th
+                  className="py-3 px-4 sm:px-6 text-left rounded-tr-2xl font-medium cursor-pointer hover:text-[#FF7037] transition-colors"
+                  onClick={() => handleSort("status")}
+                >
                   Status
+                  {sortConfig.key === "status" && (
+                    <span className="ml-1 inline-block">
+                      {sortConfig.direction === "asc" ? "↑" : "↓"}
+                    </span>
+                  )}
                 </th>
               </tr>
             </thead>
