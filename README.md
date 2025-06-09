@@ -1,110 +1,138 @@
-# pet-sitter-app
+# 🐾 Pet Sitter App
 
-A pet sitting web application that connects **pet owners** with trusted **pet sitters**, allowing for convenient and secure pet care arrangements.  
-Users can register, browse sitters, book services, communicate via chat, and review their experiences.
+A full-stack web application that connects pet owners with trusted pet sitters for reliable, secure, and convenient pet care. The platform supports real-time messaging, booking management, sitter availability, and more.
 
-## 📌 Project Description
+## 📌 Project Overview
 
-This project aims to provide a reliable platform for connecting **pet owners** and **pet sitters**.  
-It includes features like:
+This project was built as part of the **TechUp Bootcamp Final Project**, designed to simulate a real-world full-stack SaaS product. It supports both pet owners and sitters with features like:
 
-- User & Pet Sitter Authentication (Email login, validation)
-- Pet Profiles & Account Management
-- Pet Sitter Listings & Advanced Search
-- Booking System
-- Chat between owner & sitter
-- Reviews & Ratings
-- Secure Payment Integration (future phase)
+* Email/password login
+* Pet profile management
+* Pet sitter discovery via filters
+* Booking and schedule handling
+* Real-time chat
+* Reviews & ratings system
+* (Coming soon) Payment & sitter payouts
 
-## 🚀 Tech Stack
+## 🔧 Tech Stack
 
-| Frontend     | Backend        | Database     | Styling     | Others           |
-|--------------|----------------|--------------|-------------|------------------|
-| Next.js      | Node.js + Express | MongoDB Atlas | Tailwind CSS | Axios, ESLint    |
-| App Router   | JWT (for Auth) | Mongoose     | Custom Theme | Font: Satoshi    |
+| Frontend             | Backend           | Database            | Styling      | Others                    |
+| -------------------- | ----------------- | ------------------- | ------------ | ------------------------- |
+| Next.js (App Router) | Node.js + Express | Supabase (Postgres) | Tailwind CSS | Clerk Auth, Satoshi Font  |
+| TypeScript           | RESTful API       | Supabase Realtime   | Custom Theme | Supabase Storage (images) |
 
-## 🧩 Features
+---
 
-### ✅ User Management
-- Register with email, tel, and password validation
-- Login / Logout
-- Reset password (optional)
-- Social Login (Google/Facebook - optional)
+## 🧩 Core Features
 
-### 🐶 Pet Owner
-- Dashboard for pet & booking management
-- Create/update/delete pet profiles
-- Search pet sitters by location & filters
-- Book services with sitters
-- Leave reviews & ratings
-- Chat with sitters
+### 👤 Authentication & User Roles
 
-### 🧑‍🦱 Pet Sitter
-- Dashboard for schedule & booking management
-- Set availability, accept/reject bookings
-- Calendar view for appointments
-- Withdraw earnings (future)
+* Email/password authentication via Clerk
+* Separate roles for Pet Owners and Pet Sitters
+* Dashboard routing based on user role
 
-### 💸 Payments (Planned)
-- Booking payments & sitter payouts
-- View invoice & transaction history
+### 🐕 Pet Owner
 
-### 🔎 Search & Filter
-- Filter by pet type, rating, experience
-- Map view of available sitters (optional)
+* Create/update/delete pet profiles
+* Browse and search sitters by filters
+* Book available sitters
+* Leave reviews and ratings
+* Real-time chat with sitters
 
-## 📂 Folder Structure
+### 👩‍⚕️ Pet Sitter
 
-bash
-pet-sitter-app/
-├── client/             # Next.js frontend
-│   ├── src/
-│   │   ├── components/
-│   │   ├── app/
-│   │   ├── styles/
-│   │   ├── services/   # Axios API calls
-│   │   └── fonts/      # Satoshi font
-├── server/             # Node.js backend (WIP)
+* Create profile with availability and experience
+* Manage bookings (Accept/Reject)
+* Set holidays/unavailable days
+* View calendar with upcoming appointments
+* (Future) Withdraw earnings
 
+### 💬 Messaging System
 
-## 🧪 How to Run Locally
+* Real-time chat between owner and sitter
+* Chat list with unread count
+* Upload images in chat
+* Message scrollback (infinite load)
 
-bash
-# Clone project
-git clone https://github.com/<your-username>/pet-sitter-app.git
-cd pet-sitter-app/client
+### 📆 Booking System
 
-# Install dependencies
+* Time-slot based booking (1+ hr min)
+* Unavailable time blocks for confirmed bookings
+* Automatic blocking on sitter’s holiday
+* Booking modal with validation and error handling
+
+### 🔍 Advanced Search & Filter
+
+* Search by keyword
+* Filter by pet type, rating, experience
+* Mobile + Desktop friendly filter UI
+
+---
+
+## 🗂 Folder Structure
+
+```
+pet-sitter-app-dev/
+├── client/               # Next.js Frontend
+│   ├── app/              # App Router pages
+│   ├── components/       # Reusable components
+│   ├── services/         # Supabase/Clerk helpers
+│   ├── styles/           # Tailwind config & global styles
+│   ├── public/assets/    # Icons & illustrations
+│   └── middleware.js     # Clerk middleware
+├── server/ (optional)    # For future Node.js/Express backend
+```
+
+---
+
+## 🧪 Getting Started Locally
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/<your-username>/pet-sitter-app-dev.git
+cd pet-sitter-app-dev/client
+
+# 2. Install dependencies
 npm install
 
-# Run development server
+# 3. Run development server
 npm run dev
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+# 4. Visit in browser
+http://localhost:3000
+```
 
-![Screenshot 2025-05-13 214708](https://github.com/user-attachments/assets/e77a799f-fc61-44df-83f2-2defdc006292)
+---
+
+## 🖼️ Display website
+
+![Screenshot 2025-06-01 233932](https://github.com/user-attachments/assets/848894ba-8d95-47e1-b6de-46be8c27bbfd)
 
 
+---
 
+## 👩‍💻 Team Members
 
-## 👨‍👩‍👧 Team Members
+* **Nofffie (Binwaran)** – Product Owner, Frontend Dev, UI/UX, Project Lead
+* **Earth (MisaterE)** – Backend & Database
+* **Tin (Tin.Tnk)** – Realtime Messaging
+* **Big (B1GOT)** – Booking Logic
+* **Mac (wutt S)** – Search & Filter
 
-- Nofffie 👑 (Project Owner / Frontend / Designer)
-- Member A
-- Member B
-- Member C
-- Member D
+---
 
-## 📅 Current Status
-- [x] Project setup with Tailwind + Satoshi font
-- [x] Custom color theme configured
-- [ ] Landing Page
-- [ ] Auth (Register / Login)
-- [ ] Dashboard (Owner / Sitter)
-- [ ] Booking System
-- [ ] Chat / Review
-- [ ] Payment integration
+## 📅 Project Status
 
-## 📌 License
+* ✅ Initial Setup + Tailwind Theme
+* ✅ Auth System with Clerk
+* ✅ Pet Sitter Profile & Dashboard
+* ✅ Booking Modal with Validation
+* ✅ Realtime Chat with Images
+* 🚧 Payment Integration (Next Phase)
+* 🚧 Notifications & Email (Planned)
 
-MIT License — for educational use under TechUp Bootcamp.
+---
+
+## 📜 License
+
+MIT License — built for educational purposes under TechUp Bootcamp 🚀
