@@ -7,8 +7,7 @@ import { useRequireRole } from "@/hooks/useRequireRole";
 import { useAuth } from "@/context/AuthContext";
 import ImageUpload from "@/components/profile/ImageUpload";
 import Sidebar from "@/components/profile/Sidebar";
-import profileimg from "public/assets/profile/profileimg.svg";
-import { uploadFile } from "@/utils/fileUpload"; // นำเข้าฟังก์ชัน uploadFile
+import { uploadFile } from "@/utils/uploadHelpers"; // นำเข้าฟังก์ชัน uploadFile
 
 export default function OwnerProfilePage() {
   const router = useRouter();
@@ -132,11 +131,12 @@ export default function OwnerProfilePage() {
                       key={imageSrc}
                       src={imageSrc}
                       alt="avatar"
-                      fill
-                      className={`object-cover transition-all duration-300 ${
+                      width={128}
+                      height={128}
+                      className={`rounded-full object-cover transition-all duration-300 ${
                         imageSrc.includes("/assets/profile/profileimg.svg")
-                          ? "scale-45" // 👈 ทำให้รูป default เล็กลง 75%
-                          : ""
+                          ? "w-35 h-35" // default image —> เล็กลง
+                          : "w-full h-full" // รูปจริง —> เต็มกรอบ
                       }`}
                     />
                   </div>

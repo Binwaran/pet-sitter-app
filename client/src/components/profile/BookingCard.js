@@ -96,6 +96,8 @@ export default function BookingCard({ booking, onClick }) {
           <Image
             src={image}
             alt="Pet sitter"
+            width={64}
+            height={64}
             className="w-16 h-16 rounded-full object-cover"
           />
           <div>

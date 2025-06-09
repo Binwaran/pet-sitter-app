@@ -11,8 +11,8 @@ export const uploadFile = async (file) => {
     const response = await axios.post("/api/upload", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
+      withCredentials: true,
     });
 
     return response.data?.url || null;
