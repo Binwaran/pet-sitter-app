@@ -14,7 +14,7 @@ export default function ChatList({ selectedUserId, onSelectUser }) {
 
     const { data: messages, error } = await supabase
       .from('messages')
-      .select('*, sender_id, receiver_id, is_read')
+      .select('*')
       .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
       .order('created_at', { ascending: false })
 
@@ -29,12 +29,10 @@ export default function ChatList({ selectedUserId, onSelectUser }) {
     messages.forEach((msg) => {
       const otherId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id
 
-      // ดึงข้อความล่าสุด
       if (!latestMap.has(otherId)) {
         latestMap.set(otherId, msg)
       }
 
-      // นับ unread
       if (msg.receiver_id === user.id && msg.is_read === false) {
         unreadCountMap.set(otherId, (unreadCountMap.get(otherId) || 0) + 1)
       }
@@ -97,31 +95,15 @@ export default function ChatList({ selectedUserId, onSelectUser }) {
       supabase.removeChannel(channel)
     }
   }, [user?.id])
-  
 
-<<<<<<< HEAD
-=======
-export default function ChatList({ chatList, selectedUserId, onSelectUser }) {
->>>>>>> 02b8c34 (fix: deco on message page)
   return (
-<<<<<<< HEAD
-    <div className="divide-y divide-gray-700">
-      {chatPreviewList.map(({ user: chatUser, message, unreadCount }) => (
-=======
     <div className="w-[300px] bg-black text-white p-4 min-h-0 overflow-y-auto">
       <h2 className="text-xl mb-4">Messages</h2>
-      {mockConversations.map((user) => (
->>>>>>> 5ca3f8f (fix: Desktop UI and Logic for message page)
+      {chatPreviewList.map(({ user: chatUser, message, unreadCount }) => (
         <div
-<<<<<<< HEAD
           key={chatUser.id}
-          className={`p-4 cursor-pointer hover:bg-gray-800 ${
-            selectedUserId === chatUser.id ? 'bg-gray-900' : ''
-=======
-          key={user.id}
           className={`flex items-center justify-between mb-3 cursor-pointer p-2 rounded-lg ${
-            selectedUserId === user.id ? 'bg-[#2c2c2c]' : ''
->>>>>>> 02b8c34 (fix: deco on message page)
+            selectedUserId === chatUser.id ? 'bg-[#2c2c2c]' : ''
           }`}
           onClick={() => onSelectUser(chatUser)}
         >
@@ -134,13 +116,13 @@ export default function ChatList({ chatList, selectedUserId, onSelectUser }) {
             <div className="flex-1">
               <div className="text-white font-medium">{chatUser.name || 'No Name'}</div>
             </div>
-            {/* 🔥 แจ้งเตือน New ถ้ายังไม่ได้อ่าน และไม่ใช่ข้อความของตัวเอง */}
-            {message?.sender_id !== user.id && unreadCount > 0 && (
-              <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                {unreadCount}
-              </span>
-            )}
           </div>
+
+          {message?.sender_id !== user.id && unreadCount > 0 && (
+            <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+              {unreadCount}
+            </span>
+          )}
         </div>
       ))}
     </div>
