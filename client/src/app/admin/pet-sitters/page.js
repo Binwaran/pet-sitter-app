@@ -152,7 +152,29 @@ const usePetSitters = () => {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [sortConfig, setSortConfig] = useState({
+    key: "updated_at", // เริ่มต้นเรียงตาม updated_at (เวลาอัปเดตล่าสุด)
+    direction: "desc", // เรียงจากใหม่ไปเก่า
+  });
   const rowsPerPage = 8;
+
+  // แก้ไขฟังก์ชัน handleSort ใน usePetSitters hook
+  const handleSort = useCallback((key) => {
+    setSortConfig((prevConfig) => {
+      // กรณีกดคอลัมน์เดิม
+      if (prevConfig.key === key) {
+        // ถ้าเป็นการกดครั้งที่ 2 (ตอนนี้เป็น desc)
+        if (prevConfig.direction === "desc") {
+          // กดครั้งที่ 3: กลับไปใช้ค่าเริ่มต้น (ไม่ sort)
+          return { key: "updated_at", direction: "desc" };
+        }
+        // กดครั้งที่ 2: เปลี่ยนจาก asc เป็น desc
+        return { key, direction: "desc" };
+      }
+      // กดครั้งแรกของคอลัมน์ใหม่: ใช้ asc
+      return { key, direction: "asc" };
+    });
+  }, []);
 
   const fetchSitters = useCallback(async () => {
     setLoading(true);
@@ -189,14 +211,72 @@ const usePetSitters = () => {
     });
   }, [sitters, selectedStatus, search]);
 
+  // แก้ไขฟังก์ชัน sortedSitters ใน useMemo
+  const sortedSitters = useMemo(() => {
+    if (filteredSitters.length === 0) return [];
+
+    const sortable = [...filteredSitters];
+
+    // กรณีใช้ค่า default ให้เรียงตาม updated_at (หรือกลับไปยังการเรียงตามค่าเริ่มต้น)
+    if (sortConfig.key === "updated_at" && sortConfig.direction === "desc") {
+      return sortable.sort((a, b) => {
+        const dateA = new Date(a.updated_at || a.created_at || 0);
+        const dateB = new Date(b.updated_at || b.created_at || 0);
+        return dateB - dateA; // เรียงจากใหม่ไปเก่า (มากไปน้อย)
+      });
+    }
+
+    return sortable.sort((a, b) => {
+      let valueA, valueB;
+
+      switch (sortConfig.key) {
+        case "full_name":
+          valueA = (a.full_name || "").toLowerCase();
+          valueB = (b.full_name || "").toLowerCase();
+          break;
+
+        case "trade_name":
+          valueA = (a.trade_name || "").toLowerCase();
+          valueB = (b.trade_name || "").toLowerCase();
+          break;
+
+        case "email":
+          valueA = (a.email || "").toLowerCase();
+          valueB = (b.email || "").toLowerCase();
+          break;
+
+        case "status":
+          valueA = (a.status || "").toLowerCase();
+          valueB = (b.status || "").toLowerCase();
+          break;
+
+        default:
+          // กรณีอื่นๆ ที่ไม่มีการระบุเฉพาะ
+          valueA = new Date(a.updated_at || a.created_at || 0);
+          valueB = new Date(b.updated_at || b.created_at || 0);
+          return sortConfig.direction === "asc"
+            ? valueA - valueB
+            : valueB - valueA;
+      }
+
+      if (valueA < valueB) {
+        return sortConfig.direction === "asc" ? -1 : 1;
+      }
+      if (valueA > valueB) {
+        return sortConfig.direction === "asc" ? 1 : -1;
+      }
+      return 0;
+    });
+  }, [filteredSitters, sortConfig]);
+
   const totalPages = useMemo(
-    () => Math.ceil(filteredSitters.length / rowsPerPage),
-    [filteredSitters.length, rowsPerPage]
+    () => Math.ceil(sortedSitters.length / rowsPerPage),
+    [sortedSitters.length, rowsPerPage]
   );
 
   const paginatedSitters = useMemo(
-    () => filteredSitters.slice((page - 1) * rowsPerPage, page * rowsPerPage),
-    [filteredSitters, page, rowsPerPage]
+    () => sortedSitters.slice((page - 1) * rowsPerPage, page * rowsPerPage),
+    [sortedSitters, page, rowsPerPage]
   );
 
   const handlePageChange = useCallback((_, value) => {
@@ -220,10 +300,12 @@ const usePetSitters = () => {
     totalPages,
     selectedStatus,
     search,
+    sortConfig,
     fetchSitters,
     handlePageChange,
     handleStatusChange,
     handleSearchChange,
+    handleSort,
   };
 };
 
@@ -236,27 +318,32 @@ export default function AdminPetSittersPage() {
     totalPages,
     selectedStatus,
     search,
+    sortConfig,
     fetchSitters,
     handlePageChange,
     handleStatusChange,
     handleSearchChange,
+    handleSort,
   } = usePetSitters();
 
   useEffect(() => {
     fetchSitters();
   }, [fetchSitters]);
 
-  const handleSitterClick = useCallback((sitterId) => {
-  // แก้ไขการ navigate เพื่อป้องกันการ auto-scroll
-  const handleNavigation = () => {
-    router.push(`/admin/pet-sitters/${sitterId}`, { 
-      scroll: false // ปิดการ scroll อัตโนมัติ
-    });
-  };
-  
-  // หน่วงเวลาเล็กน้อยเพื่อให้แน่ใจว่า event handler ทั้งหมดทำงานเสร็จก่อน navigate
-  setTimeout(handleNavigation, 0);
-}, [router]);
+  const handleSitterClick = useCallback(
+    (sitterId) => {
+      // แก้ไขการ navigate เพื่อป้องกันการ auto-scroll
+      const handleNavigation = () => {
+        router.push(`/admin/pet-sitters/${sitterId}`, {
+          scroll: false, // ปิดการ scroll อัตโนมัติ
+        });
+      };
+
+      // หน่วงเวลาเล็กน้อยเพื่อให้แน่ใจว่า event handler ทั้งหมดทำงานเสร็จก่อน navigate
+      setTimeout(handleNavigation, 0);
+    },
+    [router]
+  );
 
   return (
     <div className="flex flex-col max-h-screen bg-[#F6F6F9] w-full min-w-0">
@@ -294,15 +381,49 @@ export default function AdminPetSittersPage() {
               <table className="min-w-[600px] w-full h-full">
                 <thead>
                   <tr className="bg-black text-white rounded-t-2xl">
-                    <th className="py-3 px-4 text-left rounded-tl-2xl font-medium">
+                    <th
+                      className="py-3 px-4 text-left rounded-tl-2xl font-medium cursor-pointer hover:text-[#FF7037] transition-colors"
+                      onClick={() => handleSort("full_name")}
+                    >
                       Full Name
+                      {sortConfig.key === "full_name" && (
+                        <span className="ml-1 inline-block">
+                          {sortConfig.direction === "asc" ? "↑" : "↓"}
+                        </span>
+                      )}
                     </th>
-                    <th className="py-3 px-4 text-left font-medium">
+                    <th
+                      className="py-3 px-4 text-left font-medium cursor-pointer hover:text-[#FF7037] transition-colors"
+                      onClick={() => handleSort("trade_name")}
+                    >
                       Pet Sitter Name
+                      {sortConfig.key === "trade_name" && (
+                        <span className="ml-1 inline-block">
+                          {sortConfig.direction === "asc" ? "↑" : "↓"}
+                        </span>
+                      )}
                     </th>
-                    <th className="py-3 px-4 text-left font-medium">Email</th>
-                    <th className="py-3 px-4 text-left rounded-tr-2xl font-medium">
+                    <th
+                      className="py-3 px-4 text-left font-medium cursor-pointer hover:text-[#FF7037] transition-colors"
+                      onClick={() => handleSort("email")}
+                    >
+                      Email
+                      {sortConfig.key === "email" && (
+                        <span className="ml-1 inline-block">
+                          {sortConfig.direction === "asc" ? "↑" : "↓"}
+                        </span>
+                      )}
+                    </th>
+                    <th
+                      className="py-3 px-4 text-left rounded-tr-2xl font-medium cursor-pointer hover:text-[#FF7037] transition-colors"
+                      onClick={() => handleSort("status")}
+                    >
                       Status
+                      {sortConfig.key === "status" && (
+                        <span className="ml-1 inline-block">
+                          {sortConfig.direction === "asc" ? "↑" : "↓"}
+                        </span>
+                      )}
                     </th>
                   </tr>
                 </thead>
