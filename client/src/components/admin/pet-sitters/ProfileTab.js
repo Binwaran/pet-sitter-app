@@ -351,7 +351,7 @@ const ProfileTab = memo(({ sitter }) => {
           {/* Profile Image */}
           <div className="flex flex-col items-center md:items-center gap-4 w-full h-full md:w-[240px]">
             <div
-              className={`w-[200px] md:w-[240px] h-[200px] md:h-[240px] rounded-full overflow-hidden bg-gray-100 flex items-center justify-center ${
+              className={`w-[200px] md:w-[240px] h-[200px] md:h-[240px] rounded-full relative bg-gray-100 flex items-center justify-center ${
                 hasFieldChanged("profile_image_url")
                   ? "border-4 border-amber-400"
                   : ""
@@ -364,11 +364,11 @@ const ProfileTab = memo(({ sitter }) => {
                   "/assets/sidebar/profile.svg"
                 }
                 alt={sitter.users.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover overflow-hidden"
                 style={{ borderRadius: "999px" }}
               />
               {hasFieldChanged("profile_image_url") && (
-                <div className="absolute bottom-2 right-2">
+                <div className="absolute -top-5 -right-8">
                   <span className="bg-amber-400 text-white text-xs px-2 py-1 rounded-full">
                     New Image
                   </span>
@@ -443,7 +443,7 @@ const ProfileTab = memo(({ sitter }) => {
             label="Image Gallery"
             hasChanged={hasFieldChanged("gallery_image_url")}
           >
-            <div ref={galleryRef} className="flex gap-4 overflow-x-auto">
+            <div ref={galleryRef} className="w-full h-full flex gap-4 overflow-x-auto">
               {galleryImages.length > 0 ? (
                 galleryImages
                   .filter(isValidImageUrl)
