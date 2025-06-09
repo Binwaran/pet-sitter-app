@@ -324,32 +324,78 @@ const useBookings = () => {
 
     const sortable = [...filteredBookings];
 
-    if (sortConfig.key === "booked_date") {
-  return sortable.sort((a, b) => {
-    // แปลงวันที่และเวลาให้เป็น Date object ที่สมบูรณ์
-    const startTimeA = a.start_time ? new Date(a.start_time) : new Date(0);
-    const startTimeB = b.start_time ? new Date(b.start_time) : new Date(0);
-    
-    // เปรียบเทียบ start_time ตรงๆ ด้วย Date object
-    const startComparison = sortConfig.direction === "asc"
-      ? startTimeA - startTimeB // น้อยไปมาก (เก่าไปใหม่)
-      : startTimeB - startTimeA; // มากไปน้อย (ใหม่ไปเก่า)
-    
-    // ถ้า start_time เท่ากัน ให้เรียงตาม end_time
-    if (startComparison === 0) {
-      const endTimeA = a.end_time ? new Date(a.end_time) : new Date(0);
-      const endTimeB = b.end_time ? new Date(b.end_time) : new Date(0);
-      
-      return sortConfig.direction === "asc"
-        ? endTimeA - endTimeB
-        : endTimeB - endTimeA;
-    }
-    
-    return startComparison;
-  });
-}
+    return sortable.sort((a, b) => {
+      // กำหนดตัวแปรสำหรับเก็บค่าที่จะนำมาเปรียบเทียบ
+      let valueA, valueB;
 
-    return sortable;
+      // ดึงค่าตามคอลัมน์ที่ต้องการเรียง
+      switch (sortConfig.key) {
+        case "owner_name":
+          // เรียงตามชื่อ Pet Owner
+          valueA = (a.owner_name || "").toLowerCase();
+          valueB = (b.owner_name || "").toLowerCase();
+          break;
+
+        case "pet_count":
+          // เรียงตามจำนวนสัตว์เลี้ยง
+          valueA = parseInt(a.pet_count || 0);
+          valueB = parseInt(b.pet_count || 0);
+          break;
+
+        case "duration":
+          // เรียงตามระยะเวลา
+          valueA = parseFloat(a.duration || 0);
+          valueB = parseFloat(b.duration || 0);
+          break;
+
+        case "status":
+          // เรียงตามสถานะ
+          valueA = (a.status || "").toLowerCase();
+          valueB = (b.status || "").toLowerCase();
+          break;
+
+        case "booked_date":
+          // กรณีวันที่ ใช้โค้ดเดิม
+          const startTimeA = a.start_time
+            ? new Date(a.start_time)
+            : new Date(0);
+          const startTimeB = b.start_time
+            ? new Date(b.start_time)
+            : new Date(0);
+
+          // เปรียบเทียบ start_time ตรงๆ ด้วย Date object
+          const startComparison =
+            sortConfig.direction === "asc"
+              ? startTimeA - startTimeB // น้อยไปมาก (เก่าไปใหม่)
+              : startTimeB - startTimeA; // มากไปน้อย (ใหม่ไปเก่า)
+
+          // ถ้า start_time เท่ากัน ให้เรียงตาม end_time
+          if (startComparison === 0) {
+            const endTimeA = a.end_time ? new Date(a.end_time) : new Date(0);
+            const endTimeB = b.end_time ? new Date(b.end_time) : new Date(0);
+
+            return sortConfig.direction === "asc"
+              ? endTimeA - endTimeB
+              : endTimeB - endTimeA;
+          }
+
+          return startComparison;
+
+        default:
+          return 0; // ไม่มีการเรียงลำดับ
+      }
+
+      // เรียงลำดับตาม valueA และ valueB (ยกเว้นกรณี booked_date ที่ได้ return ไปแล้ว)
+      if (sortConfig.key !== "booked_date") {
+        if (valueA < valueB) {
+          return sortConfig.direction === "asc" ? -1 : 1;
+        }
+        if (valueA > valueB) {
+          return sortConfig.direction === "asc" ? 1 : -1;
+        }
+        return 0;
+      }
+    });
   }, [filteredBookings, sortConfig]);
 
   const totalPages = useMemo(
@@ -488,28 +534,69 @@ const BookingPage = () => {
               <table className="min-w-[600px] w-full h-full">
                 <thead>
                   <tr className="bg-black text-white rounded-t-2xl">
-                    <th className="py-3 px-4 text-left rounded-tl-2xl font-medium whitespace-nowrap">
+                    {/* เพิ่ม cursor-pointer และ onClick handler สำหรับ Pet Owner Name */}
+                    <th
+                      className="py-3 px-4 text-left rounded-tl-2xl font-medium whitespace-nowrap cursor-pointer hover:text-[#FF7037] transition-colors"
+                      onClick={() => handleSort("owner_name")}
+                    >
                       Pet Owner Name
+                      {sortConfig.key === "owner_name" && (
+                        <span className="ml-1 inline-block">
+                          {sortConfig.direction === "asc" ? "↑" : "↓"}
+                        </span>
+                      )}
                     </th>
-                    <th className="py-3 px-4 text-left font-medium">Pet(s)</th>
-                    <th className="py-3 px-4 text-left font-medium">
+
+                    {/* เพิ่ม cursor-pointer และ onClick handler สำหรับ Pet(s) */}
+                    <th
+                      className="py-3 px-4 text-left font-medium cursor-pointer hover:text-[#FF7037] transition-colors"
+                      onClick={() => handleSort("pet_count")}
+                    >
+                      Pet(s)
+                      {sortConfig.key === "pet_count" && (
+                        <span className="ml-1 inline-block">
+                          {sortConfig.direction === "asc" ? "↑" : "↓"}
+                        </span>
+                      )}
+                    </th>
+
+                    {/* เพิ่ม cursor-pointer และ onClick handler สำหรับ Duration */}
+                    <th
+                      className="py-3 px-4 text-left font-medium cursor-pointer hover:text-[#FF7037] transition-colors"
+                      onClick={() => handleSort("duration")}
+                    >
                       Duration
+                      {sortConfig.key === "duration" && (
+                        <span className="ml-1 inline-block">
+                          {sortConfig.direction === "asc" ? "↑" : "↓"}
+                        </span>
+                      )}
                     </th>
-                    {/* เพิ่ม cursor-pointer และ onClick handler */}
+
+                    {/* Booked Date - เดิม */}
                     <th
                       className="py-3 px-4 text-left font-medium cursor-pointer hover:text-[#FF7037] transition-colors"
                       onClick={() => handleSort("booked_date")}
                     >
                       Booked Date
-                      {/* แสดงลูกศรตามทิศทางการเรียง */}
                       {sortConfig.key === "booked_date" && (
                         <span className="ml-1 inline-block">
                           {sortConfig.direction === "asc" ? "↑" : "↓"}
                         </span>
                       )}
                     </th>
-                    <th className="py-3 px-4 text-left rounded-tr-2xl font-medium">
+
+                    {/* เพิ่ม cursor-pointer และ onClick handler สำหรับ Status */}
+                    <th
+                      className="py-3 px-4 text-left rounded-tr-2xl font-medium cursor-pointer hover:text-[#FF7037] transition-colors"
+                      onClick={() => handleSort("status")}
+                    >
                       Status
+                      {sortConfig.key === "status" && (
+                        <span className="ml-1 inline-block">
+                          {sortConfig.direction === "asc" ? "↑" : "↓"}
+                        </span>
+                      )}
                     </th>
                   </tr>
                 </thead>
