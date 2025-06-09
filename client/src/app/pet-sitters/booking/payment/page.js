@@ -182,7 +182,7 @@ export default function BookingPaymentPage() {
                 <div className="text-xl text-[#3A3B46] text-center max-w-xl font-medium leading-relaxed">
                   If you want to pay by cash,<br />
                   you are required to make a cash payment<br />
-                  upon arrival at the pet sitter's location.
+                  upon arrival at the pet sitter&apos;s location.
                 </div>
               </div>
             )}
