@@ -146,6 +146,7 @@ export default function OwnerProfilePage() {
                     <ImageUpload
                       value={profileImageFile}
                       onChange={handleProfileImageChange}
+                      requiresApproval={false} // หรือไม่ต้องระบุเลย เพราะเป็นค่า default
                     />
                   </div>
                 </div>

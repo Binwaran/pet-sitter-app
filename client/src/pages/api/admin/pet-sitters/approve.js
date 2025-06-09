@@ -56,7 +56,8 @@ export default async function handler(req, res) {
           name: userData.name,
           email: userData.email,
           phone: userData.phone,
-          profile_image_url: userData.profile_image_url,
+          profile_image_url:
+            checkData.pending_profile_image_url || userData.profile_image_url,
         })
         .eq("id", userId);
 
@@ -70,10 +71,16 @@ export default async function handler(req, res) {
     const { data: updateData, error: updateError } = await supabase
       .from("pet_sitter")
       .update({
-        ...petSitterData, // เอาข้อมูลจาก pet_sitter_data มาใช้
+        ...petSitterData,
+        // อัพเดทรูปแกลเลอรี่จาก pending เป็นรูปหลัก
+        gallery_image_url:
+          checkData.pending_gallery_image_url || checkData.gallery_image_url,
         status: "approved",
         admin_suggestion: null,
+        // ล้างข้อมูล pending
         pending_data: null,
+        pending_profile_image_url: null,
+        pending_gallery_image_url: null,
       })
       .eq("user_id", userId)
       .select();
