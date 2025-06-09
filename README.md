@@ -104,9 +104,10 @@ http://localhost:3000
 
 ---
 
-## 🖼️ Screenshots
+## 🖼️ Display website
 
-(Include key screenshots such as: landing page, dashboard, booking modal, chat window)
+![Screenshot 2025-06-01 233932](https://github.com/user-attachments/assets/848894ba-8d95-47e1-b6de-46be8c27bbfd)
+
 
 ---
 
