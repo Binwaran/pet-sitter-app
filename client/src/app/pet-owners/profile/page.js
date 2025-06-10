@@ -1,17 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRequireRole } from "@/hooks/useRequireRole";
 import { useAuth } from "@/context/AuthContext";
 import ImageUpload from "@/components/profile/ImageUpload";
 import Sidebar from "@/components/profile/Sidebar";
 import { uploadFile } from "@/utils/uploadHelpers"; // นำเข้าฟังก์ชัน uploadFile
+import { CalendarIcon } from "@/components/icons";
 
 export default function OwnerProfilePage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, updateUserData, fetchUser } = useAuth();
   const { loading, authorized } = useRequireRole("owner");
   const [profile, setProfile] = useState({
     name: "",
@@ -69,12 +69,7 @@ export default function OwnerProfilePage() {
 
     if (profileImageFile) {
       try {
-        imageUrl = await uploadFile(profileImageFile);
-
-        setProfile((prev) => ({
-          ...prev,
-          profile_image_url: imageUrl,
-        }));
+        imageUrl = await uploadFile(profileImageFile, "profile"); // เพิ่มพารามิเตอร์ "profile"
       } catch (error) {
         console.error("Upload error:", error.message);
         alert("อัปโหลดรูปไม่สำเร็จ");
@@ -92,6 +87,24 @@ export default function OwnerProfilePage() {
     });
 
     if (res.ok) {
+      // รีเซ็ตค่า profileImageFile หลังอัพโหลดสำเร็จ
+      setProfileImageFile(null);
+
+      // อัพเดท AuthContext หลังบันทึกข้อมูลสำเร็จ
+      if (imageUrl && imageUrl !== user.profile_image_url) {
+        // อัพเดทเฉพาะถ้ามีการเปลี่ยนแปลง URL รูปภาพ
+        updateUserData({
+          ...user,
+          profile_image_url: imageUrl,
+          name: profile.name, // อัพเดทชื่อด้วยในกรณีที่มีการเปลี่ยน
+        });
+        console.log("Updated profile image in context:", imageUrl);
+      } else {
+        // ดึงข้อมูลใหม่จาก API เพื่อความมั่นใจ
+        await fetchUser();
+        console.log("Fetched fresh user data");
+      }
+
       alert("Profile saved!");
     } else {
       alert("บันทึกข้อมูลไม่สำเร็จ");
@@ -105,104 +118,125 @@ export default function OwnerProfilePage() {
   console.log("🧪 profile.profile_image_url:", profile.profile_image_url);
 
   const imageSrc =
-    previewUrl?.trim() ||
-    (profile?.profile_image_url?.startsWith("blob:")
-      ? ""
-      : profile?.profile_image_url?.trim()) ||
+    previewUrl ||
+    profile?.profile_image_url ||
     "/assets/profile/profileimg.svg";
 
   return (
-    <div className="bg-gray-100 min-h-screen">
-      <div className="px-20 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6">
+    <div className="bg-[#FAFAFB]">
+      <div className="md:px-20 md:pt-10 md:pb-20">
+        <div className="flex flex-col md:flex-row">
           {/* Sidebar */}
+          <div className="w-full md:max-w-81 md:max-h-89 flex md:gap-6 md:pr-8">
           <Sidebar />
+          </div>
 
           {/* Main */}
-          <div className="bg-white p-10 rounded-2xl shadow-md min-h-[824px]">
-            <form onSubmit={handleSubmit}>
-              <h1 className="text-2xl font-bold mb-14">Profile</h1>
-
-              <div className="flex flex-col items-start mb-14">
-                <div className="relative w-[240px] h-[240px]">
-                  {/* Profile image circle */}
-                  <div className="relative w-full h-full rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
-                    <Image
-                      key={imageSrc}
-                      src={imageSrc}
-                      alt="avatar"
-                      width={128}
-                      height={128}
-                      className={`rounded-full object-cover transition-all duration-300 ${
-                        imageSrc.includes("/assets/profile/profileimg.svg")
-                          ? "w-35 h-35" // default image —> เล็กลง
-                          : "w-full h-full" // รูปจริง —> เต็มกรอบ
-                      }`}
-                    />
+          <div className="bg-white px-4 py-6 md:p-10 md:rounded-2xl h-full w-full">
+            <form
+              onSubmit={handleSubmit}
+              className="flex flex-col gap-6 md:gap-15"
+            >
+              <div className="flex items-center justify-start">
+                <h1 className="text-xl md:text-2xl font-bold leading-7 md:leading-8">
+                  Profile
+                </h1>
+              </div>
+              <div className="flex flex-col gap-4 md:gap-6">
+                {/* Profile Image */}
+                <div className="flex items-center justify-start gap-10">
+                  <ImageUpload
+                    value={profileImageFile || profile.profile_image_url}
+                    onChange={handleProfileImageChange}
+                    requiresApproval={false}
+                  />
+                </div>
+                {/* Form */}
+                <div className="flex flex-col gap-4 md:gap-10 w-full">
+                  <div className="flex flex-col lg:flex-row gap-4 md:gap-10">
+                    <label
+                      htmlFor="name"
+                      className="font-medium flex flex-col gap-1 w-full"
+                    >
+                      Your Name*
+                      <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        placeholder="Enter your full name"
+                        value={profile.name}
+                        onChange={handleChange}
+                        className="w-full leading-[150%] box-border h-12 border border-gray-200 rounded-lg pl-3 pr-4 py-3"
+                        required
+                      />
+                    </label>
+                    <label
+                      htmlFor="email"
+                      className="font-medium flex flex-col gap-1 w-full"
+                    >
+                      Email*
+                      <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        placeholder="Enter your email"
+                        value={profile.email}
+                        onChange={handleChange}
+                        className="w-full leading-[150%] box-border h-12 border border-gray-200 rounded-lg pl-3 pr-4 py-3"
+                        required
+                      />
+                    </label>
                   </div>
-
-                  {/* Upload button */}
-                  <div className="absolute bottom-1 right-1 rounded-full shadow-md">
-                    <ImageUpload
-                      value={profileImageFile}
-                      onChange={handleProfileImageChange}
-                    />
+                  <div className="flex flex-col lg:flex-row gap-4 md:gap-10">
+                    <label
+                      htmlFor="phone"
+                      className="font-medium flex flex-col gap-1 w-full"
+                    >
+                      Phone*
+                      <input
+                        type="text"
+                        id="phone"
+                        name="phone"
+                        placeholder="Enter your phone number"
+                        value={profile.phone}
+                        onChange={handleChange}
+                        className="w-full leading-[150%] box-border h-12 border border-gray-200 rounded-lg pl-3 pr-4 py-3"
+                        required
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                      />
+                    </label>
+                    <label
+                      htmlFor="birthday"
+                      className="font-medium flex flex-col gap-1 w-full"
+                    >
+                      Date of Birth
+                      <div className="relative w-full">
+                        <input
+                          type="date"
+                          id="birthday"
+                          name="birthday"
+                          placeholder="Select your date of birth"
+                          value={profile.birthday || ""}
+                          onChange={handleChange}
+                          className="w-full leading-[150%] box-border h-12 border border-gray-200 rounded-lg pl-3 pr-10 py-3 
+                                    [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute 
+                                    [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full 
+                                    [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                        />
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-400">
+                          {/* คุณสามารถใช้ไอคอนจาก library อื่นๆ หรือรูปภาพก็ได้ */}
+                          <CalendarIcon className="w-5 h-5" color="#7B7E8F" />
+                        </div>
+                      </div>
+                    </label>
                   </div>
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block mb-1 font-medium ">Your Name*</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={profile.name}
-                    onChange={handleChange}
-                    className="w-full border border-gray-200 rounded-lg px-4 py-2"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block mb-1 font-medium">Email*</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={profile.email}
-                    onChange={handleChange}
-                    className="w-full border border-gray-200 rounded-lg px-4 py-2"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block mb-1 font-medium">Phone*</label>
-                  <input
-                    type="text"
-                    name="phone"
-                    value={profile.phone}
-                    onChange={handleChange}
-                    className="w-full border border-gray-200 rounded-lg px-4 py-2"
-                    required
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                  />
-                </div>
-                <div>
-                  <label className="block mb-1 font-medium">
-                    Date of Birth
-                  </label>
-                  <input
-                    type="date"
-                    name="birthday"
-                    value={profile.birthday || ""}
-                    onChange={handleChange}
-                    className="w-full border border-gray-200 rounded-lg px-4 py-2"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end mt-10">
+              <div className="flex justify-end">
                 <button
                   type="submit"
-                  className="bg-orange-500  text-white px-6 py-3 rounded-full font-semibold cursor-pointer transition-all duration-200 hover:scale-105 hover:bg-orange-400"
+                  className="bg-[#FF7037] text-white px-6 py-3 rounded-full font-bold cursor-pointer transition-all duration-200 hover:scale-105 hover:bg-[#FF986F]"
                 >
                   Update Profile
                 </button>

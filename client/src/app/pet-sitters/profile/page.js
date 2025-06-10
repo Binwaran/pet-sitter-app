@@ -55,7 +55,7 @@ const LoadingSpinner = memo(({ text = "Loading..." }) => (
 LoadingSpinner.displayName = "LoadingSpinner";
 
 export default function PetSitterProfilePage() {
-  const { user } = useAuth(); // ใช้ user จาก context แทน localStorage
+  const { user, updateUserData, fetchUserData } = useAuth();
   const [initialValues, setInitialValues] = useState({
     full_name: "",
     experience: "",
@@ -64,7 +64,7 @@ export default function PetSitterProfilePage() {
     introduction: "",
     trade_name: "",
     services: "",
-    place_description: "",
+    my_place: "",
     address_detail: "",
     district: "",
     sub_district: "",
@@ -72,7 +72,7 @@ export default function PetSitterProfilePage() {
     post_code: "",
     profile_image: null,
     gallery: [],
-    pet_types: [],
+    pet_type: [],
   });
   const [sitterStatus, setSitterStatus] = useState(null);
   const [adminSuggestion, setAdminSuggestion] = useState("");
@@ -89,9 +89,9 @@ export default function PetSitterProfilePage() {
       }
 
       try {
-        // เปลี่ยนเป็นใช้ cookie แทน token ผ่าน withCredentials
-        const res = await axios.get(`/api/pet-sitters/update-profile`, {
+        const res = await axios.get("/api/pet-sitters/update-profile", {
           withCredentials: true,
+          timeout: 10000,
         });
 
         const data = res.data.data;
@@ -104,8 +104,8 @@ export default function PetSitterProfilePage() {
             introduction: data.introduction ?? "",
             trade_name: data.trade_name ?? "",
             services: data.services ?? "",
-            place_description: data.my_place ?? "",
-            address_detail: data.house_number ?? "",
+            my_place: data.my_place ?? "",
+            address_detail: data.address_detail ?? "",
             province: data.province
               ? {
                   value:
@@ -134,15 +134,22 @@ export default function PetSitterProfilePage() {
                 }
               : "",
             post_code: data.post_code ?? "",
-            profile_image: data.profile_image_url ?? null,
-            gallery: data.gallery_image_url ?? [],
-            pet_types: data.pet_type ?? [],
+            // ใช้รูปภาพที่แสดงผล (pending หรือ approved แล้วแต่กรณี)
+            profile_image: data.display_profile_image_url ?? null,
+            gallery: data.display_gallery_image_url ?? [],
+            pet_type: data.pet_type ?? [],
+            // เพิ่มข้อมูลสถานะการรออนุมัติของรูปภาพ
+            has_pending_profile: data.has_pending_profile ?? false,
+            has_pending_gallery: data.has_pending_gallery ?? false,
           });
+
           setSitterStatus(data.status);
           setAdminSuggestion(data.admin_suggestion);
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
+        // แสดงการแจ้งเตือน
+        toast.error("Could not fetch profile data. Please try again later.");
       } finally {
         setIsLoading(false);
       }
@@ -190,10 +197,11 @@ export default function PetSitterProfilePage() {
       if (values.profile_image instanceof File) {
         try {
           toast.loading("Uploading profile image...");
-          profileImageUrl = await uploadFile(values.profile_image);
+          profileImageUrl = await uploadFile(values.profile_image, "profile"); // เพิ่มพารามิเตอร์ "profile"
           toast.dismiss();
           toast.success("Profile image uploaded successfully");
         } catch (error) {
+          console.error("Profile image upload failed:", error);
           profileImageUrl =
             typeof values.profile_image === "string"
               ? values.profile_image
@@ -205,27 +213,70 @@ export default function PetSitterProfilePage() {
         }
       }
 
-      // Handle gallery uploads
+      // Handle gallery uploads - ปรับปรุงการจัดการการอัพโหลดแกลเลอรี่
       if (Array.isArray(values.gallery) && values.gallery.length > 0) {
+        // แยก File objects และ URLs ที่มีอยู่แล้ว
         const filesToUpload = values.gallery.filter(
           (item) => item instanceof File
         );
+        const existingUrls = values.gallery.filter(
+          (item) => typeof item === "string"
+        );
+
+        galleryUrls = [...existingUrls]; // เริ่มต้นด้วย URLs ที่มีอยู่แล้ว
+
         if (filesToUpload.length > 0) {
           try {
             toast.loading(
-              `Uploading ${filesToUpload.length} gallery images...`
+              `Uploading gallery images (0/${filesToUpload.length})...`
             );
-            galleryUrls = await uploadMultipleFiles(values.gallery);
+
+            let uploadedCount = 0;
+
+            // อัพโหลดทีละไฟล์และแสดงความคืบหน้า
+            for (const file of filesToUpload) {
+              try {
+                toast.loading(
+                  `Uploading image ${uploadedCount + 1}/${
+                    filesToUpload.length
+                  }...`,
+                  { id: "upload-progress" }
+                );
+
+                const url = await uploadFile(file);
+                if (url) {
+                  galleryUrls.push(url);
+                  uploadedCount++;
+                  toast.success(
+                    `Uploaded ${uploadedCount}/${filesToUpload.length} images`,
+                    { id: "upload-progress" }
+                  );
+                }
+              } catch (fileError) {
+                console.error(`Failed to upload gallery image:`, fileError);
+                toast.error(`Failed to upload image: ${file.name}`, {
+                  id: "upload-error",
+                });
+                // รอสักครู่ก่อนดำเนินการต่อ
+                await new Promise((r) => setTimeout(r, 1000));
+              }
+            }
+
             toast.dismiss();
-            toast.success("Gallery images uploaded successfully");
+
+            if (uploadedCount === filesToUpload.length) {
+              toast.success("All gallery images uploaded successfully");
+            } else if (uploadedCount > 0) {
+              toast.warning(
+                `Uploaded ${uploadedCount}/${filesToUpload.length} images`
+              );
+            } else {
+              toast.error("Failed to upload gallery images");
+            }
           } catch (error) {
-            galleryUrls = values.gallery.filter(
-              (url) => typeof url === "string"
-            );
+            console.error("Gallery upload error:", error);
             toast.dismiss();
-            toast.error(
-              "Some gallery uploads failed, continuing with other data"
-            );
+            toast.error("Gallery uploads failed");
           }
         }
       }
@@ -241,10 +292,9 @@ export default function PetSitterProfilePage() {
         introduction: values.introduction,
         trade_name: values.trade_name,
         services: values.services,
-        pet_types: values.pet_types,
-        place_description: values.place_description,
-        my_place: values.place_description,
-        house_number: values.address_detail,
+        pet_type: values.pet_type,
+        my_place: values.my_place,
+        address_detail: values.address_detail,
         province:
           typeof values.province === "object"
             ? values.province.label
@@ -258,7 +308,9 @@ export default function PetSitterProfilePage() {
             ? values.sub_district.label
             : values.sub_district,
         post_code: values.post_code,
-        gallery_image_url: galleryUrls.filter((url) => typeof url === "string"),
+        gallery_image_url: galleryUrls.filter(
+          (url) => url && typeof url === "string"
+        ),
         lat: values.latitude,
         lng: values.longitude,
       };
@@ -269,15 +321,34 @@ export default function PetSitterProfilePage() {
         "/api/pet-sitters/update-profile",
         payload,
         {
-          withCredentials: true, // ส่ง cookie ไปกับ request
+          withCredentials: true,
         }
       );
 
       toast.dismiss();
 
       if (response.data.success) {
-        toast.success(response.data.message || "Profile updated successfully");
+        toast.success(
+          "Profile saved successfully. Your changes and images will be visible after admin approval."
+        );
         setSitterStatus("waiting for approval");
+
+        // เพิ่มโค้ดส่วนนี้เพื่ออัพเดท AuthContext
+        if (profileImageUrl && typeof profileImageUrl === "string") {
+          // อัพเดทข้อมูล user ใน context โดยตรงด้วยรูปใหม่
+          updateUserData({
+            ...user,
+            profile_image_url: profileImageUrl,
+          });
+          console.log(
+            "Updated profile image in user context:",
+            profileImageUrl
+          );
+        } else {
+          // ถ้าไม่ได้อัพโหลดรูปใหม่ แต่ต้องการให้แน่ใจว่าข้อมูล user เป็นข้อมูลล่าสุด
+          await fetchUserData();
+          console.log("Fetched updated user data after profile save");
+        }
       } else {
         toast.warning(
           response.data.message || "Operation completed but status unclear"
@@ -296,7 +367,8 @@ export default function PetSitterProfilePage() {
   const FormikErrorLogger = () => {
     const formik = useFormikContext();
     useEffect(() => {
-      if (formik && Object.keys(formik.errors).length > 0) {
+      // ตรวจสอบว่า formik.errors มีค่าและไม่ใช่ object ว่าง
+      if (formik?.errors && Object.keys(formik.errors).length > 0) {
         console.error("Form validation errors:", formik.errors);
       }
     }, [formik?.errors]);
@@ -365,7 +437,7 @@ export default function PetSitterProfilePage() {
               onSubmit={handleSubmit}
             >
               {({ values, setFieldValue, errors, touched }) => (
-                <Form className="w-full max-w-[1200px] flex flex-col gap-6 px-4 py-6 md:px-10 md:pb-20 md:pt-10">
+                <Form className="w-full flex flex-col gap-6 px-4 py-6 md:px-10 md:pb-20 md:pt-10">
                   <FormikErrorLogger />
 
                   {/* Header with status indicator */}
@@ -442,6 +514,8 @@ const BasicInfoSection = memo(({ values, setFieldValue, errors, touched }) => {
             value={values.profile_image}
             onChange={(file) => setFieldValue("profile_image", file)}
             error={touched.profile_image && errors.profile_image}
+            requiresApproval={true} // แสดง badge pending approval เสมอเมื่อมีการอัพโหลดใหม่
+            isPending={values.has_pending_profile} // บอกว่ารูปนี้กำลังรออนุมัติอยู่ (สำหรับรูปที่มาจาก API)
           />
         </div>
 
@@ -519,13 +593,13 @@ const PetSitterInfoSection = memo(
 
         <FormField
           label="Pet type*"
-          name="pet_types"
+          name="pet_type"
           type="dropdown"
           component="PetTypeMultiSelect"
           touched={touched}
           errors={errors}
-          onChange={(val) => setFieldValue("pet_types", val)}
-          value={values.pet_types}
+          onChange={(val) => setFieldValue("pet_type", val)}
+          value={values.pet_type}
         />
 
         <FormTextArea
@@ -537,7 +611,7 @@ const PetSitterInfoSection = memo(
 
         <FormTextArea
           label="My Place (Describe you place)"
-          name="place_description"
+          name="my_place"
           touched={touched}
           errors={errors}
         />
@@ -550,6 +624,8 @@ const PetSitterInfoSection = memo(
             value={values.gallery}
             onChange={(files) => setFieldValue("gallery", files)}
             error={touched.gallery && errors.gallery}
+            requiresApproval={true} // แสดง badge pending approval เสมอเมื่อมีการอัพโหลดใหม่
+            isPending={values.has_pending_gallery} // บอกว่ามีรูปในแกลเลอรี่ที่กำลังรออนุมัติอยู่
           />
         </div>
       </section>

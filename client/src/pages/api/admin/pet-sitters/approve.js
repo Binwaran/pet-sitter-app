@@ -45,18 +45,42 @@ export default async function handler(req, res) {
 
     // นำข้อมูลจาก pending_data มาอัพเดทเป็นข้อมูลหลัก
     const pendingData = checkData.pending_data;
+    const userData = pendingData?.user_data || {};
+    const petSitterData = pendingData?.pet_sitter_data || {};
 
-    // แยกข้อมูลที่ต้องการอัพเดท
-    const { profile_info, ...otherPendingData } = pendingData;
+    // อัพเดทข้อมูล users table ก่อน (ถ้ามี)
+    if (Object.keys(userData).length > 0) {
+      const { error: userUpdateError } = await supabase
+        .from("users")
+        .update({
+          name: userData.name,
+          email: userData.email,
+          phone: userData.phone,
+          profile_image_url:
+            checkData.pending_profile_image_url || userData.profile_image_url,
+        })
+        .eq("id", userId);
 
-    // อัพเดทข้อมูลหลักใน pet_sitter
+      if (userUpdateError) {
+        console.error("Error updating user data:", userUpdateError);
+        return res.status(500).json({ message: userUpdateError.message });
+      }
+    }
+
+    // อัพเดทข้อมูล pet_sitter table
     const { data: updateData, error: updateError } = await supabase
       .from("pet_sitter")
       .update({
-        ...otherPendingData,
+        ...petSitterData,
+        // อัพเดทรูปแกลเลอรี่จาก pending เป็นรูปหลัก
+        gallery_image_url:
+          checkData.pending_gallery_image_url || checkData.gallery_image_url,
         status: "approved",
         admin_suggestion: null,
-        pending_data: null, // ล้าง pending data
+        // ล้างข้อมูล pending
+        pending_data: null,
+        pending_profile_image_url: null,
+        pending_gallery_image_url: null,
       })
       .eq("user_id", userId)
       .select();

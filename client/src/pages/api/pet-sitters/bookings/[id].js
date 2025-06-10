@@ -48,17 +48,18 @@ export default async function handler(req, res) {
       .from("booking")
       .select(
         `
-        booking_id,
-        status,
-        message,
-        start_time,
-        end_time,
-        total_price,
-        transaction_no,
-        transaction_date,
-        owner_id,
-        sitter_id
-      `
+    booking_id,
+    status,
+    message,
+    start_time,
+    end_time,
+    total_price,
+    transaction_no,
+    transaction_date,
+    owner_id,
+    sitter_id,
+    pet_id
+    `
       )
       .eq("booking_id", id)
       .eq("sitter_id", userId)
@@ -73,84 +74,117 @@ export default async function handler(req, res) {
       return res.status(404).json({ message: "Booking not found" });
     }
 
-    // แก้ไขส่วนที่เกี่ยวกับข้อมูลสัตว์เลี้ยง
+    // ส่วนดึงข้อมูลสัตว์เลี้ยง
     console.log("Booking ID:", booking.booking_id);
     console.log("Owner ID:", booking.owner_id);
+    console.log("Booking has pet_id field?", booking.hasOwnProperty("pet_id"));
+    console.log("Booking pet_id value:", booking.pet_id);
 
-    // ดึงข้อมูลสัตว์เลี้ยงที่เกี่ยวข้องกับการจองนี้
-    const { data: bookingPets, error: petsError } = await supabase
+    // 1. หา pet_ids จาก booking.pet_id และ booking_pets
+    let bookingPetIds = [];
+
+    // เพิ่ม pet_id จาก booking table (ถ้ามี)
+    if (booking.pet_id) {
+      console.log("Found pet_id in booking table:", booking.pet_id);
+      bookingPetIds.push(booking.pet_id);
+    }
+
+    // ดึงข้อมูลจาก booking_pets table
+    const { data: bookingPets, error: bookingPetsError } = await supabase
       .from("booking_pets")
       .select("*")
       .eq("booking_id", booking.booking_id);
 
-    console.log("Booking pets result:", bookingPets);
+    console.log("Booking pets raw data:", bookingPets);
 
-    if (petsError) {
-      console.error("Booking pets error:", petsError);
+    if (bookingPetsError) {
+      console.error("Error fetching booking pets:", bookingPetsError);
+    } else if (bookingPets?.length > 0) {
+      const additionalPetIds = bookingPets.map((bp) => bp.pet_id);
+      // รวม pet IDs และกำจัดค่าซ้ำ
+      bookingPetIds = [
+        ...new Set([...bookingPetIds, ...additionalPetIds.filter(Boolean)]),
+      ];
     }
 
-    // เพิ่มส่วนนี้เพื่อจัดการข้อมูลสัตว์เลี้ยง
+    console.log("Combined pet IDs:", bookingPetIds);
+
+    // 2. ดึงข้อมูลของสัตว์เลี้ยงทั้งหมดที่เกี่ยวข้อง
     let pets = [];
-    let bookingPetIds = [];
+    let petsData = [];
+    let bookingPetsData = [];
 
-    // 1. รวบรวม pet_id จาก booking_pets
-    if (bookingPets?.length > 0) {
-      bookingPetIds = bookingPets.map((bp) => bp.pet_id);
-    }
-
-    // 2. เพิ่ม pet_id จาก booking (สำหรับข้อมูลเก่า)
-    if (booking.pet_id && !bookingPetIds.includes(booking.pet_id)) {
-      bookingPetIds.push(booking.pet_id);
-    }
-
-    console.log("Pet IDs to fetch:", bookingPetIds);
-
-    // 3. ดึงข้อมูลสัตว์เลี้ยงทั้งหมด
     if (bookingPetIds.length > 0) {
-      const { data: petsData, error: petDetailsError } = await supabase
+      const { data: fetchedPetsData, error: petsError } = await supabase
         .from("pets")
         .select("pet_id, pet_name, pet_type, pet_image_url, owner_id")
         .in("pet_id", bookingPetIds);
 
-      console.log("Pets data result:", petsData);
+      petsData = fetchedPetsData || [];
 
-      if (petDetailsError) {
-        console.error("Pet details error:", petDetailsError);
-      } else if (petsData) {
-        // 4. กรองเฉพาะสัตว์เลี้ยงที่เป็นของเจ้าของตามการจองนั้น
-        const filteredPets = petsData.filter(
-          (pet) => pet && pet.owner_id === booking.owner_id
-        );
+      if (petsError) {
+        console.error("Error fetching pets data:", petsError);
+      } else {
+        console.log("Fetched pets data:", petsData);
+        console.log("Owner ID for filtering:", booking.owner_id);
 
-        console.log("Filtered pets:", filteredPets);
+        // 3. กรองเฉพาะสัตว์เลี้ยงที่เป็นของเจ้าของตามการจองนั้น - ลดความเข้มงวด
+        bookingPetsData = petsData.filter((pet) => {
+          // เก็บ log เพื่อดูข้อมูล
+          console.log(
+            `Checking pet ${pet.pet_id}: owner=${pet.owner_id}, booking.owner=${booking.owner_id}`
+          );
 
-        // 5. ปรับโครงสร้างข้อมูลให้ตรงกับฟิลด์ในตาราง pets
-        pets = filteredPets.map((pet) => ({
-          id: pet.pet_id,
-          name: pet.pet_name,
-          type: pet.pet_type,
-          image: pet.pet_image_url,
+          // ตรวจสอบว่ามีข้อมูลและเป็นของเจ้าของ หรืออยู่ในรายการ bookingPetIds
+          return (
+            pet &&
+            (pet.owner_id === booking.owner_id ||
+              bookingPetIds.includes(pet.pet_id))
+          );
+        });
+
+        console.log("Filtered pets (matched with owner):", bookingPetsData);
+
+        // 4. จัดรูปแบบข้อมูลสัตว์เลี้ยง
+        pets = bookingPetsData.map((p) => ({
+          id: p.pet_id || "unknown",
+          name: p.pet_name || "Unknown Pet",
+          type: p.pet_type || "Pet",
+          image: p.pet_image_url || null,
         }));
 
-        console.log("Formatted pets:", pets);
+        console.log("Formatted pets data:", pets);
       }
     }
 
-    // 6. ถ้ายังไม่มีข้อมูลสัตว์เลี้ยง ลองดึงข้อมูลสัตว์เลี้ยงของเจ้าของโดยตรง
-    if (pets.length === 0 && booking.owner_id) {
+    // กรณีไม่พบข้อมูลสัตว์เลี้ยง หรือถ้ามี pet_id เป็น null ให้ดึงทั้งหมดของเจ้าของ
+    if (pets.length === 0 || booking.pet_id === null) {
+      console.log(
+        "No pets found or pet_id is null, fetching all pets from owner"
+      );
+
+      // ดึงสัตว์เลี้ยงทั้งหมดของเจ้าของคนนี้
       const { data: ownerPets, error: ownerPetsError } = await supabase
         .from("pets")
         .select("pet_id, pet_name, pet_type, pet_image_url")
-        .eq("owner_id", booking.owner_id);
+        .eq("owner_id", booking.owner_id)
+        .order("updated_at", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false });
 
-      console.log("Owner pets directly:", ownerPets);
+      if (ownerPetsError) {
+        console.error("Error fetching owner pets:", ownerPetsError);
+      } else if (ownerPets && ownerPets.length > 0) {
+        console.log(
+          `Found ${ownerPets.length} pets from owner ${booking.owner_id}`
+        );
+        console.log("Owner pets data:", ownerPets);
 
-      if (!ownerPetsError && ownerPets?.length > 0) {
-        pets = ownerPets.map((pet) => ({
-          id: pet.pet_id,
-          name: pet.pet_name,
-          type: pet.pet_type,
-          image: pet.pet_image_url,
+        // จัดรูปแบบข้อมูลสัตว์เลี้ยงเหมือนกับด้านบน
+        pets = ownerPets.map((p) => ({
+          id: p.pet_id || "unknown",
+          name: p.pet_name || "Unknown Pet",
+          type: p.pet_type || "Pet",
+          image: p.pet_image_url || null,
         }));
       }
     }
@@ -213,7 +247,7 @@ export default async function handler(req, res) {
       pet_count: pets.length,
       duration: duration,
       booked_date: bookingDate,
-      message: "",
+      message: booking.message || "",
       total_price: booking.total_price || 0,
       transaction_date: booking.transaction_date
         ? new Date(booking.transaction_date).toLocaleDateString("en-US", {
@@ -223,9 +257,24 @@ export default async function handler(req, res) {
           })
         : "N/A",
       transaction_no: booking.transaction_no || "",
+      start_time: booking.start_time, // เพิ่มเพื่อใช้ในการ sort
+      end_time: booking.end_time, // เพิ่มเพื่อใช้ในการ sort
     };
 
-    return res.status(200).json({ data: formattedBooking });
+    // ตรวจสอบข้อมูลก่อนส่งกลับ
+    console.log("Final pets data:", pets);
+    console.log("Final formatted booking:", formattedBooking);
+
+    return res.status(200).json({
+      data: formattedBooking,
+      debug: {
+        hasBookingPets: bookingPets?.length > 0,
+        hasPetId: booking.pet_id !== null,
+        petIdsCount: bookingPetIds.length,
+        petsDataCount: petsData?.length || 0,
+        filteredPetsCount: bookingPetsData?.length || 0,
+      },
+    });
   } catch (error) {
     console.error("Error fetching booking details:", error);
     return res.status(500).json({ message: "Server error" });

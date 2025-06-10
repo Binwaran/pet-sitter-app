@@ -1,36 +1,124 @@
-import React, { useRef, useMemo, useCallback, memo } from "react";
+import React, {
+  useRef,
+  useMemo,
+  useCallback,
+  useState,
+  memo,
+  useEffect,
+} from "react";
 import Image from "next/image";
 import xwhite from "/public/assets/profile/x-white.svg";
 import plusborder from "/public/assets/profile/plus-border.svg";
 
-// แยก ImageItem เป็น component ย่อย และใช้ memo เพื่อป้องกัน re-renders ที่ไม่จำเป็น
-const ImageItem = memo(({ file, index, onRemove }) => {
-  // คำนวณ image URL เฉพาะเมื่อ file เปลี่ยน
-  const imageUrl = useMemo(() => {
-    if (!file) return null;
-    return (
-      file.preview || (file instanceof File ? URL.createObjectURL(file) : file)
-    );
+// ImageItem component with pending approval indicator
+const ImageItem = memo(({ file, index, onRemove, isPending = false }) => {
+  // เพิ่ม state สำหรับจัดการกรณีโหลดรูปไม่สำเร็จ
+  const [hasError, setHasError] = useState(false);
+  const [imageUrl, setImageUrl] = useState(null);
+
+  // เปลี่ยนเป็นการตรวจสอบเงื่อนไขโดยตรง
+  const shouldShowPending = isPending || file instanceof File;
+
+  // ใช้ useEffect เพื่อจัดการ blob URL เพื่อป้องกัน memory leak
+  useEffect(() => {
+    let objectUrl = null;
+
+    // ล้าง error state เมื่อไฟล์เปลี่ยน
+    setHasError(false);
+
+    try {
+      if (!file) {
+        setImageUrl(null);
+        return;
+      }
+
+      // กรณีเป็นไฟล์ที่เพิ่งอัพโหลด
+      if (file instanceof File) {
+        objectUrl = URL.createObjectURL(file);
+        setImageUrl(objectUrl);
+      }
+      // กรณีเป็น URL โดยตรง (string)
+      else if (typeof file === "string") {
+        setImageUrl(file);
+      }
+      // กรณีเป็น Object จาก API
+      else if (typeof file === "object" && file !== null) {
+        if (file.url) setImageUrl(file.url);
+        else if (file.publicUrl) setImageUrl(file.publicUrl);
+        else if (file.path) setImageUrl(file.path);
+        else {
+          // หาค่าใดๆ ที่เป็น URL
+          for (const key of Object.keys(file)) {
+            const value = file[key];
+            if (
+              typeof value === "string" &&
+              (value.startsWith("http") || value.startsWith("/"))
+            ) {
+              setImageUrl(value);
+              break;
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error processing image:", error, file);
+      setHasError(true);
+    }
+
+    // Cleanup function
+    return () => {
+      if (objectUrl) {
+        console.log("Revoking object URL:", objectUrl);
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
   }, [file]);
 
-  // cleanup URL objects เมื่อ component unmount
-  React.useEffect(() => {
-    if (file instanceof File && imageUrl && imageUrl.startsWith("blob:")) {
-      return () => URL.revokeObjectURL(imageUrl);
-    }
-  }, [file, imageUrl]);
+  // handler สำหรับการโหลดรูปไม่สำเร็จ
+  const handleImageError = () => {
+    console.error(`Failed to load image at index ${index}:`, imageUrl);
+    setHasError(true);
+  };
 
   return (
     <div className="relative w-[167px] h-[167px] rounded-lg bg-[#DCDFED]">
-      {imageUrl && (
-        <Image
+      {imageUrl && !hasError ? (
+        // ใช้ HTML img tag แทน Next Image เพื่อความสามารถในการจัดการ error ได้ดีกว่า
+        <img
           src={imageUrl}
           alt={`gallery-${index}`}
-          fill
-          sizes="167px"
-          className="object-cover overflow-hidden rounded-lg"
+          className="w-full h-full object-cover overflow-hidden rounded-lg"
+          onError={handleImageError}
+          loading="lazy"
         />
+      ) : (
+        <div className="h-full w-full flex flex-col items-center justify-center text-gray-400">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-12 w-12"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1}
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+          <span className="text-xs mt-2 px-2 text-center">
+            {hasError ? "Image load failed" : "No image"}
+          </span>
+        </div>
       )}
+
+      {shouldShowPending && (
+        <div className="absolute top-0 right-0 bg-amber-400 text-white text-xs px-2 py-1 rounded-bl-md">
+          Pending
+        </div>
+      )}
+
       <button
         type="button"
         className="absolute -top-1 -right-1 bg-[#7B7E8F] text-white rounded-full w-6 h-6 flex items-center justify-center"
@@ -45,78 +133,146 @@ const ImageItem = memo(({ file, index, onRemove }) => {
   );
 });
 
-// ใช้ memo เพื่อ prevent re-render เมื่อ props ไม่เปลี่ยนแปลง
-const GalleryUpload = memo(({ value = [], onChange, error }) => {
-  const inputRef = useRef(null);
+// Main GalleryUpload component
+const GalleryUpload = memo(
+  ({ value = [], onChange, error, isPending = false }) => {
+    const inputRef = useRef(null);
 
-  // ใช้ useCallback เพื่อไม่ให้สร้างฟังก์ชันใหม่ทุกครั้งที่ render
-  const handleFileChange = useCallback(
-    (e) => {
-      const fileList = Array.from(e.target.files || []);
-      if (!fileList.length) return;
+    // จัดการกับข้อมูลที่อาจไม่ใช่อาร์เรย์
+    const normalizedValue = useMemo(() => {
+      if (!value) return [];
+      if (Array.isArray(value)) return value;
+      console.warn("Gallery value is not an array:", value);
+      return [];
+    }, [value]);
 
-      // ตรวจสอบจำนวนไฟล์และขนาด
-      const totalFiles = (value || []).length + fileList.length;
-      if (totalFiles > 10) {
-        alert("You can upload maximum 10 images");
-        return;
-      }
+    // แสดง log สำหรับ debug
+    useEffect(() => {
+      console.log("Gallery values:", normalizedValue);
+    }, [normalizedValue]);
 
-      // เพิ่มไฟล์ใหม่เข้าไปใน array เดิม และจำกัดไม่เกิน 10 รูป
-      onChange([...(value || []), ...fileList].slice(0, 10));
-    },
-    [value, onChange]
-  );
+    const handleFileChange = useCallback(
+      (e) => {
+        try {
+          const fileList = e.target.files;
+          if (!fileList || fileList.length === 0) return;
 
-  const handleRemove = useCallback(
-    (idx) => {
-      onChange(value.filter((_, i) => i !== idx));
-    },
-    [value, onChange]
-  );
+          console.log("Files selected:", fileList.length);
 
-  // คำนวณว่ายังอัพโหลดได้อีกหรือไม่
-  const canUploadMore = useMemo(() => value.length < 10, [value.length]);
+          // แปลง FileList เป็น Array
+          const filesArray = Array.from(fileList);
 
-  return (
-    <div>
-      <div className="flex gap-2 sm:gap-4 flex-wrap">
-        {/* แสดงรูปภาพที่อัพโหลดแล้ว */}
-        {value.map((file, idx) => (
-          <ImageItem
-            key={idx}
-            file={file}
-            index={idx}
-            onRemove={handleRemove}
-          />
-        ))}
+          // เช็คจำนวนไฟล์รวม
+          const totalFiles = normalizedValue.length + filesArray.length;
+          if (totalFiles > 10) {
+            alert(
+              `สามารถอัพโหลดได้สูงสุด 10 ไฟล์ (เหลือพื้นที่อีก ${
+                10 - normalizedValue.length
+              } ไฟล์)`
+            );
+            const maxNewFiles = 10 - normalizedValue.length;
+            if (maxNewFiles <= 0) return;
+            filesArray.splice(maxNewFiles); // ตัดจำนวนไฟล์ให้พอดีกับที่เหลือ
+          }
 
-        {/* ปุ่มอัพโหลดรูปภาพเพิ่ม */}
-        {canUploadMore && (
-          <label className="w-[167px] h-[167px] bg-[#FFF3ED] text-[#FF7037] rounded-lg flex flex-col items-center justify-center cursor-pointer">
-            <div className="w-[48px] h-[48px] mb-4 flex items-center justify-center">
-              <Image src={plusborder} alt="upload" width={40} height={40} />
-            </div>
-            <span className="text-[16px] font-bold">Upload Image</span>
-            <input
-              type="file"
-              accept="image/png, image/jpeg, image/jpg"
-              multiple
-              onChange={handleFileChange}
-              ref={inputRef}
-              className="hidden"
+          // คัดกรองไฟล์ที่มีขนาดใหญ่เกินไป
+          const filteredFiles = filesArray.filter((file) => {
+            const maxSize = 2 * 1024 * 1024; // 2MB
+            if (file.size > maxSize) {
+              console.warn(
+                `File ${file.name} is too large (${file.size} bytes). Max size is ${maxSize} bytes.`
+              );
+              return false;
+            }
+            return true;
+          });
+
+          if (filteredFiles.length === 0) {
+            alert(
+              "ไม่สามารถอัพโหลดไฟล์ได้ ไฟล์มีขนาดใหญ่เกินไป (สูงสุด 2MB ต่อไฟล์)"
+            );
+            return;
+          }
+
+          if (filteredFiles.length !== filesArray.length) {
+            alert(`ไม่สามารถอัพโหลดไฟล์บางรายการได้เนื่องจากขนาดไฟล์เกิน 2MB`);
+          }
+
+          // เพิ่มไฟล์ใหม่เข้าไปในอาร์เรย์
+          const updatedFiles = [...normalizedValue];
+          filteredFiles.forEach((file) => {
+            updatedFiles.push(file);
+          });
+
+          onChange(updatedFiles);
+
+          // ล้าง input เพื่อให้เลือกไฟล์ซ้ำได้
+          e.target.value = "";
+        } catch (error) {
+          console.error("Error handling file selection:", error);
+          alert("เกิดข้อผิดพลาดในการอัพโหลดไฟล์ โปรดลองใหม่อีกครั้ง");
+          e.target.value = "";
+        }
+      },
+      [normalizedValue, onChange]
+    );
+
+    // Handle image removal
+    const handleRemove = useCallback(
+      (idx) => {
+        const newFiles = [...normalizedValue];
+        newFiles.splice(idx, 1);
+        onChange(newFiles);
+      },
+      [normalizedValue, onChange]
+    );
+
+    // Calculate if more uploads are allowed
+    const canUploadMore = useMemo(
+      () => normalizedValue.length < 10,
+      [normalizedValue.length]
+    );
+
+    return (
+      <div>
+        <div className="flex gap-2 sm:gap-4 flex-wrap">
+          {normalizedValue.map((file, idx) => (
+            <ImageItem
+              key={`gallery-item-${idx}-${Date.now()}-${Math.random()
+                .toString(36)
+                .substring(7)}`}
+              file={file}
+              index={idx}
+              onRemove={handleRemove}
+              isPending={isPending}
             />
-          </label>
-        )}
+          ))}
+
+          {canUploadMore && (
+            <label className="w-[167px] h-[167px] bg-[#FFF3ED] text-[#FF7037] rounded-lg flex flex-col items-center justify-center cursor-pointer">
+              <div className="w-[48px] h-[48px] mb-4 flex items-center justify-center">
+                <Image src={plusborder} alt="upload" width={40} height={40} />
+              </div>
+              <span className="text-[16px] font-bold">Upload Image</span>
+              <input
+                type="file"
+                accept="image/png, image/jpeg, image/jpg, image/webp"
+                multiple
+                onChange={handleFileChange}
+                ref={inputRef}
+                className="hidden"
+              />
+            </label>
+          )}
+        </div>
+
+        {error && <div className="text-red-500 text-xs mt-2">{error}</div>}
       </div>
+    );
+  }
+);
 
-      {/* แสดง error ถ้ามี */}
-      {error && <div className="text-red-500 text-xs mt-2">{error}</div>}
-    </div>
-  );
-});
-
-// เพิ่ม displayName เพื่อให้ง่ายต่อการ debug
+// Add displayName for better debugging
 ImageItem.displayName = "ImageItem";
 GalleryUpload.displayName = "GalleryUpload";
 

@@ -100,20 +100,22 @@ export default function AdminPetSitterDetailPage() {
 
   // Memoized function to fetch booking data
   const fetchBookings = useCallback(async () => {
-    if (!sitter?.pet_sitter?.user_id) return;
+    if (!userId) return; // ใช้ userId แทน params.userId
 
     try {
       setBookingsLoading(true);
-      const res = await axios.get(
-        `/api/admin/bookings/${sitter.pet_sitter.user_id}`
-      );
-      setBookings(res.data.data || []);
-    } catch (err) {
-      setBookings([]);
+      const response = await axios.get(`/api/admin/bookings/${userId}`); // ใช้ userId แทน params.userId
+      setBookings(response.data.data || []);
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
     } finally {
       setBookingsLoading(false);
     }
-  }, [sitter?.pet_sitter?.user_id]);
+  }, [userId]); // แก้ไข dependency เป็น userId แทน params.userId
+
+  useEffect(() => {
+    fetchBookings();
+  }, [fetchBookings]);
 
   // Update sitter data after API call
   const updateSitterStatus = useCallback((status, suggestion = null) => {

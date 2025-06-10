@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, memo } from "react";
+import React, { useState, useEffect, useCallback, memo, useMemo } from "react";
 
 // แยก constants สำหรับสถานะการจองเพื่อลดการซ้ำซ้อน
 const STATUS_CONFIG = {
@@ -69,10 +69,8 @@ const PetTypeTag = memo(({ type }) => {
   const style = PET_TYPE_STYLES[type] || PET_TYPE_STYLES.default;
 
   return (
-    <span
-      className={`rounded-full border px-3 md:px-4 py-1 text-[15px] md:text-[16px] font-medium ${style}`}
-    >
-      {type || "Pet"}
+    <span className={`px-2 py-1 text-sm border rounded-full ${style}`}>
+      {type || "Unknown"}
     </span>
   );
 });
@@ -90,14 +88,18 @@ const DetailField = memo(({ label, value }) => (
 DetailField.displayName = "DetailField";
 
 // Component แสดงข้อมูลสัตว์เลี้ยง
-const PetCard = memo(({ pet }) => (
+const PetCard = memo(({ pet = {} }) => (
   <div className="text-center border border-[#DCDFED] p-6 gap-4 rounded-2xl bg-white w-[207px] h-[240px] flex flex-col items-center">
-    <div className="w-26 h-26 rounded-full overflow-hidden border-gray-200">
-      {pet.image ? (
+    <div className="w-24 h-24 rounded-full overflow-hidden border border-gray-200">
+      {pet?.image ? (
         <img
           src={pet.image}
-          alt={pet.name}
+          alt={pet?.name || "Pet"}
           className="w-full h-full object-cover"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = "/client/public/assets/profile/profileimg.svg"; // เปลี่ยนเป็น path ที่ถูกต้อง
+          }}
         />
       ) : (
         <div className="w-full h-full bg-gray-200 flex items-center justify-center">
@@ -106,8 +108,10 @@ const PetCard = memo(({ pet }) => (
       )}
     </div>
     <div className="flex flex-col items-center gap-2">
-      <p className="font-bold text-black text-xl">{pet.name}</p>
-      <PetTypeTag type={pet.type} />
+      <p className="font-bold text-black text-xl">
+        {pet?.name || "Unknown Pet"}
+      </p>
+      <PetTypeTag type={pet?.type} />
     </div>
   </div>
 ));
@@ -143,14 +147,19 @@ const BookingDetailModal = memo(({ booking, onClose }) => {
           <DetailField label="Pet(s)" value={booking.pet_count || "N/A"} />
 
           {/* Pet Detail */}
-          {booking.pets?.length > 0 && (
+          {Array.isArray(booking.pets) && booking.pets.length > 0 ? (
             <div className="flex flex-col gap-1">
               <h3 className="text-xl font-bold text-[#AEB1C3]">Pet Detail</h3>
               <div className="flex flex-wrap gap-4">
-                {booking.pets.map((pet) => (
-                  <PetCard key={pet.id} pet={pet} />
+                {booking.pets.map((pet, index) => (
+                  <PetCard key={pet.id || index} pet={pet} />
                 ))}
               </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1">
+              <h3 className="text-xl font-bold text-[#AEB1C3]">Pet Detail</h3>
+              <p className="text-black font-medium">No pet details available</p>
             </div>
           )}
 
@@ -191,6 +200,110 @@ export default function BookingTab({ bookings, bookingsLoading }) {
   const [viewedBookings, setViewedBookings] = useState([]);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // เพิ่ม state สำหรับการเรียงลำดับ
+  const [sortConfig, setSortConfig] = useState({
+    key: "default", // เริ่มต้นใช้การเรียงลำดับเดิมตามที่ API ส่งมา
+    direction: "desc",
+  });
+
+  // ฟังก์ชันจัดการการเรียงลำดับ
+  const handleSort = useCallback((key) => {
+    setSortConfig((prev) => {
+      // ถ้าคลิกที่คอลัมน์เดิม
+      if (prev.key === key) {
+        // ถ้าเป็น desc อยู่แล้ว เปลี่ยนเป็น asc
+        if (prev.direction === "desc") {
+          return { key, direction: "asc" };
+        }
+        // ถ้าเป็น asc อยู่แล้ว เปลี่ยนกลับไปเป็น default (ยกเลิกการเรียง)
+        else {
+          return { key: "default", direction: "desc" };
+        }
+      }
+      // ถ้าคลิกที่คอลัมน์ใหม่ เริ่มด้วย desc
+      else {
+        return { key, direction: "desc" };
+      }
+    });
+  }, []);
+
+  // 2. ปรับฟังก์ชัน sortedBookings ให้รองรับการเรียงลำดับทุกคอลัมน์
+  const sortedBookings = useMemo(() => {
+    if (!bookings || bookings.length === 0) return [];
+
+    if (sortConfig.key === "default") return bookings;
+
+    const sortableItems = [...bookings];
+
+    return sortableItems.sort((a, b) => {
+      // ตัวแปรสำหรับเก็บค่าที่จะนำมาเปรียบเทียบ
+      let valueA, valueB;
+
+      // ดึงค่าตามคอลัมน์ที่ต้องการเรียง
+      switch (sortConfig.key) {
+        case "owner_name":
+          valueA = (a.owner_name || "").toLowerCase();
+          valueB = (b.owner_name || "").toLowerCase();
+          break;
+
+        case "pet_count":
+          valueA = parseInt(a.pet_count || 0);
+          valueB = parseInt(b.pet_count || 0);
+          break;
+
+        case "duration":
+          valueA = parseInt(a.duration || 0);
+          valueB = parseInt(b.duration || 0);
+          break;
+
+        case "booked_date":
+          // กรณีวันที่ ใช้โค้ดเดิม
+          const startTimeA = a.start_time
+            ? new Date(a.start_time)
+            : new Date(0);
+          const startTimeB = b.start_time
+            ? new Date(b.start_time)
+            : new Date(0);
+
+          const startComparison =
+            sortConfig.direction === "asc"
+              ? startTimeA - startTimeB
+              : startTimeB - startTimeA;
+
+          // ถ้า start_time เท่ากัน ให้เรียงตาม end_time
+          if (startComparison === 0) {
+            const endTimeA = a.end_time ? new Date(a.end_time) : new Date(0);
+            const endTimeB = b.end_time ? new Date(b.end_time) : new Date(0);
+
+            return sortConfig.direction === "asc"
+              ? endTimeA - endTimeB
+              : endTimeB - endTimeA;
+          }
+
+          return startComparison;
+
+        case "status":
+          valueA = (a.status || "").toLowerCase();
+          valueB = (b.status || "").toLowerCase();
+          break;
+
+        default:
+          return 0; // ไม่มีการเรียงลำดับ
+      }
+
+      // เรียงลำดับตาม valueA และ valueB ยกเว้นกรณี booked_date
+      // (ที่ได้ return ไปแล้วข้างบน)
+      if (sortConfig.key !== "booked_date") {
+        if (valueA < valueB) {
+          return sortConfig.direction === "asc" ? -1 : 1;
+        }
+        if (valueA > valueB) {
+          return sortConfig.direction === "asc" ? 1 : -1;
+        }
+        return 0;
+      }
+    });
+  }, [bookings, sortConfig]);
 
   // โหลดข้อมูลการดูจาก localStorage เมื่อ component ถูกโหลด
   useEffect(() => {
@@ -214,6 +327,8 @@ export default function BookingTab({ bookings, bookingsLoading }) {
   // บันทึกข้อมูลว่า booking ได้ถูกดูแล้ว และเปิด modal
   const openBookingDetail = useCallback(
     (booking) => {
+      console.log("Booking data:", booking); // เพิ่มบรรทัดนี้
+      console.log("Pets data:", booking.pets); // เพิ่มบรรทัดนี้
       if (!isBookingViewed(booking.id)) {
         const newViewedBookings = [...viewedBookings, booking.id];
         setViewedBookings(newViewedBookings);
@@ -240,20 +355,60 @@ export default function BookingTab({ bookings, bookingsLoading }) {
           <table className="min-w-[600px] w-full h-full">
             <thead>
               <tr className="bg-black text-white rounded-t-2xl">
-                <th className="py-3 px-4 sm:px-6 text-left rounded-tl-2xl font-medium whitespace-nowrap">
+                <th
+                  className="py-3 px-4 sm:px-6 text-left rounded-tl-2xl font-medium whitespace-nowrap cursor-pointer hover:text-[#FF7037] transition-colors"
+                  onClick={() => handleSort("owner_name")}
+                >
                   Pet Owner Name
+                  {sortConfig.key === "owner_name" && (
+                    <span className="ml-1 inline-block">
+                      {sortConfig.direction === "asc" ? "↑" : "↓"}
+                    </span>
+                  )}
                 </th>
-                <th className="py-3 px-4 sm:px-6 text-left font-medium">
+                <th
+                  className="py-3 px-4 sm:px-6 text-left font-medium cursor-pointer hover:text-[#FF7037] transition-colors"
+                  onClick={() => handleSort("pet_count")}
+                >
                   Pet(s)
+                  {sortConfig.key === "pet_count" && (
+                    <span className="ml-1 inline-block">
+                      {sortConfig.direction === "asc" ? "↑" : "↓"}
+                    </span>
+                  )}
                 </th>
-                <th className="py-3 px-4 sm:px-6 text-left font-medium">
+                <th
+                  className="py-3 px-4 sm:px-6 text-left font-medium cursor-pointer hover:text-[#FF7037] transition-colors"
+                  onClick={() => handleSort("duration")}
+                >
                   Duration
+                  {sortConfig.key === "duration" && (
+                    <span className="ml-1 inline-block">
+                      {sortConfig.direction === "asc" ? "↑" : "↓"}
+                    </span>
+                  )}
                 </th>
-                <th className="py-3 px-4 sm:px-6 text-left font-medium whitespace-nowrap">
+                <th
+                  className="py-3 px-4 sm:px-6 text-left font-medium whitespace-nowrap cursor-pointer hover:text-[#FF7037] transition-colors"
+                  onClick={() => handleSort("booked_date")}
+                >
                   Booked Date
+                  {sortConfig.key === "booked_date" && (
+                    <span className="ml-1 inline-block">
+                      {sortConfig.direction === "asc" ? "↑" : "↓"}
+                    </span>
+                  )}
                 </th>
-                <th className="py-3 px-4 sm:px-6 text-left rounded-tr-2xl font-medium">
+                <th
+                  className="py-3 px-4 sm:px-6 text-left rounded-tr-2xl font-medium cursor-pointer hover:text-[#FF7037] transition-colors"
+                  onClick={() => handleSort("status")}
+                >
                   Status
+                  {sortConfig.key === "status" && (
+                    <span className="ml-1 inline-block">
+                      {sortConfig.direction === "asc" ? "↑" : "↓"}
+                    </span>
+                  )}
                 </th>
               </tr>
             </thead>
@@ -264,14 +419,14 @@ export default function BookingTab({ bookings, bookingsLoading }) {
                     Loading bookings...
                   </td>
                 </tr>
-              ) : bookings.length === 0 ? (
+              ) : sortedBookings.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="text-center py-6">
                     No booking history found.
                   </td>
                 </tr>
               ) : (
-                bookings.map((booking) => (
+                sortedBookings.map((booking) => (
                   <tr
                     key={booking.id}
                     className="cursor-pointer border-b border-[#DCDFED] last:border-0 hover:bg-gray-50 transition"

@@ -29,6 +29,16 @@ export function AuthProvider({ children }) {
     setLoading(false);
   };
 
+  // เพิ่มฟังก์ชัน updateUserData สำหรับอัพเดทข้อมูล user โดยตรง
+  const updateUserData = (newUserData) => {
+    if (newUserData && typeof newUserData === "object") {
+      console.log("Updating user data in context:", newUserData);
+      setUser(newUserData);
+    } else {
+      console.error("Invalid user data format for update:", newUserData);
+    }
+  };
+
   // login function
   const login = async (email, password) => {
     const res = await fetch("/api/login", {
@@ -53,7 +63,18 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, redirectPath, setRedirectPath }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        logout,
+        redirectPath,
+        setRedirectPath,
+        updateUserData, // เพิ่มฟังก์ชันนี้
+        fetchUser, // ส่งออกฟังก์ชันนี้ด้วย
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
