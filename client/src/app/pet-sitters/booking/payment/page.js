@@ -58,6 +58,11 @@ export default function BookingPaymentPage() {
     router.push('/');
   };
 
+  const handleConfirmBooking = () => {
+    setShowModal(false);
+    router.push('/pet-sitters/booking/thankyou');
+  };
+
   return (
     <>
     < NavBar/>
