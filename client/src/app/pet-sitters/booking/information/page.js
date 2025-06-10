@@ -5,8 +5,6 @@ import BookingSteps from '@/components/booking/BookingSteps';
 import { useRouter } from 'next/navigation';
 import BookingSummaryCard from '@/components/booking/BookingSummaryCard';
 import { AlertCircle } from 'lucide-react';
-<<<<<<< Updated upstream
-=======
 import NavBar from '@/components/NavBar';
 import { generateTransactionNo } from '@/utils/generateTransactionNo';
 
@@ -71,7 +69,6 @@ export default function BookingInformationPage() {
     
     localStorage.setItem('bookingDetails', JSON.stringify(bookingDetails));
     localStorage.removeItem('bookingPets');
->>>>>>> Stashed changes
     router.push('/pet-sitters/booking/payment');
   };
 
