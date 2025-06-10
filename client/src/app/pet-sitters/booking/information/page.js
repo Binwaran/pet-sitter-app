@@ -5,7 +5,10 @@ import BookingSteps from '@/components/booking/BookingSteps';
 import { useRouter } from 'next/navigation';
 import BookingSummaryCard from '@/components/booking/BookingSummaryCard';
 import { AlertCircle } from 'lucide-react';
+<<<<<<< Updated upstream
+=======
 import NavBar from '@/components/NavBar';
+import { generateTransactionNo } from '@/utils/generateTransactionNo';
 
 export default function BookingInformationPage() {
   const [form, setForm] = useState({
@@ -44,13 +47,31 @@ export default function BookingInformationPage() {
       setErrors(validationErrors);
       return;
     }
-    // Merge pets info from localStorage
+
+    // โหลดข้อมูลการจองที่มีอยู่แล้ว (เช่น ข้อมูล sitter, วันที่, เวลา, ยอดรวม)
+    // นี่เป็นสิ่งสำคัญหากขั้นตอนก่อนหน้านี้ได้บันทึกข้อมูลที่ต้องรวมเข้าด้วยกัน
+    const existingBookingDetails = JSON.parse(localStorage.getItem('bookingDetails') || '{}');
+
+    // สร้างหมายเลข transaction ที่นี่ก่อนบันทึก
+    // สร้างก็ต่อเมื่อยังไม่มี transactionNo อยู่ในข้อมูลที่มีอยู่ (เช่น ถ้าผู้ใช้ย้อนกลับมาที่หน้านี้)
+    const currentTransactionNo = existingBookingDetails.transactionNo || generateTransactionNo(); 
+
+    // สร้าง Transaction Date ปัจจุบัน
+    const transactionDate = new Date().toLocaleDateString('en-GB', { 
+        weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
+    });
+
     const bookingDetails = {
+      ...existingBookingDetails, 
       ...form,
       pets: selectedPets,
+      transactionNo: currentTransactionNo, 
+      transactionDate: transactionDate, 
     };
+    
     localStorage.setItem('bookingDetails', JSON.stringify(bookingDetails));
     localStorage.removeItem('bookingPets');
+>>>>>>> Stashed changes
     router.push('/pet-sitters/booking/payment');
   };
 
