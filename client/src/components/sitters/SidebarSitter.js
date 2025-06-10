@@ -180,8 +180,8 @@ const NavButton = memo(
     const mobileClasses =
       "md:text-left justify-center md:justify-start text-center text-[18px] md:text-[16px] font-bold md:font-medium";
     const activeClasses = isActive
-      ? "bg-[#FFF1EC] text-[#FF7037] md:text-[#FEA267] font-bold md:font-medium"
-      : "hover:bg-[#FFF1EC] hover:text-[#FF7037] md:hover:text-[#FEA267] text-[#5B5D6F]";
+      ? "bg-[#FFF1EC] text-[#FF7037] font-bold md:font-medium"
+      : "hover:bg-[#FFF1EC] hover:text-[#FF7037] text-[#5B5D6F]";
 
     // แก้ไขส่วนนี้ - เปลี่ยนวิธีจัดการ visibility
     // แสดงปกติบน mobile สำหรับปุ่มทั่วไป และแสดงเฉพาะบน desktop ถ้า showInDesktop=true
@@ -198,12 +198,10 @@ const NavButton = memo(
     let iconHoverClass = "";
 
     if (isActive) {
-      iconColor = isMobile ? "#FF7037" : "#FF986F";
+      iconColor = "#FF986F";
     } else {
-      // กำหนด class สำหรับ hover ตามประเภทอุปกรณ์
-      iconHoverClass = isMobile
-        ? "group-hover:text-[#FF7037]"
-        : "group-hover:text-[#FF986F]";
+      // กำหนด class สำหรับ hover
+      iconHoverClass = "group-hover:text-[#FF986F]";
     }
 
     return (
@@ -376,7 +374,13 @@ const Sidebar = memo(({ className = "" }) => {
             type="button"
             onClick={() => router.push("/")}
           >
-            <Image src={sitterlogo} alt="sitter-logo" width={132} height={40} priority={true} />
+            <Image
+              src={sitterlogo}
+              alt="sitter-logo"
+              width={132}
+              height={40}
+              priority={true}
+            />
           </button>
         </div>
 

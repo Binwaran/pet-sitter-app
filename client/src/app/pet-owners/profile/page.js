@@ -111,7 +111,19 @@ export default function OwnerProfilePage() {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading)
+    return (
+      <div className="flex flex-col min-h-screen bg-[#F9FAFB] relative">
+        <div className="flex-1 flex justify-center items-center">
+          <div className="flex items-center justify-center w-full h-full">
+            <div className="text-center">
+              <div className="inline-block w-8 h-8 border-4 border-[#FF7C43] border-t-transparent rounded-full animate-spin"></div>
+              <p className="mt-2 text-gray-600">Loading...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   if (!authorized) return null; // หรือแสดง spinner
 
   console.log("🧪 profile:", profile);
@@ -128,7 +140,7 @@ export default function OwnerProfilePage() {
         <div className="flex flex-col md:flex-row">
           {/* Sidebar */}
           <div className="w-full md:max-w-81 md:max-h-89 flex md:gap-6 md:pr-8">
-          <Sidebar />
+            <Sidebar />
           </div>
 
           {/* Main */}
@@ -168,6 +180,7 @@ export default function OwnerProfilePage() {
                         onChange={handleChange}
                         className="w-full leading-[150%] box-border h-12 border border-gray-200 rounded-lg pl-3 pr-4 py-3"
                         required
+                        autoComplete="name"
                       />
                     </label>
                     <label
@@ -184,6 +197,7 @@ export default function OwnerProfilePage() {
                         onChange={handleChange}
                         className="w-full leading-[150%] box-border h-12 border border-gray-200 rounded-lg pl-3 pr-4 py-3"
                         required
+                        autoComplete="email"
                       />
                     </label>
                   </div>
@@ -204,6 +218,7 @@ export default function OwnerProfilePage() {
                         required
                         inputMode="numeric"
                         pattern="[0-9]*"
+                        autoComplete="tel"
                       />
                     </label>
                     <label

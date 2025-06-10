@@ -14,6 +14,13 @@ const NavBar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const router = useRouter();
 
+  // เพิ่ม useEffect นี้เพื่ออัพเดท isLoggedIn จาก user
+  useEffect(() => {
+    // ถ้า user มีค่า แสดงว่า login แล้ว
+    setIsLoggedIn(!!user);
+    console.log("Updated isLoggedIn state:", !!user);
+  }, [user]);
+
   const toggleDropdown = () => setIsDropdownOpen((v) => !v);
   const toggleMobileMenu = () => setMobileOpen((v) => !v);
 

@@ -25,6 +25,7 @@ export default function RootLayout({ children }) {
     "/pet-sitters/booking/thankyou",
     "/pet-sitters/calendar",
     "/pet-sitters/payout",
+    "/pet-sitters/booking-list",
     "/pet-sitters/booking-list/[id]",
     "/pet-sitters/profile/[id]",
     "/pet-sitters/calendar/[id]",
@@ -45,6 +46,8 @@ export default function RootLayout({ children }) {
       (route.includes("[id]") && pathname.startsWith(route.replace("[id]", "")))
   );
 
+  const hideFooter = pathname.startsWith("/pet-owners/");
+
   return (
   <html lang="en">
     <body>
@@ -52,7 +55,7 @@ export default function RootLayout({ children }) {
         <PetIdProvider>
           {!isNoLayout && <NavBar />}
           <main>{children}</main>
-          {!isNoLayout && <Footer />}
+          {!isNoLayout && !hideFooter && <Footer />}
         </PetIdProvider>
       </AuthProvider>
       <Toaster richColors position="top-center" />

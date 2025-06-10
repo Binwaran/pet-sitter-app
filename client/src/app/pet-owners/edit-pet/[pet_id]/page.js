@@ -4,7 +4,14 @@ import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
 const petTypes = [
-  "Dog", "Cat", "Bird", "Rabbit", "Mouse", "Turtle", "Snake", "Other"
+  "Dog",
+  "Cat",
+  "Bird",
+  "Rabbit",
+  "Mouse",
+  "Turtle",
+  "Snake",
+  "Other",
 ];
 const sexes = [
   { value: "เพศผู้", label: "เพศผู้" },
@@ -77,7 +84,7 @@ export default function EditPetPageInner() {
     fetchPet();
   }, [user, authLoading, router, petId, setRedirectPath]);
 
-  const handleChange = e => {
+  const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -116,12 +123,27 @@ export default function EditPetPageInner() {
     }
   };
 
-  if (authLoading || fetchLoading) return <div>Loading...</div>;
+  if (authLoading || fetchLoading)
+    return (
+      <div className="flex flex-col min-h-screen bg-[#F9FAFB] relative">
+        <div className="flex-1 flex justify-center items-center">
+          <div className="flex items-center justify-center w-full h-full">
+            <div className="text-center">
+              <div className="inline-block w-8 h-8 border-4 border-[#FF7C43] border-t-transparent rounded-full animate-spin"></div>
+              <p className="mt-2 text-gray-600">Loading...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   if (!user) return <div>Please sign in</div>;
   if (error) return <div className="text-red-500">{error}</div>;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 bg-white p-8 rounded-2xl shadow max-w-3xl mx-auto mt-8">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-4 bg-white p-8 rounded-2xl shadow max-w-3xl mx-auto mt-8"
+    >
       <h2 className="text-xl font-bold mb-4">Your Pet</h2>
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2">
@@ -146,8 +168,10 @@ export default function EditPetPageInner() {
             required
           >
             <option value="">Select your pet type</option>
-            {petTypes.map(type => (
-              <option key={type} value={type}>{type}</option>
+            {petTypes.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
             ))}
           </select>
         </div>
@@ -173,8 +197,10 @@ export default function EditPetPageInner() {
             required
           >
             <option value="">Select sex of your pet</option>
-            {sexes.map(sex => (
-              <option key={sex.value} value={sex.value}>{sex.label}</option>
+            {sexes.map((sex) => (
+              <option key={sex.value} value={sex.value}>
+                {sex.label}
+              </option>
             ))}
           </select>
         </div>
