@@ -47,13 +47,17 @@ export default function BookingPaymentPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (paymentType === 'credit') {
-      const validationErrors = validate();
-      if (Object.keys(validationErrors).length > 0) {
-        setErrors(validationErrors);
-        return;
-      }
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      alert('Please fill in all required fields.');
+      return;
     }
+<<<<<<< Updated upstream
+    alert('Booking confirmed!');
+    localStorage.removeItem('bookingDetails');
+    router.push('/');
+=======
     setShowModal(true);
   };
 
@@ -62,8 +66,8 @@ export default function BookingPaymentPage() {
     // Merge payment info with bookingDetails
     const prevDetails = JSON.parse(localStorage.getItem('bookingDetails') || '{}');
     const paymentInfo = {
-      transactionDate: new Date().toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }),
-      transactionNo: Math.floor(Math.random() * 1000000).toString(),
+      // transactionDate: new Date().toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }),
+      // // transactionNo: Math.floor(Math.random() * 1000000).toString(),
       total: prevDetails.total || '900.00', // fallback if needed
       cardNumber: form.cardNumber,
       cardOwner: form.cardOwner,
@@ -73,6 +77,7 @@ export default function BookingPaymentPage() {
     const merged = { ...prevDetails, ...paymentInfo };
     localStorage.setItem('bookingDetails', JSON.stringify(merged));
     router.push('/pet-sitters/booking/thankyou');
+>>>>>>> Stashed changes
   };
 
   return (

@@ -4,23 +4,30 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import NavBar from '@/components/NavBar';
+import {generateTransactionNo} from '@/utils/generateTransactionNo';
 
 export default function BookingThankYouPage() {
   const [booking, setBooking] = useState(null);
   const router = useRouter();
 
-  useEffect(() => {
-    // สมมุติว่าข้อมูล booking ถูกเก็บไว้ใน localStorage หลังจองเสร็จ
+    useEffect(() => {
     const stored = localStorage.getItem('bookingDetails');
     if (stored) {
-      setBooking(JSON.parse(stored));
+      const parsed = JSON.parse(stored);
+
+      if (!parsed.transactionNo) {
+        parsed.transactionNo = generateTransactionNo();
+        console.log('Generated new transactionNo:', parsed.transactionNo);//log check
+        localStorage.setItem('bookingDetails', JSON.stringify(parsed)); 
+      }
+
+      setBooking(parsed);
     } else {
-      // ถ้าไม่มี booking กลับไปหน้าแรก
       router.push('/');
     }
   }, [router]);
 
-  if (!booking) return null; // รอจนกว่าจะโหลดข้อมูล booking
+  if (!booking) return null; 
   const data = booking;
 
 
