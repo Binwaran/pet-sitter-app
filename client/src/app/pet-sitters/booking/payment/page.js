@@ -53,31 +53,9 @@ export default function BookingPaymentPage() {
       alert('Please fill in all required fields.');
       return;
     }
-<<<<<<< Updated upstream
     alert('Booking confirmed!');
     localStorage.removeItem('bookingDetails');
     router.push('/');
-=======
-    setShowModal(true);
-  };
-
-  const handleConfirmBooking = () => {
-    setShowModal(false);
-    // Merge payment info with bookingDetails
-    const prevDetails = JSON.parse(localStorage.getItem('bookingDetails') || '{}');
-    const paymentInfo = {
-      // transactionDate: new Date().toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }),
-      // // transactionNo: Math.floor(Math.random() * 1000000).toString(),
-      total: prevDetails.total || '900.00', // fallback if needed
-      cardNumber: form.cardNumber,
-      cardOwner: form.cardOwner,
-      expiry: form.expiry,
-      cvc: form.cvc,
-    };
-    const merged = { ...prevDetails, ...paymentInfo };
-    localStorage.setItem('bookingDetails', JSON.stringify(merged));
-    router.push('/pet-sitters/booking/thankyou');
->>>>>>> Stashed changes
   };
 
   return (
