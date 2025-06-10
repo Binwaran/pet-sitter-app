@@ -33,7 +33,9 @@ export default function BookingHistoryPage() {
     } else if (status === "Completed") {
       return {
         label: "Completed at",
-        value: new Date(completedAt || paidAt || createdAt).toLocaleDateString(),
+        value: new Date(
+          completedAt || paidAt || createdAt
+        ).toLocaleDateString(),
       };
     } else {
       return {
@@ -85,43 +87,55 @@ export default function BookingHistoryPage() {
     fetchBookings();
   }, [user, authLoading, router]);
 
-  if (authLoading || loading) return <div>Loading...</div>;
-  if (error) return <div className="text-red-500">{error}</div>;
-
- return (
-  <div className="bg-gray-100 min-h-screen">
-    <div className="px-20 py-8">
-      <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6">
-        <Sidebar />
-        <div className="self-start">
-          <div className="bg-white p-6 rounded-2xl shadow-md">
-            <h1 className="text-2xl font-bold mb-14">Booking History</h1>
-            {bookings.length === 0 ? (
-              <p className="text-gray-500">No bookings found.</p>
-            ) : (
-              bookings.map((booking, index) => {
-                console.log("Booking:", booking); // ✅ ถูกต้อง
-                return (
-                  <BookingCard
-                    key={booking.booking_id || index}
-                    booking={booking}
-                    onClick={() => setSelectedBooking(booking)}
-                  />
-                );
-              })
-            )}
+  if (authLoading || loading)
+    return (
+      <div className="flex flex-col min-h-screen bg-[#F9FAFB] relative">
+        <div className="flex-1 flex justify-center items-center">
+          <div className="flex items-center justify-center w-full h-full">
+            <div className="text-center">
+              <div className="inline-block w-8 h-8 border-4 border-[#FF7C43] border-t-transparent rounded-full animate-spin"></div>
+              <p className="mt-2 text-gray-600">Loading...</p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    );
+  if (error) return <div className="text-red-500">{error}</div>;
 
-    {/* ✅ Booking Detail Modal */}
-    {selectedBooking && (
-      <BookingDetailModal
-        booking={selectedBooking}
-        onClose={() => setSelectedBooking(null)}
-      />
-    )}
-  </div>
-);
+  return (
+    <div className="bg-gray-100 min-h-screen">
+      <div className="px-20 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6">
+          <Sidebar />
+          <div className="self-start">
+            <div className="bg-white p-6 rounded-2xl shadow-md">
+              <h1 className="text-2xl font-bold mb-14">Booking History</h1>
+              {bookings.length === 0 ? (
+                <p className="text-gray-500">No bookings found.</p>
+              ) : (
+                bookings.map((booking, index) => {
+                  console.log("Booking:", booking); // ✅ ถูกต้อง
+                  return (
+                    <BookingCard
+                      key={booking.booking_id || index}
+                      booking={booking}
+                      onClick={() => setSelectedBooking(booking)}
+                    />
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ✅ Booking Detail Modal */}
+      {selectedBooking && (
+        <BookingDetailModal
+          booking={selectedBooking}
+          onClose={() => setSelectedBooking(null)}
+        />
+      )}
+    </div>
+  );
 }

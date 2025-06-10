@@ -32,7 +32,19 @@ export default function YourPetPage() {
     fetchPets();
   }, [user, loading, router]);
 
-  if (loading || fetchLoading) return <div>Loading...</div>;
+  if (loading || fetchLoading)
+    return (
+      <div className="flex flex-col min-h-screen bg-[#F9FAFB] relative">
+        <div className="flex-1 flex justify-center items-center">
+          <div className="flex items-center justify-center w-full h-full">
+            <div className="text-center">
+              <div className="inline-block w-8 h-8 border-4 border-[#FF7C43] border-t-transparent rounded-full animate-spin"></div>
+              <p className="mt-2 text-gray-600">Loading...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
 
   return (
     <div className="bg-gray-100 min-h-screen">
