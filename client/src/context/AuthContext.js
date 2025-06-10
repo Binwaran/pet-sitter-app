@@ -16,7 +16,18 @@ export function AuthProvider({ children }) {
   const fetchUser = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/me", { credentials: "include" });
+      // เพิ่ม logging เพื่อดีบัก
+      console.log("Fetching user data...");
+
+      const res = await fetch("/api/me", {
+        credentials: "include", // สำคัญมาก! ต้องส่ง cookies ไปด้วย
+        headers: {
+          Accept: "application/json",
+        },
+      });
+
+      console.log("Response status:", res.status);
+
       if (res.ok) {
         const userData = await res.json();
         setUser(userData);
@@ -41,18 +52,24 @@ export function AuthProvider({ children }) {
 
   // login function
   const login = async (email, password) => {
-    const res = await fetch("/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include", // สำคัญ!
-      body: JSON.stringify({ email, password }),
-    });
-    if (res.ok) {
-      await fetchUser(); // ดึง user info ใหม่
-      return { success: true };
-    } else {
-      const data = await res.json();
-      return { success: false, message: data.message || "Login failed" };
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include", // สำคัญมาก!
+        body: JSON.stringify({ email, password }),
+      });
+      if (res.ok) {
+        console.log("Login successful, fetching user info...");
+        await fetchUser(); // ดึงข้อมูล user ใหม่
+        return { success: true };
+      } else {
+        const data = await res.json();
+        return { success: false, message: data.message || "Login failed" };
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      return { success: false, message: "An error occurred during login" };
     }
   };
 
