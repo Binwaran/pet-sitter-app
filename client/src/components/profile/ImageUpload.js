@@ -42,7 +42,7 @@ const ImageUpload = memo(
 
     return (
       <div>
-        <div className="relative w-[160px] h-[160px] sm:w-[200px] sm:h-[200px] md:w-[240px] md:h-[240px] rounded-full bg-[#DCDFED] flex items-center justify-center mx-auto">
+        <div className="relative w-30 h-30 sm:w-45 sm:h-45 md:w-60 md:h-60 rounded-full bg-[#DCDFED] flex items-center justify-center mx-auto">
           {/* Display image or default profile */}
           {preview ? (
             <img
@@ -58,7 +58,7 @@ const ImageUpload = memo(
               width={104}
               height={104}
               priority={true}
-              className="w-[104px] h-[104px]"
+              className="w-10 h-10 sm:w-18 sm:h-18 md:w-26 md:h-26"
             />
           )}
 
@@ -72,7 +72,7 @@ const ImageUpload = memo(
           {/* Upload button */}
           <button
             type="button"
-            className="absolute bottom-0 right-0 w-[60px] h-[60px] rounded-full bg-[#FFF1EC] flex items-center justify-center shadow"
+            className="absolute bottom-0 right-0 w-10 h-10 sm:w-12.5 sm:h-12.5 md:w-15 md:h-15 rounded-full bg-[#FFF1EC] flex items-center justify-center shadow"
             onClick={triggerFileSelect}
             aria-label="Upload image"
           >

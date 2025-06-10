@@ -1,71 +1,35 @@
 import axios from "axios";
 
-// Upload single file and get URL back
-export const uploadFile = async (file) => {
+// Upload single file and get URL back - เพิ่มพารามิเตอร์ type เพื่อระบุประเภทรูปภาพ
+export const uploadFile = async (file, type = "gallery") => {
   if (!file || !(file instanceof File)) {
     console.error("Invalid file object:", file);
     return null;
   }
 
-  // ตรวจสอบขนาดไฟล์ (ไม่เกิน 2MB)
+  // ตรวจสอบขนาดไฟล์
   if (file.size > 2 * 1024 * 1024) {
     throw new Error(`File ${file.name} is too large. Maximum size is 2MB.`);
   }
 
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("uploadType", type); // เพิ่มฟิลด์ uploadType เพื่อระบุประเภท
 
   try {
-    console.log(`Uploading file: ${file.name}, size: ${file.size} bytes, type: ${file.type}`);
+    console.log(`Uploading ${type} file: ${file.name}`);
     
-    // เพิ่ม retries เพื่อให้มีโอกาสอัพโหลดสำเร็จมากขึ้น
-    let retries = 0;
-    const maxRetries = 2;
-    let lastError = null;
-    
-    while (retries <= maxRetries) {
-      try {
-        const response = await axios.post("/api/upload", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          withCredentials: true,
-          onUploadProgress: (progressEvent) => {
-            const percentCompleted = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
-            );
-            console.log(`Upload progress (${file.name}): ${percentCompleted}%`);
-          },
-          timeout: 30000, // 30 seconds timeout
-        });
-        
-        if (response.data?.url) {
-          console.log(`Upload successful (${file.name}). URL: ${response.data.url}`);
-          return response.data.url;
-        } else {
-          console.warn("Upload response missing URL:", response.data);
-          throw new Error("Upload response missing URL");
-        }
-      } catch (err) {
-        lastError = err;
-        retries++;
-        if (retries <= maxRetries) {
-          console.warn(`Retry ${retries}/${maxRetries} for file ${file.name}`);
-          // รอเวลาเล็กน้อยก่อน retry
-          await new Promise(r => setTimeout(r, 1000));
-        }
-      }
-    }
-    
-    // ถ้าทำ retries ครบแล้วยังไม่สำเร็จ ให้ throw error
-    console.error("All upload retries failed:", lastError);
-    throw lastError || new Error("Upload failed after retries");
+    const response = await axios.post("/api/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+      withCredentials: true,
+    });
+
+    return response.data?.url || null;
   } catch (error) {
-    console.error(`Upload error for ${file.name}:`, error.message);
-    if (error.response) {
-      console.error("Server response:", error.response.data);
-    }
-    throw error;
+    console.error("Upload error:", error);
+    throw new Error("Failed to upload file");
   }
 };
 

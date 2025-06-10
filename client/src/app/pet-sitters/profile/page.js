@@ -55,7 +55,7 @@ const LoadingSpinner = memo(({ text = "Loading..." }) => (
 LoadingSpinner.displayName = "LoadingSpinner";
 
 export default function PetSitterProfilePage() {
-  const { user } = useAuth(); // ใช้ user จาก context แทน localStorage
+  const { user, updateUserData, fetchUserData } = useAuth();
   const [initialValues, setInitialValues] = useState({
     full_name: "",
     experience: "",
@@ -197,7 +197,7 @@ export default function PetSitterProfilePage() {
       if (values.profile_image instanceof File) {
         try {
           toast.loading("Uploading profile image...");
-          profileImageUrl = await uploadFile(values.profile_image);
+          profileImageUrl = await uploadFile(values.profile_image, "profile"); // เพิ่มพารามิเตอร์ "profile"
           toast.dismiss();
           toast.success("Profile image uploaded successfully");
         } catch (error) {
@@ -332,6 +332,23 @@ export default function PetSitterProfilePage() {
           "Profile saved successfully. Your changes and images will be visible after admin approval."
         );
         setSitterStatus("waiting for approval");
+
+        // เพิ่มโค้ดส่วนนี้เพื่ออัพเดท AuthContext
+        if (profileImageUrl && typeof profileImageUrl === "string") {
+          // อัพเดทข้อมูล user ใน context โดยตรงด้วยรูปใหม่
+          updateUserData({
+            ...user,
+            profile_image_url: profileImageUrl,
+          });
+          console.log(
+            "Updated profile image in user context:",
+            profileImageUrl
+          );
+        } else {
+          // ถ้าไม่ได้อัพโหลดรูปใหม่ แต่ต้องการให้แน่ใจว่าข้อมูล user เป็นข้อมูลล่าสุด
+          await fetchUserData();
+          console.log("Fetched updated user data after profile save");
+        }
       } else {
         toast.warning(
           response.data.message || "Operation completed but status unclear"

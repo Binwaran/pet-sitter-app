@@ -57,6 +57,7 @@ export default async function handler(req, res) {
           reject(err);
         }
         console.log("Files received:", Object.keys(files).length);
+        console.log("Fields received:", fields);
         resolve([fields, files]);
       });
     });
@@ -124,8 +125,28 @@ export default async function handler(req, res) {
       // สร้างชื่อไฟล์ที่ไม่ซ้ำกัน
       const filename = `${uuidv4()}.${fileExt}`;
 
-      // ใช้เพียง bucket name โดยไม่ต้องมี sub-folder เพิ่มเติม
-      const bucketName = "pet-sitter-gallery";
+      // เลือก bucket ตามประเภทการอัพโหลด - profile หรือ gallery
+      // ตรวจสอบจาก fields ที่ส่งมา หรือตั้งให้เป็น gallery เป็นค่าเริ่มต้น
+      let uploadType = "gallery"; // ค่าเริ่มต้น
+      
+      // ตรวจสอบประเภทการอัพโหลดจาก fields ที่ส่งมา
+      if (fields.uploadType) {
+        uploadType = fields.uploadType.toString().toLowerCase();
+      } else if (fields.type) {
+        uploadType = fields.type.toString().toLowerCase();
+      } else if (fields.imageType) {
+        uploadType = fields.imageType.toString().toLowerCase();
+      }
+
+      // กำหนด bucket ตามประเภทการอัพโหลด
+      let bucketName;
+      if (uploadType === "profile") {
+        bucketName = "pet-sitter-images";
+        console.log("Detected PROFILE image upload");
+      } else {
+        bucketName = "pet-sitter-gallery";
+        console.log("Detected GALLERY image upload");
+      }
 
       // ปรับโครงสร้างไฟล์ให้เป็นแบบแบนๆ ไม่มี subfolder
       const filePath = filename; // ใช้ filename เฉยๆ ไม่มี subfolder
