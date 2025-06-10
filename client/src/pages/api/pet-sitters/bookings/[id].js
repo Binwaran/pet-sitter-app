@@ -117,7 +117,7 @@ export default async function handler(req, res) {
     if (bookingPetIds.length > 0) {
       const { data: fetchedPetsData, error: petsError } = await supabase
         .from("pets")
-        .select("pet_id, pet_name, pet_type, pet_image_url, owner_id")
+        .select("*") // ดึงข้อมูลทั้งหมด แทนที่จะระบุเฉพาะฟิลด์
         .in("pet_id", bookingPetIds);
 
       petsData = fetchedPetsData || [];
@@ -145,11 +145,17 @@ export default async function handler(req, res) {
 
         console.log("Filtered pets (matched with owner):", bookingPetsData);
 
-        // 4. จัดรูปแบบข้อมูลสัตว์เลี้ยง
+        // 4. จัดรูปแบบข้อมูลสัตว์เลี้ยง - แก้ไขส่วนนี้ให้มีข้อมูลครบ
         pets = bookingPetsData.map((p) => ({
           id: p.pet_id || "unknown",
           name: p.pet_name || "Unknown Pet",
           type: p.pet_type || "Pet",
+          breed: p.breed || null,
+          sex: p.sex || null,
+          age: p.age || null,
+          color: p.color || null,
+          weight: p.weight || null,
+          about: p.about || null,
           image: p.pet_image_url || null,
         }));
 
@@ -166,7 +172,7 @@ export default async function handler(req, res) {
       // ดึงสัตว์เลี้ยงทั้งหมดของเจ้าของคนนี้
       const { data: ownerPets, error: ownerPetsError } = await supabase
         .from("pets")
-        .select("pet_id, pet_name, pet_type, pet_image_url")
+        .select("*") // เปลี่ยนเป็นดึงข้อมูลทั้งหมด
         .eq("owner_id", booking.owner_id)
         .order("updated_at", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false });
@@ -184,6 +190,12 @@ export default async function handler(req, res) {
           id: p.pet_id || "unknown",
           name: p.pet_name || "Unknown Pet",
           type: p.pet_type || "Pet",
+          breed: p.breed || null,
+          sex: p.sex || null,
+          age: p.age || null,
+          color: p.color || null,
+          weight: p.weight || null,
+          about: p.about || null,
           image: p.pet_image_url || null,
         }));
       }
@@ -222,7 +234,7 @@ export default async function handler(req, res) {
     if (booking.owner_id) {
       const { data: ownerData, error: ownerError } = await supabase
         .from("users")
-        .select("id, name, profile_image_url")
+        .select("id, name, email, phone, birthday, profile_image_url") // เพิ่ม email, phone, birthday
         .eq("id", booking.owner_id)
         .single();
 
@@ -239,6 +251,9 @@ export default async function handler(req, res) {
       id: booking.booking_id,
       owner_name: owner?.name || "Unknown",
       owner_image: owner?.profile_image_url || null,
+      owner_email: owner?.email || "", // เพิ่มฟิลด์นี้
+      owner_phone: owner?.phone || "", // เพิ่มฟิลด์นี้
+      owner_birthday: owner?.birthday || "", // เพิ่มฟิลด์นี้
       status: booking.status,
       pets:
         pets.length > 0
