@@ -47,15 +47,17 @@ export default function BookingPaymentPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (paymentType === 'cash') {
+      setShowModal(true);
+      return;
+    }
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       alert('Please fill in all required fields.');
       return;
     }
-    alert('Booking confirmed!');
-    localStorage.removeItem('bookingDetails');
-    router.push('/');
+    setShowModal(true);
   };
 
   const handleConfirmBooking = () => {
