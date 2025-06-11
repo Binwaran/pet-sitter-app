@@ -101,7 +101,7 @@ export default function ReportDetailPage() {
                 />
               </div>
               {report.subject.length > 20
-                        ? report.subject.slice(0, 20) + "..."
+                        ? report.subject.slice(0, 20) + "...."
                         : report.subject}
               <span
                 className={`ml-10 text-[18px] font-medium ${

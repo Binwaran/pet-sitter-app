@@ -49,24 +49,30 @@ export default function AdminReportPage() {
               <select
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                className="border rounded px-2 py-1"
+                className="border border-gray-300 text-gray-500 rounded pl-5 pr-20 py-3 appearance-none"
+                style={{
+                  backgroundImage: "url('/assets/arrow_drop_down_black_24dp 2.png')",
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: "right 1rem center",
+                  backgroundSize: "20px",
+                }}
               >
                 <option value="all">All status</option>
-                <option value="new">New Report</option>
-                <option value="pending">Pending</option>
-                <option value="resolved">Resolved</option>
-                <option value="canceled">Canceled</option>
+                <option className="text-pink-300" value="new">New Report</option>
+                <option className="text-blue-300" value="pending">Pending</option>
+                <option className="text-green-500" value="resolved">Resolved</option>
+                <option className="text-red-500" value="canceled">Canceled</option>
               </select>
             </div>
 
             <table className="w-full text-left border bg-white rounded-lg overflow-hidden ">
               <thead className="bg-black text-white text-md font-medium">
                 <tr>
-                  <th className="p-3 py-6 w-1/5 text-[20px]">User</th>
-                  <th className="p-3 py-6 w-1/5 text-[20px]">Reported Person</th>
-                  <th className="p-3 py-6 w-1/5 text-[20px]">Issue</th>
-                  <th className="p-3 py-6 w-1/5 text-[20px]">Date Submitted</th>
-                  <th className="p-3 py-6 w-1/5 text-[20px]">Status</th>
+                  <th className="p-3 py-6 w-1/5 text-[20px] font-thin">User</th>
+                  <th className="p-3 py-6 w-1/5 text-[20px] font-thin">Reported Person</th>
+                  <th className="p-3 py-6 w-1/5 text-[20px] font-thin">Issue</th>
+                  <th className="p-3 py-6 w-1/5 text-[20px] font-thin">Date Submitted</th>
+                  <th className="p-3 py-6 w-1/5 text-[20px] font-thin">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -80,7 +86,7 @@ export default function AdminReportPage() {
                     <td className="px-3 py-6 text-[18px]">{report.target?.name || report.target_id}</td>
                     <td className="px-3 py-6 text-[18px]">
                       {report.subject.length > 20
-                        ? report.subject.slice(0, 20) + "..."
+                        ? report.subject.slice(0, 20) + "...."
                         : report.subject}
                     </td>
 
