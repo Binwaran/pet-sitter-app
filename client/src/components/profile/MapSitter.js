@@ -1,9 +1,9 @@
 "use client";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import L from "leaflet";
 import axios from "axios";
-import { useAuth } from "@/context/AuthContext"; // เพิ่มการใช้ useAuth
+import { useAuth } from "@/context/AuthContext";
 
 // คงค่าไว้ที่ constants
 const DEFAULT_POSITION = [13.7563, 100.5018]; // กรุงเทพฯ
@@ -46,27 +46,41 @@ function useDebounce(value, delay) {
   return debouncedValue;
 }
 
-export default function MapSitter({ addressDetails = {} }) {
+// เพิ่ม prop ใหม่: initialPosition, onPositionChange, autoSave
+export default function MapSitter({
+  addressDetails = {},
+  initialPosition = null,
+  onPositionChange = null,
+  autoSave = false,
+}) {
   // State hooks
   const [isClient, setIsClient] = useState(false);
-  const [position, setPosition] = useState(null);
+  const [position, setPosition] = useState(initialPosition || null);
   const [userInfo, setUserInfo] = useState({ tradeName: "Pet Sitter" });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { user } = useAuth(); // ใช้ user จาก context แทน localStorage
+  const { user } = useAuth();
+  const lastSearchRef = useRef(""); // เพื่อป้องกันการค้นหาซ้ำ
 
   // เพิ่ม client-side CSS import
   useEffect(() => {
     import("leaflet/dist/leaflet.css");
   }, []);
 
-  // debounce address changes
-  const debouncedAddress = useDebounce(addressDetails, 500);
+  // debounce address changes - เพิ่มเวลาให้นานขึ้น
+  const debouncedAddress = useDebounce(addressDetails, 1500);
 
   // Client-side rendering check
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // ถ้ามีการส่ง initialPosition มาใหม่ ให้อัพเดต position
+  useEffect(() => {
+    if (initialPosition && initialPosition[0] && initialPosition[1]) {
+      setPosition(initialPosition);
+    }
+  }, [initialPosition]);
 
   // Format address for API
   const formattedAddress = useMemo(() => {
@@ -81,6 +95,7 @@ export default function MapSitter({ addressDetails = {} }) {
       return null;
     }
 
+    // แปลงข้อมูลที่อยู่ให้เป็นสตริงสำหรับการค้นหา
     const provinceStr =
       typeof province === "object" ? province.label : String(province || "");
     const districtStr =
@@ -92,214 +107,140 @@ export default function MapSitter({ addressDetails = {} }) {
     const postalCodeStr = String(postalCode || "");
     const addressDetailStr = String(addressDetail || "");
 
-    // Create complete address string with addressDetail at beginning for better geocoding results
+    // สร้างที่อยู่เต็มรูปแบบสำหรับการ geocode
     return addressDetailStr
       ? `${addressDetailStr} ${subDistrictStr}, ${districtStr}, ${provinceStr} ${postalCodeStr}, Thailand`
       : `${subDistrictStr}, ${districtStr}, ${provinceStr} ${postalCodeStr}, Thailand`;
   }, [debouncedAddress]);
 
-  // Fetch user data
-  const fetchUserData = useCallback(async () => {
-    if (!user?.id) {
-      setLoading(false);
-      return;
-    }
-
+  // Geocode address when it changes
+useEffect(() => {
+  if (!formattedAddress || formattedAddress === lastSearchRef.current) return;
+  
+  let isActive = true; // ป้องกัน race condition
+  lastSearchRef.current = formattedAddress;
+  
+  console.log("Searching for address:", formattedAddress);
+  
+  const searchAddress = async () => {
     try {
-      // เปลี่ยนเป็นการใช้ cookie ผ่าน withCredentials
-      const response = await axios.get(`/api/pet-sitters/update-profile`, {
-        withCredentials: true, // ส่ง cookies ไปกับ request
+      const response = await axios.get("/api/geocode/search", {
+        params: { q: formattedAddress },
+        timeout: 10000,
       });
-
-      if (response.data?.data) {
-        const data = response.data.data;
-        setUserInfo({
-          tradeName: data.trade_name || "Pet Sitter",
-        });
-
-        if (data.lat && data.lng) {
-          setPosition([data.lat, data.lng]);
+      
+      // ถ้า component unmount ไปแล้ว ไม่ต้องอัพเดต state
+      if (!isActive) return;
+      
+      console.log("Geocoding response:", response.data);
+      
+      if (response.data?.[0]) {
+        const { lat, lon } = response.data[0];
+        const newLat = parseFloat(lat);
+        const newLng = parseFloat(lon);
+        
+        if (!isNaN(newLat) && !isNaN(newLng)) {
+          const newPosition = [newLat, newLng];
+          setPosition(newPosition);
+          
+          // แจ้ง parent component เกี่ยวกับการเปลี่ยนแปลงพิกัด
+          if (onPositionChange) {
+            onPositionChange(newLat, newLng);
+          }
         }
       }
     } catch (err) {
-      console.error("Error fetching user location:", err);
-      setError("ไม่สามารถดึงข้อมูลพิกัดได้");
-    } finally {
-      setLoading(false);
+      if (!isActive) return;
+      console.error("Error geocoding address:", err);
+      setError("เกิดข้อผิดพลาดในการค้นหาพิกัด");
     }
-  }, [user?.id]);
+  };
+  
+  // ดีเลย์การค้นหาเล็กน้อย
+  const timer = setTimeout(searchAddress, 500);
+  
+  // Cleanup function
+  return () => {
+    isActive = false;
+    clearTimeout(timer);
+  };
+}, [formattedAddress, user?.id, onPositionChange, autoSave]);
 
-  // Update coordinates in database
-  const updateCoordinates = useCallback(
-    async (lat, lng, address) => {
-      if (!user?.id) return;
-
-      // Validate coordinates before sending request
-      if (!lat || !lng || isNaN(parseFloat(lat)) || isNaN(parseFloat(lng))) {
-        console.error("Invalid coordinates:", { lat, lng });
+  // Initial data fetch - load only once when component mounts
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      if (!user?.id) {
+        setLoading(false);
         return;
       }
 
       try {
-        // Format coordinates to ensure correct precision
-        const formattedLat = parseFloat(parseFloat(lat).toFixed(6));
-        const formattedLng = parseFloat(parseFloat(lng).toFixed(6));
-
-        // Format address to prevent undefined or null values
-        const safeAddress = typeof address === "string" ? address : "";
-
-        // First check if user role is sitter
-        console.log("Preparing to update coordinates for sitter:", user.id);
-
-        // Try with a different endpoint structure or format
-        await axios.post(
-          "/api/pet-sitters/update-coordinates",
-          {
-            // Add user_id explicitly in case the server needs it
-            user_id: user.id,
-            lat: formattedLat,
-            lng: formattedLng,
-            // Make sure address is properly formatted
-            address: safeAddress.substring(0, 500), // Limit length in case it's too long
-          },
-          {
-            withCredentials: true,
-            timeout: 20000, // Increase timeout for slow connections
-          }
-        );
-
-        console.log("Coordinates updated successfully");
-      } catch (err) {
-        console.error("Error updating coordinates:", err);
-
-        // More detailed error logging
-        if (err.response) {
-          console.error("Server response:", {
-            status: err.response.status,
-            data: err.response.data,
-            headers: err.response.headers,
-          });
-
-          // Different handling based on status code
-          if (err.response.status === 401) {
-            console.error("Authentication issue - please log in again");
-            setError("Session expired. Please log in again.");
-          } else if (err.response.status === 405) {
-            console.error(
-              "Method not allowed - server expects a different HTTP method"
-            );
-          } else if (err.response.status === 500) {
-            console.error("Server error - check server logs for details");
-            // Continue without showing error to user (non-critical failure)
-          }
-        } else if (err.request) {
-          console.error("No response received from server");
-        }
-
-        // Don't throw error for coordinate updates - they're non-critical
-      }
-    },
-    [user?.id]
-  );
-
-  // Geocode address when it changes
-  useEffect(() => {
-    async function geocodeAddress() {
-      if (!formattedAddress) return;
-
-      try {
-        console.log("Searching for address:", formattedAddress);
-
-        const response = await axios.get("/api/geocode/search", {
-          params: { q: formattedAddress },
-          timeout: 10000,
+        // ดึงข้อมูลเริ่มต้นจาก API
+        const response = await axios.get(`/api/pet-sitters/update-profile`, {
+          withCredentials: true,
         });
 
-        // Log the raw geocoding response for debugging
-        console.log("Geocoding response:", response.data);
+        if (response.data?.data) {
+          const data = response.data.data;
 
-        if (response.data?.[0]) {
-          const { lat, lon } = response.data[0];
-          const newLat = parseFloat(lat);
-          const newLng = parseFloat(lon);
+          setUserInfo({
+            tradeName: data.trade_name || "Pet Sitter",
+          });
 
-          if (!isNaN(newLat) && !isNaN(newLng)) {
-            setPosition([newLat, newLng]);
+          // ใช้ initialPosition จาก props ถ้ามี มิฉะนั้นใช้จาก API
+          if (!initialPosition && data.lat && data.lng) {
+            setPosition([data.lat, data.lng]);
 
-            // Skip coordinate updates if we've had errors with them
-            // This makes the UI work even if the server-side saving is broken
-            if (!error) {
-              // Add a longer delay to ensure server is ready
-              setTimeout(() => {
-                updateCoordinates(newLat, newLng, formattedAddress);
-              }, 1000);
+            // แจ้ง parent component เกี่ยวกับพิกัดเริ่มต้น
+            if (onPositionChange) {
+              onPositionChange(data.lat, data.lng);
             }
-          } else {
-            console.error("Invalid geocoding result:", response.data[0]);
           }
-        } else {
-          console.warn(
-            "No geocoding results found for address:",
-            formattedAddress
-          );
         }
       } catch (err) {
-        console.error("Error geocoding address:", err);
+        console.error("Error fetching initial data:", err);
+        setError("ไม่สามารถดึงข้อมูลเริ่มต้นได้");
+      } finally {
+        setLoading(false);
       }
-    }
+    };
 
-    geocodeAddress();
-  }, [formattedAddress, updateCoordinates, error]);
+    fetchInitialData();
+  }, [user?.id, initialPosition, onPositionChange]);
 
-  // Initial data fetch
-  useEffect(() => {
-    fetchUserData();
-  }, [fetchUserData]);
-
-  if (!isClient) return null;
+  // ถ้าไม่ได้ render บน client หรือกำลังโหลดอยู่
+  if (!isClient) {
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        <span>Loading map...</span>
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full h-full">
-      {loading ? (
-        <div className="flex items-center justify-center w-full h-full bg-gray-100">
-          <div className="text-center">
-            <div className="inline-block w-8 h-8 border-4 border-[#FF7C43] border-t-transparent rounded-full animate-spin"></div>
-            <p className="mt-2 text-gray-600">Loading...</p>
-          </div>
-        </div>
-      ) : error ? (
-        <div className="flex items-center justify-center w-full h-full bg-gray-100">
-          <div className="text-center text-red-500">
-            <p>{error}</p>
-            <p className="mt-2 text-sm">Please try again</p>
-          </div>
-        </div>
-      ) : (
-        <div className="w-full h-full overflow-hidden">
-          <MapContainer
-            center={position || DEFAULT_POSITION}
-            zoom={DEFAULT_ZOOM}
-            scrollWheelZoom={true}
-            className="w-full h-full z-0"
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
+    <MapContainer
+      center={position || DEFAULT_POSITION}
+      zoom={DEFAULT_ZOOM}
+      style={{ height: "100%", width: "100%" }}
+      scrollWheelZoom={false}
+    >
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
 
-            <MapAdjuster
-              position={position || DEFAULT_POSITION}
-              zoom={DEFAULT_ZOOM}
-            />
-
-            {position && (
-              <Marker position={position} icon={petSitterIcon}>
-                <Popup>{userInfo.tradeName}</Popup>
-              </Marker>
-            )}
-          </MapContainer>
-        </div>
+      {position && (
+        <Marker position={position} icon={petSitterIcon}>
+          <Popup>
+            <div className="text-center">
+              <strong>{userInfo.tradeName}</strong>
+              <p className="text-sm">{formattedAddress}</p>
+            </div>
+          </Popup>
+        </Marker>
       )}
-    </div>
+
+      <MapAdjuster position={position} zoom={DEFAULT_ZOOM} />
+    </MapContainer>
   );
 }

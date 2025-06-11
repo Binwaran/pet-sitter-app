@@ -10,6 +10,24 @@ export default async function handler(req, res) {
     try {
       const { user_id, lat, lng, address } = req.body;
 
+      // ตรวจสอบว่าเป็นการเรียกจาก form submit จริงๆ หรือไม่
+      const fromFormSubmit = req.headers["x-form-submit"] === "true";
+
+      // ถ้าไม่ใช่การเรียกจาก form submit ให้ตอบกลับโดยไม่อัพเดตข้อมูลจริง
+      if (!fromFormSubmit) {
+        console.log(
+          "Received update-coordinates request but ignored (not from form submit)"
+        );
+        return res.status(200).json({
+          success: true,
+          message: "Preview mode - no database update",
+          coordinates: {
+            lat: req.body.lat,
+            lng: req.body.lng,
+          },
+        });
+      }
+
       console.log("Updating coordinates:", { user_id, lat, lng });
 
       // อัพเดตค่า lat, lng โดยตรงด้วย Supabase
@@ -28,12 +46,14 @@ export default async function handler(req, res) {
         });
       }
 
-      console.log("Coordinates updated successfully:", data);
-      return res.status(200).json({
+      const response = {
         success: true,
         message: "Coordinates updated successfully",
         data,
-      });
+      };
+
+      console.log("Coordinates updated successfully:", data);
+      return res.status(200).json(response);
     } catch (error) {
       console.error("Error updating coordinates:", error);
       return res.status(500).json({

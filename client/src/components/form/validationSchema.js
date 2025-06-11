@@ -82,4 +82,6 @@ export const profileSchema = Yup.object().shape({
   district: createLocationFieldTest("District is required"),
   sub_district: createLocationFieldTest("Sub-district is required"),
   post_code: Yup.string().required("Post code is required"),
+  latitude: Yup.number().nullable(),
+  longitude: Yup.number().nullable(),
 });

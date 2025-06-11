@@ -58,8 +58,6 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Unauthorized: Invalid user ID" });
     }
 
-    console.log("Fetching bookings for sitter ID:", userId);
-
     // 1. Get bookings for this sitter
     const { data: bookings, error } = await supabase
       .from("booking")
@@ -78,7 +76,6 @@ export default async function handler(req, res) {
 
     // 2. Get booking pets relationships
     const bookingIds = bookings.map((booking) => booking.booking_id);
-    console.log("Booking IDs:", bookingIds); // Debug log
 
     const { data: bookingPets, error: bookingPetsError } = await supabase
       .from("booking_pets")
@@ -89,8 +86,6 @@ export default async function handler(req, res) {
       console.error("Error fetching booking pets:", bookingPetsError);
       return res.status(500).json({ error: "Failed to fetch booking pets" });
     }
-
-    console.log("Retrieved booking_pets:", bookingPets); // Debug log
 
     // Map booking pets by booking_id
     const bookingPetsMap = {};
@@ -104,8 +99,6 @@ export default async function handler(req, res) {
     } else {
       console.log("No booking_pets records found");
     }
-
-    console.log("Booking pets map:", bookingPetsMap); // Debug log
 
     // Gather all pet IDs
     const allPetIds = bookingPets ? bookingPets.map((item) => item.pet_id) : [];
@@ -172,10 +165,6 @@ export default async function handler(req, res) {
           bookingPetsData = bookingPetIds
             .map((petId) => petsMap[petId])
             .filter((pet) => pet); // กรองเฉพาะข้อมูลที่มีจริง
-
-          console.log(
-            `Using specified pets for booking ${booking.booking_id}: ${bookingPetsData.length} pets found`
-          );
         }
 
         // ถ้าไม่มีข้อมูลสัตว์เลี้ยงเลย ให้ใช้สัตว์เลี้ยงทั้งหมดของ owner
@@ -185,14 +174,7 @@ export default async function handler(req, res) {
           petsByOwner[booking.owner_id].length > 0
         ) {
           bookingPetsData = petsByOwner[booking.owner_id];
-          console.log(
-            `Using all owner's pets for booking ${booking.booking_id}: ${bookingPetsData.length} pets found from owner ${booking.owner_id}`
-          );
         }
-
-        console.log(
-          `Booking ${booking.booking_id} final count: ${bookingPetsData.length} pets`
-        ); // Debug log
 
         // Format dates
         let bookedDate = "N/A";
