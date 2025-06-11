@@ -4,7 +4,7 @@ import Sidebar from "@/components/sitters/SidebarSitter";
 import Topbar from "@/components/sitters/TopbarSitter";
 import Image from "next/image";
 import { Formik, Form, useFormikContext } from "formik";
-import { useEffect, useState, useMemo, memo } from "react";
+import { useEffect, useState, useMemo, memo, useRef } from "react";
 import { profileSchema } from "@/components/form/validationSchema";
 import ImageUpload from "@/components/profile/ImageUpload";
 import GalleryUpload from "@/components/profile/GalleryUpload";
@@ -33,7 +33,7 @@ import {
 } from "@/utils/addressHelpers";
 import { uploadFile, uploadMultipleFiles } from "@/utils/uploadHelpers";
 
-// Dynamic imports with loading state
+// อัพเดต Dynamic Import
 export const MapSitterWithNoSSR = dynamic(
   () => import("@/components/profile/MapSitter"),
   {
@@ -73,6 +73,8 @@ export default function PetSitterProfilePage() {
     profile_image: null,
     gallery: [],
     pet_type: [],
+    latitude: null,
+    longitude: null,
   });
   const [sitterStatus, setSitterStatus] = useState(null);
   const [adminSuggestion, setAdminSuggestion] = useState("");
@@ -80,22 +82,20 @@ export default function PetSitterProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // เรียกข้อมูลโปรไฟล์
     const fetchProfile = async () => {
-      setIsLoading(true);
-
-      if (!user?.id) {
-        setIsLoading(false);
-        return;
-      }
+      if (!user?.id) return;
 
       try {
-        const res = await axios.get("/api/pet-sitters/update-profile", {
+        setIsLoading(true);
+        const response = await axios.get("/api/pet-sitters/update-profile", {
           withCredentials: true,
-          timeout: 10000,
         });
 
-        const data = res.data.data;
-        if (data) {
+        if (response.data?.data) {
+          const data = response.data.data;
+
+          // อัพเดต initialValues ด้วยข้อมูลที่ได้จาก API
           setInitialValues({
             full_name: data.full_name ?? "",
             experience: data.experience ?? "",
@@ -141,6 +141,8 @@ export default function PetSitterProfilePage() {
             // เพิ่มข้อมูลสถานะการรออนุมัติของรูปภาพ
             has_pending_profile: data.has_pending_profile ?? false,
             has_pending_gallery: data.has_pending_gallery ?? false,
+            latitude: data.lat || null,
+            longitude: data.lng || null,
           });
 
           setSitterStatus(data.status);
@@ -148,7 +150,6 @@ export default function PetSitterProfilePage() {
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
-        // แสดงการแจ้งเตือน
         toast.error("Could not fetch profile data. Please try again later.");
       } finally {
         setIsLoading(false);
@@ -311,8 +312,8 @@ export default function PetSitterProfilePage() {
         gallery_image_url: galleryUrls.filter(
           (url) => url && typeof url === "string"
         ),
-        lat: values.latitude,
-        lng: values.longitude,
+        lat: values.latitude ? parseFloat(values.latitude) : null,
+        lng: values.longitude ? parseFloat(values.longitude) : null,
       };
 
       // Submit to API
@@ -322,6 +323,9 @@ export default function PetSitterProfilePage() {
         payload,
         {
           withCredentials: true,
+          headers: {
+            "X-Form-Submit": "true",
+          },
         }
       );
 
@@ -436,8 +440,11 @@ export default function PetSitterProfilePage() {
               validationSchema={profileSchema}
               onSubmit={handleSubmit}
             >
-              {({ values, setFieldValue, errors, touched }) => (
-                <Form className="w-full flex flex-col gap-6 px-4 py-6 md:px-10 md:pb-20 md:pt-10">
+              {({ values, setFieldValue, errors, touched, submitForm }) => (
+                <Form
+                  noValidate
+                  className="w-full flex flex-col gap-6 px-4 py-6 md:px-10 md:pb-20 md:pt-10"
+                >
                   <FormikErrorLogger />
 
                   {/* Header with status indicator */}
@@ -638,6 +645,7 @@ PetSitterInfoSection.displayName = "PetSitterInfoSection";
 // Address Section Component
 const AddressSection = memo(() => {
   const { values, setFieldValue, errors, touched } = useFormikContext();
+  const lastPositionRef = useRef({ lat: null, lng: null });
 
   // Update postal code when subdistrict changes
   useEffect(() => {
@@ -696,6 +704,14 @@ const AddressSection = memo(() => {
     ]
   );
 
+  // สร้าง initialPosition สำหรับส่งให้ MapSitter
+  const initialPosition = useMemo(() => {
+    if (values.latitude && values.longitude) {
+      return [parseFloat(values.latitude), parseFloat(values.longitude)];
+    }
+    return null;
+  }, [values.latitude, values.longitude]);
+
   return (
     <section className="bg-white flex flex-col rounded-2xl px-4 sm:px-6 md:px-20 py-6 sm:py-10 gap-6">
       <h2 className="text-[#AEB1C3] font-bold text-[18px] sm:text-[20px]">
@@ -714,6 +730,7 @@ const AddressSection = memo(() => {
       <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 w-full">
         <ProvinceField
           onChange={(selectedProvince) => {
+            console.log("Province change in form state only");
             setFieldValue("province", selectedProvince);
             setFieldValue("district", "");
             setFieldValue("sub_district", "");
@@ -752,9 +769,28 @@ const AddressSection = memo(() => {
         />
       </div>
 
-      <div className="bg-gray-300 rounded-lg overflow-hidden relative w-full h-[400px]">
+      <div className="bg-gray-300 z-0 rounded-lg overflow-hidden relative w-full h-[400px]">
         {showMap ? (
-          <MapSitterWithNoSSR addressDetails={addressDetails} />
+          <MapSitterWithNoSSR
+            // ส่งค่า initial position จาก form state
+            initialPosition={initialPosition}
+            addressDetails={addressDetails}
+            // ไม่เปิดใช้งาน autoSave สำหรับหน้า profile
+            autoSave={false}
+            // รับค่าพิกัดที่เปลี่ยนแปลงและเก็บไว้ใน form state
+            onPositionChange={(lat, lng) => {
+              // ตรวจสอบว่าค่าเปลี่ยนไปจริงๆ หรือไม่ ป้องกันการ set ซ้ำๆ
+              if (
+                lastPositionRef.current.lat !== lat ||
+                lastPositionRef.current.lng !== lng
+              ) {
+                lastPositionRef.current = { lat, lng };
+                setFieldValue("latitude", lat);
+                setFieldValue("longitude", lng);
+                console.log("Position updated in form:", lat, lng);
+              }
+            }}
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <p className="text-gray-500">กรุณาเลือกจังหวัดและอำเภอก่อน</p>

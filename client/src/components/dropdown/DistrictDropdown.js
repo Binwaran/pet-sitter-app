@@ -44,9 +44,13 @@ const DistrictDropdown = ({
     <div ref={dropdownRef} className="relative w-full">
       <button
         id={id}
+        type="button"
         tabIndex={0}
         role="button"
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={(e) => {
+          e.preventDefault(); // ป้องกันการ submit
+          setIsOpen((prev) => !prev);
+        }}
         className={`flex items-center justify-between w-full pl-3 pr-4 py-3 border border-[#DCDFED] rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] ${
           !actualProvinceCode ? "opacity-50 pointer-events-none" : ""
         } ${className}`}
@@ -65,7 +69,8 @@ const DistrictDropdown = ({
           {filteredDistricts.map((district) => (
             <li
               key={district.districtCode}
-              onClick={() => {
+              onClick={(event) => {
+                event.preventDefault();
                 onChange({
                   value: district.districtCode,
                   label: district.districtNameEn,
