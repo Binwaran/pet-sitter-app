@@ -9,6 +9,7 @@ import {
   ButtonOrangeLight,
 } from "@/components/buttons/OrangeButtons";
 import { useAuth } from "@/context/AuthContext"; // เพิ่มการนำเข้า useAuth
+import Modal from "@/components/Modal";
 
 // Pet type styles for tags
 const PET_TYPE_STYLES = {
@@ -45,7 +46,7 @@ const STATUS_MAP = {
     dot: "bg-[#1CCD83]",
   },
   cancelled: {
-    text: "Canceled",
+    text: "Cancelled",
     color: "text-[#EA1010]",
     dot: "bg-[#EA1010]",
   },
@@ -216,7 +217,9 @@ const OwnerProfileModal = ({ owner, isOpen, onClose }) => {
           {/* Right column with owner details */}
           <div className="flex-1 flex flex-col gap-5 md:gap-10 p-4 md:p-6 bg-[#FAFAFB] rounded-lg">
             <div className="flex flex-col gap-1">
-              <h4 className="text-[#AEB1C3] text-xl font-bold">Pet Owner Name</h4>
+              <h4 className="text-[#AEB1C3] text-xl font-bold">
+                Pet Owner Name
+              </h4>
               <p className="text-black font-medium">{owner.name || "N/A"}</p>
             </div>
 
@@ -231,7 +234,9 @@ const OwnerProfileModal = ({ owner, isOpen, onClose }) => {
             </div>
 
             <div className="flex flex-col gap-1">
-              <h4 className="text-[#AEB1C3] text-xl font-bold">Date of Birth</h4>
+              <h4 className="text-[#AEB1C3] text-xl font-bold">
+                Date of Birth
+              </h4>
               <p className="text-black font-medium">
                 {owner.birthday || "N/A"}
               </p>
@@ -254,6 +259,8 @@ export default function BookingDetailPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOwnerModalOpen, setIsOwnerModalOpen] = useState(false);
   const [ownerData, setOwnerData] = useState(null);
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [timeNow, setTimeNow] = useState(new Date());
 
   const handleOpenPetModal = (pet) => {
     setSelectedPet(pet);
@@ -263,6 +270,26 @@ export default function BookingDetailPage() {
   const handleClosePetModal = () => {
     setIsModalOpen(false);
     setSelectedPet(null);
+  };
+
+  // Add this useEffect to update the time every minute - place after the other useEffect
+  useEffect(() => {
+    // Only set up timer if booking is in "in service" status
+    if (booking?.status === "in service") {
+      const timer = setInterval(() => {
+        setTimeNow(new Date());
+      }, 60000); // Update every minute
+
+      return () => clearInterval(timer);
+    }
+  }, [booking?.status]);
+
+  // Add this function to check if the complete service button should be enabled - place before renderActionButtons
+  const isCompleteServiceEnabled = () => {
+    if (!booking || !booking.end_time) return false;
+
+    const endTime = new Date(booking.end_time);
+    return timeNow >= endTime;
   };
 
   // Fetch booking details
@@ -319,16 +346,19 @@ export default function BookingDetailPage() {
     }
   };
 
-  const handleRejectBooking = async () => {
-    if (!confirm("Are you sure you want to reject this booking?")) return;
+  const handleRejectBooking = () => {
+    setIsRejectModalOpen(true);
+  };
 
+  // Add this new function to handle the actual rejection
+  const confirmRejectBooking = async () => {
     try {
       setActionLoading(true);
       await axios.post(
         `/api/pet-sitters/bookings/${id}/reject`,
         {},
         {
-          withCredentials: true, // ส่ง cookie ไปกับ request
+          withCredentials: true,
         }
       );
 
@@ -341,6 +371,7 @@ export default function BookingDetailPage() {
       console.error("Error rejecting booking:", error);
       alert("Failed to reject booking. Please try again.");
     } finally {
+      setIsRejectModalOpen(false);
       setActionLoading(false);
     }
   };
@@ -437,12 +468,25 @@ export default function BookingDetailPage() {
         );
 
       case "in service":
+        // Update the in-service case to check if button should be enabled
+        const isEnabled = isCompleteServiceEnabled();
+        const buttonTooltip = isEnabled
+          ? ""
+          : "Button will be enabled at the end of booking time";
+
         return (
-          <ButtonOrange
-            text="Success"
-            onClick={handleCompleteService}
-            disabled={actionLoading}
-          />
+          <div className="relative group">
+            <ButtonOrange
+              text="Success"
+              onClick={handleCompleteService}
+              disabled={!isEnabled || actionLoading}
+            />
+            {!isEnabled && (
+              <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                {buttonTooltip}
+              </div>
+            )}
+          </div>
         );
 
       default:
@@ -451,31 +495,31 @@ export default function BookingDetailPage() {
   };
 
   const handleViewOwnerProfile = async () => {
-  console.log("handleViewOwnerProfile clicked");
-  
-  try {
-    if (!booking) {
-      console.log("No booking data");
-      return;
+    console.log("handleViewOwnerProfile clicked");
+
+    try {
+      if (!booking) {
+        console.log("No booking data");
+        return;
+      }
+
+      // สร้าง object จากข้อมูลที่มีอยู่แล้วใน booking
+      // ไม่จำเป็นต้องมี booking.owner_id
+      const ownerInfo = {
+        name: booking.owner_name || "Unknown Owner",
+        email: booking.owner_email || "",
+        phone: booking.owner_phone || "",
+        profile_image_url: booking.owner_image || "",
+        birthday: booking.owner_birthday || "",
+      };
+
+      console.log("Created owner info:", ownerInfo);
+      setOwnerData(ownerInfo);
+      setIsOwnerModalOpen(true);
+    } catch (error) {
+      console.error("Error viewing owner profile:", error);
     }
-    
-    // สร้าง object จากข้อมูลที่มีอยู่แล้วใน booking
-    // ไม่จำเป็นต้องมี booking.owner_id
-    const ownerInfo = {
-      name: booking.owner_name || "Unknown Owner",
-      email: booking.owner_email || "",
-      phone: booking.owner_phone || "",
-      profile_image_url: booking.owner_image || "",
-      birthday: booking.owner_birthday || ""
-    };
-    
-    console.log("Created owner info:", ownerInfo);
-    setOwnerData(ownerInfo);
-    setIsOwnerModalOpen(true);
-  } catch (error) {
-    console.error("Error viewing owner profile:", error);
-  }
-};
+  };
 
   const handleCloseOwnerModal = () => {
     console.log("Closing owner modal");
@@ -681,6 +725,20 @@ export default function BookingDetailPage() {
         isOpen={isOwnerModalOpen}
         onClose={handleCloseOwnerModal}
       />
+      <Modal
+        open={isRejectModalOpen}
+        title="Reject Confirmation"
+        onClose={() => setIsRejectModalOpen(false)}
+        onConfirm={confirmRejectBooking}
+        confirmText="Reject Booking"
+        cancelText="Cancel"
+        disabled={actionLoading}
+        maxWidthClass="md:max-w-100"
+      >
+        <p className="text-[#7B7E8F] font-medium leading-7">
+          Are you sure to reject this booking?
+        </p>
+      </Modal>
     </div>
   );
 }
