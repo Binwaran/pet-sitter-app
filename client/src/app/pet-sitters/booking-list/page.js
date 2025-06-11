@@ -31,7 +31,7 @@ const STATUS_MAP = {
     dot: "bg-[#1CCD83]",
   },
   cancelled: {
-    text: "Canceled",
+    text: "Cancelled",
     color: "text-[#EA1010]",
     dot: "bg-[#EA1010]",
   },
@@ -522,7 +522,7 @@ const BookingPage = () => {
                     },
                     { value: "in service", label: "In service" },
                     { value: "success", label: "Success" },
-                    { value: "cancelled", label: "Canceled" },
+                    { value: "cancelled", label: "Cancelled" },
                   ]}
                   className="w-full h-[48px] bg-white border border-[#E4E4E7] rounded-lg"
                 />
