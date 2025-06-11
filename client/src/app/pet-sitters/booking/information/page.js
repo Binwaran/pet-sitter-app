@@ -38,7 +38,7 @@ export default function BookingInformationPage() {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
@@ -47,11 +47,9 @@ export default function BookingInformationPage() {
     }
 
     // โหลดข้อมูลการจองที่มีอยู่แล้ว (เช่น ข้อมูล sitter, วันที่, เวลา, ยอดรวม)
-    // นี่เป็นสิ่งสำคัญหากขั้นตอนก่อนหน้านี้ได้บันทึกข้อมูลที่ต้องรวมเข้าด้วยกัน
     const existingBookingDetails = JSON.parse(localStorage.getItem('bookingDetails') || '{}');
 
     // สร้างหมายเลข transaction ที่นี่ก่อนบันทึก
-    // สร้างก็ต่อเมื่อยังไม่มี transactionNo อยู่ในข้อมูลที่มีอยู่ (เช่น ถ้าผู้ใช้ย้อนกลับมาที่หน้านี้)
     const currentTransactionNo = existingBookingDetails.transactionNo || generateTransactionNo(); 
 
     // สร้าง Transaction Date ปัจจุบัน
@@ -59,14 +57,46 @@ export default function BookingInformationPage() {
         weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
     });
 
+    // --- เรียก API คำนวณราคา ---
+    let total = 0;
+    try {
+      // รองรับหลายตัว: รวมราคาทุกตัว
+      if (selectedPets.length > 0 && existingBookingDetails.date && existingBookingDetails.duration) {
+        const startDate = existingBookingDetails.date;
+        // แปลง duration เป็นจำนวนวัน (รองรับกรณี "3 days" หรือ "1 day")
+        const daysMatch = existingBookingDetails.duration.match(/(\d+)/);
+        const numDays = daysMatch ? parseInt(daysMatch[1], 10) : 1;
+        const endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + numDays - 1);
+        for (const pet of selectedPets) {
+          const res = await fetch('/api/calculate-price', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: pet.type?.toLowerCase() || pet.type,
+              weight: pet.weight,
+              startDate,
+              endDate: endDate.toISOString().slice(0, 10),
+              specialDayFlags: []
+            })
+          });
+          const data = await res.json();
+          if (data.totalPrice) total += data.totalPrice;
+        }
+      }
+    } catch (err) {
+      // ถ้าคำนวณราคาไม่ได้ ให้ใช้ 0
+      total = 0;
+    }
+
     const bookingDetails = {
       ...existingBookingDetails, 
       ...form,
       pets: selectedPets,
       transactionNo: currentTransactionNo, 
       transactionDate: transactionDate, 
+      total,
     };
-    
     localStorage.setItem('bookingDetails', JSON.stringify(bookingDetails));
     localStorage.removeItem('bookingPets');
     router.push('/pet-sitters/booking/payment');
