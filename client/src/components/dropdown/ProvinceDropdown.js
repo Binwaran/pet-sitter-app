@@ -18,17 +18,26 @@ const ProvinceDropdown = ({ id, value, onChange, className = "" }) => {
   }, []);
 
   // แก้ไขวิธีดึงค่า selectedProvince
-  const selectedProvince = value && typeof value === 'object'
-  ? provinces.find(province => String(province.provinceCode) === String(value.value))
-  : provinces.find(province => String(province.provinceCode) === String(value));
+  const selectedProvince =
+    value && typeof value === "object"
+      ? provinces.find(
+          (province) => String(province.provinceCode) === String(value.value)
+        )
+      : provinces.find(
+          (province) => String(province.provinceCode) === String(value)
+        );
 
   return (
     <div ref={dropdownRef} className="relative w-full">
       <button
         id={id}
+        type="button"
         tabIndex={0}
         role="button"
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={(e) => {
+          e.preventDefault(); // ป้องกันการ submit
+          setIsOpen((prev) => !prev);
+        }}
         className={`flex items-center justify-between w-full pl-3 pr-4 py-3 border rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] ${className}`}
       >
         <span
@@ -45,8 +54,8 @@ const ProvinceDropdown = ({ id, value, onChange, className = "" }) => {
           {provinces.map((province) => (
             <li
               key={province.provinceCode}
-              onClick={() => {
-                // แก้ไขส่วนนี้ให้ส่ง object ที่มีทั้ง value และ label
+              onClick={(event) => {
+                event.preventDefault();
                 onChange({
                   value: province.provinceCode,
                   label: province.provinceNameEn,

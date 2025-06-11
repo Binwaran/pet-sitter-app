@@ -78,14 +78,19 @@ export default async function handler(req, res) {
     if (req.method === "POST") {
       console.log("Processing POST request for user ID:", userId);
       const updateData = req.body;
+      const isFormSubmit = req.headers['x-form-submit'] === 'true';
+      
+      if (!isFormSubmit) {
+        return res.status(400).json({ 
+          error: "Missing form submission header. This API should only be called from form submit."
+        });
+      }
 
       // แยกข้อมูลสำหรับตาราง users และ pet_sitter
       const userUpdateData = {
         name: updateData.full_name,
         email: updateData.email,
         phone: updateData.phone_number,
-        // ไม่อัพเดทรูปโปรไฟล์โดยตรง ให้ใช้ pending_profile_image_url แทน
-        // profile_image_url: updateData.profile_image_url,
       };
 
       // ตรวจสอบว่ามีโปรไฟล์ pet_sitter อยู่แล้วหรือไม่
@@ -180,6 +185,11 @@ export default async function handler(req, res) {
         profile_image_url: updatedProfile.profile_image_url, // แสดงรูปเดิมที่อนุมัติแล้ว
         pending_profile_image_url: updateData.profile_image_url, // เพิ่มข้อมูลรูปที่รออนุมัติ
       };
+
+      if (updateData.lat && updateData.lng) {
+        petSitterData.lat = updateData.lat;
+        petSitterData.lng = updateData.lng;
+      }
 
       return res.status(200).json({
         success: true,
