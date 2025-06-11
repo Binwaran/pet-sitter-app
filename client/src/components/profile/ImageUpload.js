@@ -62,8 +62,8 @@ const ImageUpload = memo(
             />
           )}
 
-          {/* แสดง badge เมื่อเป็นไฟล์ใหม่หรือมีการ flag ว่ากำลังรออนุมัติ */}
-          {requiresApproval && (value instanceof File || isPending) && (
+          {/* แสดง badge เฉพาะเมื่อมีการ flag ว่ากำลังรออนุมัติ */}
+          {requiresApproval && isPending && (
             <div className="absolute top-0 right-0 bg-amber-400 text-white text-xs px-2 py-1 rounded-b-md rounded-tr-md">
               Pending Approval
             </div>
