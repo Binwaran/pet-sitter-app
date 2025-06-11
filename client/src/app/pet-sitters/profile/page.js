@@ -694,6 +694,15 @@ const AddressSection = memo(() => {
           : values.sub_district,
       postalCode: values.post_code,
       addressDetail: values.address_detail,
+      // เพิ่มข้อมูลจาก database ด้วย
+      provinceId:
+        typeof values.province === "object" ? values.province.value : null,
+      districtId:
+        typeof values.district === "object" ? values.district.value : null,
+      subdistrictId:
+        typeof values.sub_district === "object"
+          ? values.sub_district.value
+          : null,
     }),
     [
       values.province,
@@ -707,7 +716,12 @@ const AddressSection = memo(() => {
   // สร้าง initialPosition สำหรับส่งให้ MapSitter
   const initialPosition = useMemo(() => {
     if (values.latitude && values.longitude) {
-      return [parseFloat(values.latitude), parseFloat(values.longitude)];
+      const lat = parseFloat(values.latitude);
+      const lng = parseFloat(values.longitude);
+
+      if (!isNaN(lat) && !isNaN(lng)) {
+        return [lat, lng];
+      }
     }
     return null;
   }, [values.latitude, values.longitude]);
@@ -772,14 +786,11 @@ const AddressSection = memo(() => {
       <div className="bg-gray-300 z-0 rounded-lg overflow-hidden relative w-full h-[400px]">
         {showMap ? (
           <MapSitterWithNoSSR
-            // ส่งค่า initial position จาก form state
             initialPosition={initialPosition}
             addressDetails={addressDetails}
-            // ไม่เปิดใช้งาน autoSave สำหรับหน้า profile
             autoSave={false}
-            // รับค่าพิกัดที่เปลี่ยนแปลงและเก็บไว้ใน form state
+            allowManualPin={true} // เปิดให้ผู้ใช้ปักหมุดเองได้
             onPositionChange={(lat, lng) => {
-              // ตรวจสอบว่าค่าเปลี่ยนไปจริงๆ หรือไม่ ป้องกันการ set ซ้ำๆ
               if (
                 lastPositionRef.current.lat !== lat ||
                 lastPositionRef.current.lng !== lng
@@ -787,7 +798,6 @@ const AddressSection = memo(() => {
                 lastPositionRef.current = { lat, lng };
                 setFieldValue("latitude", lat);
                 setFieldValue("longitude", lng);
-                console.log("Position updated in form:", lat, lng);
               }
             }}
           />
@@ -796,6 +806,21 @@ const AddressSection = memo(() => {
             <p className="text-gray-500">กรุณาเลือกจังหวัดและอำเภอก่อน</p>
           </div>
         )}
+      </div>
+
+      {/* เพิ่มช่องแสดงพิกัดปัจจุบัน */}
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 w-full">
+        <div className="text-xs text-gray-500 flex gap-2">
+          <span>พิกัดปัจจุบัน:</span>
+          {values.latitude && values.longitude ? (
+            <span className="font-medium">
+              {parseFloat(values.latitude).toFixed(6)},{" "}
+              {parseFloat(values.longitude).toFixed(6)}
+            </span>
+          ) : (
+            <span className="italic">ไม่ได้ระบุพิกัด</span>
+          )}
+        </div>
       </div>
     </section>
   );

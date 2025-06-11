@@ -22,11 +22,43 @@ function MapAdjuster({ position, zoom }) {
 
   useEffect(() => {
     if (position && position[0] && position[1]) {
-      map.setView(position, zoom || map.getZoom());
+      // เช็คว่าพิกัดที่ได้อยู่ห่างจากจุดกลางปัจจุบันเกิน threshold หรือไม่
+      const center = map.getCenter();
+      const currentPos = [center.lat, center.lng];
+      const distance = getDistance(position, currentPos);
+
+      // ถ้าพิกัดใหม่ห่างจากพิกัดปัจจุบันเกิน 10 เมตร หรือถูกซูมที่ระดับต่างกัน ให้ปรับมุมมองแผนที่
+      if (distance > 10 || map.getZoom() !== (zoom || DEFAULT_ZOOM)) {
+        // flyTo ให้มีการเคลื่อนไหวแบบ smooth animation
+        map.flyTo(position, zoom || map.getZoom(), {
+          animate: true,
+          duration: 1, // 1 วินาที
+        });
+      }
     }
   }, [position, zoom, map]);
 
   return null;
+}
+
+// Helper function to calculate distance between two coordinates in meters
+function getDistance(coord1, coord2) {
+  if (!coord1 || !coord2) return 0;
+
+  // Haversine formula
+  const R = 6371e3; // metres
+  const φ1 = (coord1[0] * Math.PI) / 180; // φ, λ in radians
+  const φ2 = (coord2[0] * Math.PI) / 180;
+  const Δφ = ((coord2[0] - coord1[0]) * Math.PI) / 180;
+  const Δλ = ((coord2[1] - coord1[1]) * Math.PI) / 180;
+
+  const a =
+    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  const d = R * c; // in metres
+  return d;
 }
 
 // Hook สำหรับ debounce
@@ -52,6 +84,7 @@ export default function MapSitter({
   initialPosition = null,
   onPositionChange = null,
   autoSave = false,
+  allowManualPin = true, // สามารถกำหนดพิกัดด้วยการคลิกบนแผนที่
 }) {
   // State hooks
   const [isClient, setIsClient] = useState(false);
@@ -59,8 +92,11 @@ export default function MapSitter({
   const [userInfo, setUserInfo] = useState({ tradeName: "Pet Sitter" });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [draggable, setDraggable] = useState(allowManualPin);
+  const [showConfirmManualPin, setShowConfirmManualPin] = useState(false);
   const { user } = useAuth();
-  const lastSearchRef = useRef(""); // เพื่อป้องกันการค้นหาซ้ำ
+  const lastSearchRef = useRef("");
+  const mapRef = useRef(null);
 
   // เพิ่ม client-side CSS import
   useEffect(() => {
@@ -82,7 +118,7 @@ export default function MapSitter({
     }
   }, [initialPosition]);
 
-  // Format address for API
+  // Format address for API - ปรับปรุงให้แม่นยำมากขึ้น
   const formattedAddress = useMemo(() => {
     if (!debouncedAddress || Object.keys(debouncedAddress).length === 0) {
       return null;
@@ -95,76 +131,183 @@ export default function MapSitter({
       return null;
     }
 
-    // แปลงข้อมูลที่อยู่ให้เป็นสตริงสำหรับการค้นหา
+    // แปลงข้อมูลที่อยู่ให้เป็นสตริงสำหรับการค้นหาและตัดข้อความว่างเปล่า
     const provinceStr =
-      typeof province === "object" ? province.label : String(province || "");
+      typeof province === "object"
+        ? province.label?.trim()
+        : String(province || "").trim();
     const districtStr =
-      typeof district === "object" ? district.label : String(district || "");
+      typeof district === "object"
+        ? district.label?.trim()
+        : String(district || "").trim();
     const subDistrictStr =
       typeof subDistrict === "object"
-        ? subDistrict.label
-        : String(subDistrict || "");
-    const postalCodeStr = String(postalCode || "");
-    const addressDetailStr = String(addressDetail || "");
+        ? subDistrict.label?.trim()
+        : String(subDistrict || "").trim();
+    const postalCodeStr = String(postalCode || "").trim();
+    const addressDetailStr = String(addressDetail || "").trim();
 
-    // สร้างที่อยู่เต็มรูปแบบสำหรับการ geocode
-    return addressDetailStr
-      ? `${addressDetailStr} ${subDistrictStr}, ${districtStr}, ${provinceStr} ${postalCodeStr}, Thailand`
-      : `${subDistrictStr}, ${districtStr}, ${provinceStr} ${postalCodeStr}, Thailand`;
+    // ใช้รูปแบบที่เฉพาะเจาะจงสำหรับประเทศไทย
+    if (addressDetailStr) {
+      return `${addressDetailStr}, ${subDistrictStr}, ${districtStr}, ${provinceStr} ${postalCodeStr}, Thailand`;
+    } else {
+      return `${subDistrictStr}, ${districtStr}, ${provinceStr} ${postalCodeStr}, Thailand`;
+    }
   }, [debouncedAddress]);
 
-  // Geocode address when it changes
-useEffect(() => {
-  if (!formattedAddress || formattedAddress === lastSearchRef.current) return;
-  
-  let isActive = true; // ป้องกัน race condition
-  lastSearchRef.current = formattedAddress;
-  
-  console.log("Searching for address:", formattedAddress);
-  
-  const searchAddress = async () => {
-    try {
-      const response = await axios.get("/api/geocode/search", {
-        params: { q: formattedAddress },
-        timeout: 10000,
-      });
-      
-      // ถ้า component unmount ไปแล้ว ไม่ต้องอัพเดต state
-      if (!isActive) return;
-      
-      console.log("Geocoding response:", response.data);
-      
-      if (response.data?.[0]) {
-        const { lat, lon } = response.data[0];
-        const newLat = parseFloat(lat);
-        const newLng = parseFloat(lon);
-        
-        if (!isNaN(newLat) && !isNaN(newLng)) {
-          const newPosition = [newLat, newLng];
-          setPosition(newPosition);
-          
-          // แจ้ง parent component เกี่ยวกับการเปลี่ยนแปลงพิกัด
-          if (onPositionChange) {
-            onPositionChange(newLat, newLng);
-          }
+  // เพิ่ม function สำหรับปักหมุดด้วยการคลิก
+  const handleMapClick = useCallback(
+    (e) => {
+      if (!allowManualPin) return;
+
+      const { lat, lng } = e.latlng;
+      const newLat = parseFloat(lat);
+      const newLng = parseFloat(lng);
+
+      if (!isNaN(newLat) && !isNaN(newLng)) {
+        setPosition([newLat, newLng]);
+
+        // แสดงข้อความยืนยันว่าต้องการปักหมุดที่นี่จริงหรือไม่
+        setShowConfirmManualPin(true);
+
+        // หลังจากแสดงข้อความ 3 วินาที ให้ซ่อนข้อความ
+        setTimeout(() => {
+          setShowConfirmManualPin(false);
+        }, 3000);
+
+        if (onPositionChange) {
+          onPositionChange(newLat, newLng);
         }
       }
+    },
+    [allowManualPin, onPositionChange]
+  );
+
+  // สำหรับการอัพเดตพิกัดเมื่อลากหมุด
+  const handleMarkerDrag = useCallback(
+    (e) => {
+      if (!allowManualPin) return;
+
+      const { lat, lng } = e.latlng;
+      const newLat = parseFloat(lat);
+      const newLng = parseFloat(lng);
+
+      if (!isNaN(newLat) && !isNaN(newLng)) {
+        setPosition([newLat, newLng]);
+
+        if (onPositionChange) {
+          onPositionChange(newLat, newLng);
+        }
+      }
+    },
+    [allowManualPin, onPositionChange]
+  );
+
+  // เพิ่ม component สำหรับให้สามารถคลิกบนแผนที่ได้
+  const MapEvents = () => {
+    const map = useMap();
+    mapRef.current = map;
+
+    useEffect(() => {
+      if (allowManualPin) {
+        map.on("click", handleMapClick);
+      }
+
+      return () => {
+        if (allowManualPin) {
+          map.off("click", handleMapClick);
+        }
+      };
+    }, [map]);
+
+    return null;
+  };
+
+  // Function สำหรับแปลงพิกัดเป็นที่อยู่ (Reverse Geocoding)
+  const reverseGeocodePosition = useCallback(async (lat, lng) => {
+    try {
+      const response = await axios.get("/api/geocode/reverse", {
+        params: { lat, lng },
+        timeout: 10000,
+      });
+
+      if (response.data && response.data.display_name) {
+        return response.data.display_name;
+      }
     } catch (err) {
-      if (!isActive) return;
-      console.error("Error geocoding address:", err);
-      setError("เกิดข้อผิดพลาดในการค้นหาพิกัด");
+      console.error("Error reverse geocoding:", err);
     }
-  };
-  
-  // ดีเลย์การค้นหาเล็กน้อย
-  const timer = setTimeout(searchAddress, 500);
-  
-  // Cleanup function
-  return () => {
-    isActive = false;
-    clearTimeout(timer);
-  };
-}, [formattedAddress, user?.id, onPositionChange, autoSave]);
+
+    return null;
+  }, []);
+
+  // Geocode address when it changes
+  useEffect(() => {
+    if (!formattedAddress || formattedAddress === lastSearchRef.current) return;
+
+    let isActive = true; // ป้องกัน race condition
+    lastSearchRef.current = formattedAddress;
+
+    setLoading(true);
+    console.log("Searching for address:", formattedAddress);
+
+    // ทำให้การค้นหาแม่นยำขึ้นโดยให้น้ำหนักกับส่วนต่างๆ ของที่อยู่
+    const searchAddress = async () => {
+      try {
+        // ใช้ค่า timeout ที่นานขึ้นเพื่อรองรับการค้นหาที่ซับซ้อน
+        const response = await axios.get("/api/geocode/search", {
+          params: { q: formattedAddress },
+          timeout: 20000,
+        });
+
+        // ถ้า component unmount ไปแล้ว ไม่ต้องอัพเดต state
+        if (!isActive) return;
+
+        setLoading(false);
+
+        if (response.data && response.data.length > 0) {
+          // เลือกผลลัพธ์ที่ดีที่สุดจากการค้นหา
+          const bestResult = response.data[0];
+          const newLat = parseFloat(bestResult.lat);
+          const newLng = parseFloat(bestResult.lon);
+
+          if (!isNaN(newLat) && !isNaN(newLng)) {
+            const newPosition = [newLat, newLng];
+            setPosition(newPosition);
+            setError(null);
+
+            // แจ้ง parent component เกี่ยวกับการเปลี่ยนแปลงพิกัด
+            if (onPositionChange) {
+              onPositionChange(newLat, newLng);
+            }
+          }
+        } else {
+          // ถ้าไม่พบผลลัพธ์ที่เข้าเกณฑ์
+          setError("ไม่พบที่อยู่ที่ระบุ โปรดปรับการค้นหาหรือปักหมุดด้วยตนเอง");
+
+          // คงตำแหน่งเดิมไว้ถ้ามี
+          if (!position && initialPosition) {
+            setPosition(initialPosition);
+          }
+        }
+      } catch (err) {
+        if (!isActive) return;
+
+        console.error("Error geocoding address:", err);
+        setError("เกิดข้อผิดพลาดในการค้นหาพิกัด");
+        setLoading(false);
+      }
+    };
+
+    // ดีเลย์การค้นหาเล็กน้อย เพื่อรองรับการพิมพ์ต่อเนื่อง
+    const timer = setTimeout(searchAddress, 500);
+
+    // Cleanup function
+    return () => {
+      isActive = false;
+      clearTimeout(timer);
+    };
+  }, [formattedAddress, onPositionChange, position, initialPosition]);
 
   // Initial data fetch - load only once when component mounts
   useEffect(() => {
@@ -218,29 +361,82 @@ useEffect(() => {
   }
 
   return (
-    <MapContainer
-      center={position || DEFAULT_POSITION}
-      zoom={DEFAULT_ZOOM}
-      style={{ height: "100%", width: "100%" }}
-      scrollWheelZoom={false}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-
-      {position && (
-        <Marker position={position} icon={petSitterIcon}>
-          <Popup>
-            <div className="text-center">
-              <strong>{userInfo.tradeName}</strong>
-              <p className="text-sm">{formattedAddress}</p>
-            </div>
-          </Popup>
-        </Marker>
+    <div className="relative w-full h-full">
+      {loading && (
+        <div className="absolute top-0 left-0 w-full h-full bg-white bg-opacity-70 flex items-center justify-center z-[1001]">
+          <div className="text-center">
+            <div className="inline-block w-6 h-6 border-4 border-[#FF7C43] border-t-transparent rounded-full animate-spin"></div>
+            <p className="mt-2 text-sm">กำลังโหลดแผนที่...</p>
+          </div>
+        </div>
       )}
 
-      <MapAdjuster position={position} zoom={DEFAULT_ZOOM} />
-    </MapContainer>
+      {/* ย้าย Control มาไว้ข้างนอก MapContainer */}
+      {allowManualPin && (
+        <div className="absolute bottom-4 right-4 z-[1000]">
+          <div className="bg-white p-2 rounded shadow">
+            <button
+              type="button"
+              className="bg-orange-500 text-white rounded p-2 text-sm"
+              onClick={() => setDraggable(!draggable)}
+            >
+              {draggable ? "หยุดปรับตำแหน่งหมุด" : "ปรับตำแหน่งหมุด"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ย้าย confirmation message มาไว้ข้างนอก MapContainer */}
+      {showConfirmManualPin && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000]">
+          <div className="bg-white p-3 rounded shadow-lg border-2 border-orange-500 text-center">
+            <p className="text-sm font-medium">ปักหมุดที่ตำแหน่งนี้แล้ว</p>
+            <p className="text-xs text-gray-600 mt-1">
+              คุณสามารถปรับตำแหน่งได้โดยลากหมุดหรือคลิกบนแผนที่
+            </p>
+          </div>
+        </div>
+      )}
+
+      <MapContainer
+        center={position || DEFAULT_POSITION}
+        zoom={DEFAULT_ZOOM}
+        style={{ height: "100%", width: "100%" }}
+        scrollWheelZoom={true}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+
+        {position && (
+          <Marker
+            position={position}
+            icon={petSitterIcon}
+            draggable={draggable}
+            eventHandlers={{
+              dragend: handleMarkerDrag,
+            }}
+          >
+            <Popup>
+              <div className="text-center">
+                <strong>{userInfo.tradeName}</strong>
+                <p className="text-sm">{formattedAddress}</p>
+              </div>
+            </Popup>
+          </Marker>
+        )}
+
+        <MapAdjuster position={position} zoom={DEFAULT_ZOOM} />
+        <MapEvents />
+      </MapContainer>
+
+      {/* Error message */}
+      {error && (
+        <div className="absolute bottom-0 left-0 right-0 bg-red-100 text-red-700 p-2 text-center text-sm">
+          {error}
+        </div>
+      )}
+    </div>
   );
 }
