@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import Image from 'next/image';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/utils/supabase';
+import { markMessagesAsRead } from '@/hooks/message/useMarkMessagesAsRead'
 import BookNowButton from './BookNowButton'
 
 export default function ChatWindow({
@@ -138,6 +139,11 @@ export default function ChatWindow({
 
   fetchMessages();
 }, [currentUser?.id, user?.id]);
+
+useEffect(() => {
+  if (!currentUser?.id || !user?.id) return;
+  markMessagesAsRead(user.id, currentUser.id)
+}, [user?.id, currentUser?.id])
 
   return (
     <div className="flex-1 flex flex-col h-full">
