@@ -56,30 +56,52 @@ export default function handler(req, res) {
     let currentDate = new Date(startDate);
     const end = new Date(endDate);
 
-    while (currentDate <= end) {
-      const basePrice = getPricePerDay(type, weight);
-      const multiplier = getSpecialDayMultiplier(currentDate, specialDayFlags);
-      const priceForDay = basePrice * (1 + multiplier);
-      totalPrice += priceForDay;
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
+    // คำนวณจำนวนชั่วโมงทั้งหมด
+    const diffMs = end - currentDate;
+    const hours = Math.ceil(diffMs / (1000 * 60 * 60)) + 1; // +1 เพื่อรวมชั่วโมงเริ่มต้น
+    const basePrice = getPricePerDay(type, weight);
+    // สมมติ 1 วัน = 24 ชม. คิดราคาต่อชั่วโมง
+    const pricePerHour = basePrice / 24;
 
-    return totalPrice;
+    for (let i = 0; i < hours; i++) {
+      const hourDate = new Date(currentDate.getTime() + i * 60 * 60 * 1000);
+      const multiplier = getSpecialDayMultiplier(hourDate, specialDayFlags);
+      const priceForHour = pricePerHour * (1 + multiplier);
+      totalPrice += priceForHour;
+    }
+    // เพิ่มราคาอีก 1 เท่าตัว
+    totalPrice = totalPrice * 2;
+    return Math.round(totalPrice);
   }
 
   try {
-    const { type, weight, startDate, endDate, specialDayFlags = [] } = req.body;
-
-    if (!type || !weight || !startDate || !endDate) {
-      return res.status(400).json({ error: 'Missing required fields: type, weight, startDate, endDate' });
+    let totalPrice = 0;
+    let details = {};
+    if (Array.isArray(req.body.pets)) {
+      // กรณีส่ง pets: [{type, weight, ...}, ...], startDate, endDate, specialDayFlags
+      const { pets, startDate, endDate, specialDayFlags = [] } = req.body;
+      if (!pets || !startDate || !endDate) {
+        return res.status(400).json({ error: 'Missing required fields: pets[], startDate, endDate' });
+      }
+      for (const pet of pets) {
+        if (!pet.type || !pet.weight) continue;
+        totalPrice += calculateTotalPrice(pet.type, pet.weight, startDate, endDate, specialDayFlags);
+      }
+      details = { pets, startDate, endDate, specialDayFlags };
+    } else {
+      // กรณีส่ง type, weight, startDate, endDate, specialDayFlags แบบเดี่ยว
+      const { type, weight, startDate, endDate, specialDayFlags = [] } = req.body;
+      if (!type || !weight || !startDate || !endDate) {
+        return res.status(400).json({ error: 'Missing required fields: type, weight, startDate, endDate' });
+      }
+      totalPrice = calculateTotalPrice(type, weight, startDate, endDate, specialDayFlags);
+      details = { type, weight, startDate, endDate, specialDayFlags };
     }
-
-    const totalPrice = calculateTotalPrice(type, weight, startDate, endDate, specialDayFlags);
 
     res.status(200).json({
       totalPrice,
       currency: 'THB',
-      details: { type, weight, startDate, endDate, specialDayFlags },
+      details,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

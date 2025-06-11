@@ -60,15 +60,15 @@ export default function BookingInformationPage() {
     // --- เรียก API คำนวณราคา ---
     let total = 0;
     try {
-      // รองรับหลายตัว: รวมราคาทุกตัว
       if (selectedPets.length > 0 && existingBookingDetails.date && existingBookingDetails.duration) {
         const startDate = existingBookingDetails.date;
-        // แปลง duration เป็นจำนวนวัน (รองรับกรณี "3 days" หรือ "1 day")
         const daysMatch = existingBookingDetails.duration.match(/(\d+)/);
         const numDays = daysMatch ? parseInt(daysMatch[1], 10) : 1;
         const endDate = new Date(startDate);
         endDate.setDate(endDate.getDate() + numDays - 1);
+        // รวมราคาทุกตัวจากข้อมูลใน state
         for (const pet of selectedPets) {
+          if (!pet.type || !pet.weight) continue; // ข้ามถ้าไม่มีข้อมูลจำเป็น
           const res = await fetch('/api/calculate-price', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -85,7 +85,6 @@ export default function BookingInformationPage() {
         }
       }
     } catch (err) {
-      // ถ้าคำนวณราคาไม่ได้ ให้ใช้ 0
       total = 0;
     }
 
