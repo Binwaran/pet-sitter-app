@@ -185,32 +185,32 @@ export default function MapSitter({
 
   // สำหรับการอัพเดตพิกัดเมื่อลากหมุด
   const handleMarkerDrag = useCallback(
-  (e) => {
-    if (!allowManualPin) return;
-    
-    // แก้ไขจาก e.latlng เป็น e.target._latlng
-    const { lat, lng } = e.target._latlng;
-    const newLat = parseFloat(lat);
-    const newLng = parseFloat(lng);
+    (e) => {
+      if (!allowManualPin) return;
 
-    if (!isNaN(newLat) && !isNaN(newLng)) {
-      setPosition([newLat, newLng]);
-      
-      // แสดงข้อความยืนยันว่าปรับตำแหน่งแล้ว
-      setShowConfirmManualPin(true);
-      
-      // หลังจากแสดงข้อความ 3 วินาที ให้ซ่อนข้อความ
-      setTimeout(() => {
-        setShowConfirmManualPin(false);
-      }, 3000);
+      // แก้ไขจาก e.latlng เป็น e.target._latlng
+      const { lat, lng } = e.target._latlng;
+      const newLat = parseFloat(lat);
+      const newLng = parseFloat(lng);
 
-      if (onPositionChange) {
-        onPositionChange(newLat, newLng);
+      if (!isNaN(newLat) && !isNaN(newLng)) {
+        setPosition([newLat, newLng]);
+
+        // แสดงข้อความยืนยันว่าปรับตำแหน่งแล้ว
+        setShowConfirmManualPin(true);
+
+        // หลังจากแสดงข้อความ 3 วินาที ให้ซ่อนข้อความ
+        setTimeout(() => {
+          setShowConfirmManualPin(false);
+        }, 3000);
+
+        if (onPositionChange) {
+          onPositionChange(newLat, newLng);
+        }
       }
-    }
-  },
-  [allowManualPin, onPositionChange]
-);
+    },
+    [allowManualPin, onPositionChange]
+  );
 
   // เพิ่ม component สำหรับให้สามารถคลิกบนแผนที่ได้
   const MapEvents = () => {
@@ -381,16 +381,18 @@ export default function MapSitter({
       )}
 
       {/* ข้อความแนะนำการใช้งานแผนที่ */}
-  {allowManualPin && (
-  <div className="absolute bottom-5 right-4 z-[1000]">
-    <div className="bg-white p-2 rounded shadow-md border border-orange-400 text-center max-w-[200px]">
-      <p className="text-xs font-medium">คลิกบนแผนที่เพื่อปรับตำแหน่งหมุด</p>
-      <p className="text-xs text-gray-500">
-        หรือลากหมุดไปยังตำแหน่งที่ต้องการ
-      </p>
-    </div>
-  </div>
-)}
+      {allowManualPin && (
+        <div className="absolute bottom-5 right-4 z-[1000]">
+          <div className="bg-white p-2 rounded shadow-md border border-orange-400 text-center max-w-[200px]">
+            <p className="text-xs font-medium">
+              คลิกบนแผนที่เพื่อปรับตำแหน่งหมุด
+            </p>
+            <p className="text-xs text-gray-500">
+              หรือลากหมุดไปยังตำแหน่งที่ต้องการ
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ย้าย confirmation message มาไว้ข้างนอก MapContainer */}
       {showConfirmManualPin && (
@@ -443,3 +445,4 @@ export default function MapSitter({
     </div>
   );
 }
+MapSitter.displayName = "MapSitter"; // ตั้งชื่อให้กับ component เพื่อช่วยในการ debug
