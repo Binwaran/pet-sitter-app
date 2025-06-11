@@ -141,8 +141,16 @@ export default function PetSitterProfilePage() {
             // เพิ่มข้อมูลสถานะการรออนุมัติของรูปภาพ
             has_pending_profile: data.has_pending_profile ?? false,
             has_pending_gallery: data.has_pending_gallery ?? false,
+            // พิกัดปัจจุบันที่อนุมัติแล้ว
             latitude: data.lat || null,
             longitude: data.lng || null,
+
+            // พิกัดที่รออนุมัติ
+            pendingLatitude: data.pending_lat || null,
+            pendingLongitude: data.pending_lng || null,
+
+            // มีพิกัดที่รออนุมัติหรือไม่
+            has_pending_location: data.has_pending_location || false,
           });
 
           setSitterStatus(data.status);
@@ -312,8 +320,18 @@ export default function PetSitterProfilePage() {
         gallery_image_url: galleryUrls.filter(
           (url) => url && typeof url === "string"
         ),
-        lat: values.latitude ? parseFloat(values.latitude) : null,
-        lng: values.longitude ? parseFloat(values.longitude) : null,
+        lat:
+          values.has_pending_location && values.pendingLatitude
+            ? parseFloat(values.pendingLatitude)
+            : values.latitude
+            ? parseFloat(values.latitude)
+            : null,
+        lng:
+          values.has_pending_location && values.pendingLongitude
+            ? parseFloat(values.pendingLongitude)
+            : values.longitude
+            ? parseFloat(values.longitude)
+            : null,
       };
 
       // Submit to API
@@ -521,8 +539,8 @@ const BasicInfoSection = memo(({ values, setFieldValue, errors, touched }) => {
             value={values.profile_image}
             onChange={(file) => setFieldValue("profile_image", file)}
             error={touched.profile_image && errors.profile_image}
-            requiresApproval={true} // แสดง badge pending approval เสมอเมื่อมีการอัพโหลดใหม่
-            isPending={values.has_pending_profile} // บอกว่ารูปนี้กำลังรออนุมัติอยู่ (สำหรับรูปที่มาจาก API)
+            requiresApproval={true}
+            isPending={values.has_pending_profile} // ค่านี้ควรมีเฉพาะเมื่อมีการรออนุมัติรูปภาพจริงๆ
           />
         </div>
 
@@ -715,6 +733,21 @@ const AddressSection = memo(() => {
 
   // สร้าง initialPosition สำหรับส่งให้ MapSitter
   const initialPosition = useMemo(() => {
+    // ถ้ามีพิกัดที่รออนุมัติ ให้ใช้ก่อน
+    if (
+      values.has_pending_location &&
+      values.pendingLatitude &&
+      values.pendingLongitude
+    ) {
+      const lat = parseFloat(values.pendingLatitude);
+      const lng = parseFloat(values.pendingLongitude);
+
+      if (!isNaN(lat) && !isNaN(lng)) {
+        return [lat, lng];
+      }
+    }
+
+    // ถ้าไม่มีพิกัดที่รออนุมัติ ให้ใช้พิกัดที่อนุมัติแล้ว
     if (values.latitude && values.longitude) {
       const lat = parseFloat(values.latitude);
       const lng = parseFloat(values.longitude);
@@ -723,8 +756,15 @@ const AddressSection = memo(() => {
         return [lat, lng];
       }
     }
+
     return null;
-  }, [values.latitude, values.longitude]);
+  }, [
+    values.latitude,
+    values.longitude,
+    values.pendingLatitude,
+    values.pendingLongitude,
+    values.has_pending_location,
+  ]);
 
   return (
     <section className="bg-white flex flex-col rounded-2xl px-4 sm:px-6 md:px-20 py-6 sm:py-10 gap-6">
@@ -789,15 +829,23 @@ const AddressSection = memo(() => {
             initialPosition={initialPosition}
             addressDetails={addressDetails}
             autoSave={false}
-            allowManualPin={true} // เปิดให้ผู้ใช้ปักหมุดเองได้
+            allowManualPin={true}
             onPositionChange={(lat, lng) => {
               if (
                 lastPositionRef.current.lat !== lat ||
                 lastPositionRef.current.lng !== lng
               ) {
                 lastPositionRef.current = { lat, lng };
-                setFieldValue("latitude", lat);
-                setFieldValue("longitude", lng);
+
+                // เก็บพิกัดที่ต้องการอัพเดทเป็นค่าที่รออนุมัติ
+                setFieldValue("pendingLatitude", lat);
+                setFieldValue("pendingLongitude", lng);
+                setFieldValue("has_pending_location", true);
+
+                // ไม่ต้องอัพเดตค่า latitude/longitude เพื่อรักษาพิกัดเดิมที่อนุมัติแล้ว
+                // แก้ไขตรงนี้โดยไม่ต้องใช้คำสั่ง setFieldValue สำหรับ latitude และ longitude
+
+                // คงค่าเดิมไว้แต่เพิ่มเฉพาะใน payload ตอนส่ง API
               }
             }}
           />
@@ -808,19 +856,33 @@ const AddressSection = memo(() => {
         )}
       </div>
 
-      {/* เพิ่มช่องแสดงพิกัดปัจจุบัน */}
-      <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 w-full">
+      {/* แสดงทั้งพิกัดที่อนุมัติแล้วและพิกัดที่รออนุมัติ */}
+      <div className="flex flex-col gap-3 w-full">
+        {/* พิกัดปัจจุบันที่อนุมัติแล้ว */}
         <div className="text-xs text-gray-500 flex gap-2">
-          <span>พิกัดปัจจุบัน:</span>
+          <span>พิกัดปัจจุบัน (ที่ได้รับอนุมัติ):</span>
           {values.latitude && values.longitude ? (
             <span className="font-medium">
-              {parseFloat(values.latitude).toFixed(6)},{" "}
+              {parseFloat(values.latitude).toFixed(6)},
               {parseFloat(values.longitude).toFixed(6)}
             </span>
           ) : (
             <span className="italic">ไม่ได้ระบุพิกัด</span>
           )}
         </div>
+
+        {/* พิกัดที่รออนุมัติ */}
+        {values.has_pending_location &&
+          values.pendingLatitude &&
+          values.pendingLongitude && (
+            <div className="text-xs text-amber-600 flex gap-2">
+              <span>พิกัดที่รออนุมัติ:</span>
+              <span className="font-medium">
+                {parseFloat(values.pendingLatitude).toFixed(6)},
+                {parseFloat(values.pendingLongitude).toFixed(6)}
+              </span>
+            </div>
+          )}
       </div>
     </section>
   );
