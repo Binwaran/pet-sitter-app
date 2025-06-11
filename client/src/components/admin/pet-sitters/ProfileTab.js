@@ -384,7 +384,7 @@ const ProfileTab = memo(({ sitter }) => {
 
   return (
     <div className="bg-[#F6F6F9] w-full gap-10">
-      <div className="w-full flex flex-col items-center bg-white md:rounded-tr-2xl rounded-br-2xl rounded-bl-2xl gap-10 p-10">
+      <div className="w-full flex flex-col items-center bg-white md:rounded-tr-2xl rounded-br-2xl rounded-bl-2xl gap-5 md:gap-10 p-5 md:p-10">
         {/* Changes Summary */}
         {changeSummary.length > 0 && (
           <div className="p-4 bg-amber-50 rounded-lg border border-amber-200 w-full">
