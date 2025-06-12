@@ -9,7 +9,7 @@ import { uploadBookBankImage } from "@/utils/uploadHelpers";
 import { useRouter } from "next/navigation";
 import BankDropdown from "@/components/dropdown/BankDropdown";
 import Modal from "@/components/Modal";
-import { Toaster, toast } from "sonner"; // เพิ่ม import
+import { Toaster, toast } from "sonner"; // Added import
 
 export default function BankAccountPage() {
   const router = useRouter();
@@ -27,7 +27,7 @@ export default function BankAccountPage() {
     accountName: "",
     bookBankImage: "",
   });
-  // เพิ่มสถานะสำหรับ Modal
+  // Added state for Modal
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   // Load existing bank account details (if available)
@@ -139,15 +139,15 @@ export default function BankAccountPage() {
     return isValid;
   };
 
-  // แก้ไขฟังก์ชัน handleSubmit ให้แสดง Modal เมื่อ validate ผ่าน
+  // Modified handleSubmit function to show Modal when validation passes
   const handleSubmit = () => {
     if (!validateForm()) return;
 
-    // เปิด Modal ให้ยืนยัน
+    // Open confirmation Modal
     setShowConfirmModal(true);
   };
 
-  // เพิ่มฟังก์ชัน confirmSubmit สำหรับดำเนินการเมื่อยืนยัน
+  // Added confirmSubmit function for when confirmation is given
   const confirmSubmit = async () => {
     setShowConfirmModal(false);
     setIsLoading(true);
@@ -169,22 +169,22 @@ export default function BankAccountPage() {
         book_bank_image_url: bookBankImageUrl,
       });
 
-      // แสดง toast notification สำเร็จ
+      // Show success toast notification
       toast.success("Payout information updated successfully!", {
         position: "top-center",
         duration: 3000,
       });
 
-      // ดีเลย์การ redirect เล็กน้อยเพื่อให้ผู้ใช้เห็น toast
+      // Small delay before redirecting to let user see the toast
       setTimeout(() => {
         // Return to payout page after successful save
         router.push("/pet-sitters/payout");
-      }, 1000); // ดีเลย์ 1 วินาทีก่อน redirect
+      }, 1000); // 1 second delay before redirect
     } catch (error) {
       console.error("Error updating bank account:", error);
       setUploadError("An error occurred while saving. Please try again.");
 
-      // แสดง toast notification ข้อผิดพลาด
+      // Show error toast notification
       toast.error("Error updating bank account. Please try again.", {
         position: "top-center",
         duration: 5000,
@@ -194,14 +194,14 @@ export default function BankAccountPage() {
     }
   };
 
-  // เพิ่มฟังก์ชัน cancelSubmit สำหรับยกเลิก
+  // Added cancelSubmit function for cancelation
   const cancelSubmit = () => {
     setShowConfirmModal(false);
   };
 
   return (
     <div className="flex flex-col max-h-screen bg-[#F6F6F9] w-full min-w-0">
-      {/* เพิ่ม Toaster component */}
+      {/* Added Toaster component */}
       <Toaster richColors closeButton />
 
       <div className="flex w-full min-w-0">

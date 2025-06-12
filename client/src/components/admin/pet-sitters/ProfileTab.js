@@ -58,7 +58,7 @@ export const MapSitterWithNoSSR = dynamic(
   () => import("@/components/profile/MapSitter"),
   {
     ssr: false,
-    loading: () => <LoadingSpinner text="กำลังโหลดแผนที่..." />,
+    loading: () => <LoadingSpinner text="Loading map..." />,
   }
 );
 
@@ -372,7 +372,9 @@ const ProfileTab = memo(({ sitter }) => {
 
     return (
       <div className="w-full h-full flex items-center justify-center">
-        <p className="text-gray-500">กรุณาเลือกจังหวัดและอำเภอก่อน</p>
+        <p className="text-gray-500">
+          Please select province and district first
+        </p>
       </div>
     );
   }, [
@@ -533,10 +535,7 @@ const ProfileTab = memo(({ sitter }) => {
           </div>
 
           {/* แสดงพิกัดถ้ามี */}
-          <InfoField
-            label="Coordinates"
-            hasChanged={hasLocationChanged}
-          >
+          <InfoField label="Coordinates" hasChanged={hasLocationChanged}>
             {(() => {
               // พิกัดจาก pending data
               const pendingLat = getPendingValue("lat");

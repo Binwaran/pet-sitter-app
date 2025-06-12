@@ -17,7 +17,7 @@ const Payout = () => {
   const { user } = useAuth();
   const router = useRouter();
 
-  // เพิ่ม state สำหรับการ sort
+  // Add state for sorting
   const [sortConfig, setSortConfig] = useState({
     key: "default",
     direction: "desc",
@@ -30,7 +30,7 @@ const Payout = () => {
 
       try {
         setLoading(true);
-        // ดึงข้อมูล Payout ของ Pet Sitter
+        // Fetch Pet Sitter's payout data
         const response = await axios.get("/api/pet-sitters/payout", {
           withCredentials: true,
         });
@@ -61,7 +61,7 @@ const Payout = () => {
         }
       } catch (error) {
         console.error("Failed to fetch payout data:", error);
-        toast.error("ไม่สามารถโหลดข้อมูลการชำระเงินได้");
+        toast.error("Unable to load payment information");
       } finally {
         setLoading(false);
       }
@@ -98,11 +98,11 @@ const Payout = () => {
       : "-";
   };
 
-  // แปลงชื่อธนาคารเป็นชื่อย่อ
+  // Convert bank name to abbreviation
   const getBankAbbreviation = (bankName) => {
     if (!bankName) return "";
 
-    // แมปชื่อธนาคารกับชื่อย่อ
+    // Map bank names to abbreviations
     const bankMap = {
       "Prompt Pay": "Prompt Pay",
       "True Money": "True Money",
@@ -123,56 +123,56 @@ const Payout = () => {
   };
 
   const handleBankAccountClick = () => {
-    // เพิ่มการ navigate ไปยังหน้าแก้ไขข้อมูลธนาคาร หรือแสดง modal
+    // Add navigation to edit bank account page or show modal
     router.push("/pet-sitters/payout/bank-account");
     console.log("Edit bank account clicked");
   };
 
-  // ฟังก์ชันจัดการการเรียงลำดับ
+  // Function to handle sorting
   const handleSort = useCallback((key) => {
     setSortConfig((prev) => {
-      // ถ้าคลิกที่คอลัมน์เดิม
+      // If clicking the same column
       if (prev.key === key) {
-        // ถ้าเป็น desc อยู่แล้ว เปลี่ยนเป็น asc
+        // If it's already desc, change to asc
         if (prev.direction === "desc") {
           return { key, direction: "asc" };
         }
-        // ถ้าเป็น asc อยู่แล้ว เปลี่ยนกลับไปเป็น default (ยกเลิกการเรียง)
+        // If it's already asc, change back to default (cancel sorting)
         else {
           return { key: "default", direction: "desc" };
         }
       }
-      // ถ้าคลิกที่คอลัมน์ใหม่ เริ่มด้วย desc
+      // If clicking a new column, start with desc
       else {
         return { key, direction: "desc" };
       }
     });
   }, []);
 
-  // ฟังก์ชันสำหรับแสดงเครื่องหมาย sort (↑/↓)
+  // Function to display sort icon (↑/↓)
   const getSortIcon = (key) => {
     if (sortConfig.key !== key) return null;
     return sortConfig.direction === "asc" ? "↑" : "↓";
   };
 
-  // เรียงลำดับข้อมูล
+  // Sort transactions
   const sortedTransactions = [...transactions].sort((a, b) => {
-    // ถ้าเป็น default ให้ไม่เรียงลำดับ
+    // If default, don't sort
     if (sortConfig.key === "default") return 0;
 
     let valueA, valueB;
 
-    // ดึงค่าตามคอลัมน์ที่ต้องการเรียง
+    // Get values based on the column to sort
     switch (sortConfig.key) {
       case "date":
-        // แปลงวันที่เป็น Date object
+        // Convert dates to Date objects
         valueA = a.date ? new Date(a.date) : new Date(0);
         valueB = b.date ? new Date(b.date) : new Date(0);
 
-        // เปรียบเทียบ date ตรงๆ ด้วย Date object
+        // Compare dates directly using Date objects
         return sortConfig.direction === "asc"
-          ? valueA - valueB // น้อยไปมาก (เก่าไปใหม่)
-          : valueB - valueA; // มากไปน้อย (ใหม่ไปเก่า)
+          ? valueA - valueB // old to new
+          : valueB - valueA; // new to old
 
       case "from":
         valueA = (a.ownerName || a.from || "").toLowerCase();
@@ -193,7 +193,7 @@ const Payout = () => {
         return 0;
     }
 
-    // เรียงลำดับตาม valueA และ valueB ยกเว้นกรณี date ที่ได้ return ไปแล้ว
+    // Sort based on valueA and valueB except for the date case that was already returned
     if (valueA < valueB) {
       return sortConfig.direction === "asc" ? -1 : 1;
     }
@@ -284,7 +284,7 @@ const Payout = () => {
                       </p>
                     ) : (
                       <p className="font-medium leading-7 text-[#FF7037]">
-                        ยังไม่ได้เพิ่มบัญชี
+                        No account added
                       </p>
                     )}
                     <div
@@ -402,7 +402,7 @@ const Payout = () => {
                           colSpan="4"
                           className="text-center py-6 text-gray-500"
                         >
-                          ไม่พบรายการธุรกรรม
+                          No transactions found
                         </td>
                       </tr>
                     )}

@@ -204,13 +204,13 @@ export default function MapSitter({
           setShowConfirmManualPin(false);
         }, 3000);
 
-      if (onPositionChange) {
-        onPositionChange(newLat, newLng);
+        if (onPositionChange) {
+          onPositionChange(newLat, newLng);
+        }
       }
-    }
-  },
-  [allowManualPin, onPositionChange]
-);
+    },
+    [allowManualPin, onPositionChange]
+  );
 
   // เพิ่ม component สำหรับให้สามารถคลิกบนแผนที่ได้
   const MapEvents = () => {
@@ -292,7 +292,9 @@ export default function MapSitter({
           }
         } else {
           // ถ้าไม่พบผลลัพธ์ที่เข้าเกณฑ์
-          setError("ไม่พบที่อยู่ที่ระบุ โปรดปรับการค้นหาหรือปักหมุดด้วยตนเอง");
+          setError(
+            "Address not found. Please adjust your search or pin the location manually."
+          );
 
           // คงตำแหน่งเดิมไว้ถ้ามี
           if (!position && initialPosition) {
@@ -303,7 +305,7 @@ export default function MapSitter({
         if (!isActive) return;
 
         console.error("Error geocoding address:", err);
-        setError("เกิดข้อผิดพลาดในการค้นหาพิกัด");
+        setError("Error searching for coordinates.");
         setLoading(false);
       }
     };
@@ -351,7 +353,7 @@ export default function MapSitter({
         }
       } catch (err) {
         console.error("Error fetching initial data:", err);
-        setError("ไม่สามารถดึงข้อมูลเริ่มต้นได้");
+        setError("Unable to load initial data.");
       } finally {
         setLoading(false);
       }
@@ -375,7 +377,7 @@ export default function MapSitter({
         <div className="absolute top-0 left-0 w-full h-full bg-white bg-opacity-70 flex items-center justify-center z-[1001]">
           <div className="text-center">
             <div className="inline-block w-6 h-6 border-4 border-[#FF7C43] border-t-transparent rounded-full animate-spin"></div>
-            <p className="mt-2 text-sm">กำลังโหลดแผนที่...</p>
+            <p className="mt-2 text-sm">Loading map...</p>
           </div>
         </div>
       )}
@@ -385,10 +387,10 @@ export default function MapSitter({
         <div className="absolute bottom-5 right-4 z-[1000]">
           <div className="bg-white p-2 rounded shadow-md border border-orange-400 text-center max-w-[200px]">
             <p className="text-xs font-medium">
-              คลิกบนแผนที่เพื่อปรับตำแหน่งหมุด
+              Click on the map to adjust pin position.
             </p>
             <p className="text-xs text-gray-500">
-              หรือลากหมุดไปยังตำแหน่งที่ต้องการ
+              Or drag the pin to the desired location.
             </p>
           </div>
         </div>
@@ -398,7 +400,7 @@ export default function MapSitter({
       {showConfirmManualPin && (
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000]">
           <div className="bg-white p-3 rounded shadow-lg border-2 border-orange-500 text-center">
-            <p className="text-sm font-medium">ปักหมุดที่ตำแหน่งนี้แล้ว</p>
+            <p className="text-sm font-medium">Pin placed at this location.</p>
           </div>
         </div>
       )}

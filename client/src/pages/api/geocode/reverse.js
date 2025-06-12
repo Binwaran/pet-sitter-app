@@ -43,7 +43,7 @@ export default async function handler(req, res) {
           format: "json",
           addressdetails: 1,
           zoom: 18,
-          accept_language: "th,en",
+          accept_language: "en,th",
         },
         headers: {
           "User-Agent": "pet-sitter-app/1.0",
