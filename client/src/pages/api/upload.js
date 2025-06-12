@@ -128,7 +128,7 @@ export default async function handler(req, res) {
       // เลือก bucket ตามประเภทการอัพโหลด - profile หรือ gallery
       // ตรวจสอบจาก fields ที่ส่งมา หรือตั้งให้เป็น gallery เป็นค่าเริ่มต้น
       let uploadType = "gallery"; // ค่าเริ่มต้น
-      
+
       // ตรวจสอบประเภทการอัพโหลดจาก fields ที่ส่งมา
       if (fields.uploadType) {
         uploadType = fields.uploadType.toString().toLowerCase();
@@ -143,6 +143,9 @@ export default async function handler(req, res) {
       if (uploadType === "profile") {
         bucketName = "pet-sitter-images";
         console.log("Detected PROFILE image upload");
+      } else if (uploadType === "book-bank") {
+        bucketName = "book-bank-images";
+        console.log("Detected BOOK BANK image upload");
       } else {
         bucketName = "pet-sitter-gallery";
         console.log("Detected GALLERY image upload");

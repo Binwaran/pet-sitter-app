@@ -462,7 +462,7 @@ export default function AdminPetSittersPage() {
                             {sitter.full_name}
                           </span>
                         </td>
-                        <td className="font-medium py-6 px-4 gap-2.5 h-[92px]">
+                        <td className="font-medium py-6 px-4 gap-2.5 h-[92px] whitespace-nowrap">
                           {sitter.trade_name}
                         </td>
                         <td className="font-medium py-6 px-4 gap-2.5 h-[92px]">

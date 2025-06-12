@@ -493,7 +493,7 @@ const BookingPage = () => {
           <div className="fixed top-0 left-0 right-0 z-50 md:left-[240px] flex flex-col">
             <Topbar className="w-full" />
             <div className="md:hidden w-full">
-              <Sidebar className="flex flex-row md:hidden bg-white border-b border-[#DCDFED]" />
+              <Sidebar className="flex flex-row md:hidden bg-white shadow-[4px_4px_24px_0px_#0000000A]"/>
             </div>
           </div>
 
@@ -631,7 +631,7 @@ const BookingPage = () => {
                             </span>
                           </div>
                         </td>
-                        <td className="font-medium py-6 px-4 gap-2.5 h-[92px]">
+                        <td className="font-medium py-6 px-4 gap-2.5 h-[92px] whitespace-nowrap">
                           {booking.pet_count || 0}
                         </td>
                         <td className="font-medium py-6 px-4 gap-2.5 h-[92px] whitespace-nowrap">

@@ -37,6 +37,8 @@ export default function RootLayout({ children }) {
     "/admin/pet-sitters/[userId]",
     "/admin/report",
     "/admin/report/[id]",
+    "/messages",
+    "/messages/[id]",
   ];
 
   const isNoLayout = noLayoutRoutes.some(
