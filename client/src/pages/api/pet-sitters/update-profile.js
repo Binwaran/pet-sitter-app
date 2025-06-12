@@ -55,6 +55,21 @@ export default async function handler(req, res) {
         email: userData?.email || "",
         phone_number: userData?.phone || "",
         profile_image_url: userData?.profile_image_url || null,
+
+        // เพิ่มข้อมูลพิกัดที่รออนุมัติจาก pending_data
+        // พิกัดปัจจุบันที่อนุมัติแล้ว
+        lat: petSitter?.lat || null,
+        lng: petSitter?.lng || null,
+
+        // พิกัดที่รออนุมัติ (จาก pending_data)
+        pending_lat: petSitter?.pending_data?.pet_sitter_data?.lat || null,
+        pending_lng: petSitter?.pending_data?.pet_sitter_data?.lng || null,
+
+        // มีพิกัดที่รออนุมัติหรือไม่
+        has_pending_location: !!(
+          petSitter?.pending_data?.pet_sitter_data?.lat !== undefined &&
+          petSitter?.pending_data?.pet_sitter_data?.lng !== undefined
+        ),
         // เพิ่มข้อมูลสำหรับการตรวจสอบว่ามีรูปที่รออนุมัติหรือไม่
         display_profile_image_url:
           petSitter?.pending_profile_image_url ||
@@ -64,7 +79,10 @@ export default async function handler(req, res) {
           petSitter?.pending_gallery_image_url ||
           petSitter?.gallery_image_url ||
           [],
-        has_pending_profile: !!petSitter?.pending_profile_image_url,
+        // แก้ไขตรงนี้: ตรวจสอบว่าค่า pending แตกต่างจากค่าปัจจุบันหรือไม่
+        has_pending_profile:
+          !!petSitter?.pending_profile_image_url &&
+          petSitter?.pending_profile_image_url !== userData?.profile_image_url,
         has_pending_gallery:
           Array.isArray(petSitter?.pending_gallery_image_url) &&
           petSitter.pending_gallery_image_url.length > 0,
@@ -78,20 +96,26 @@ export default async function handler(req, res) {
     if (req.method === "POST") {
       console.log("Processing POST request for user ID:", userId);
       const updateData = req.body;
+      const isFormSubmit = req.headers["x-form-submit"] === "true";
+
+      if (!isFormSubmit) {
+        return res.status(400).json({
+          error:
+            "Missing form submission header. This API should only be called from form submit.",
+        });
+      }
 
       // แยกข้อมูลสำหรับตาราง users และ pet_sitter
       const userUpdateData = {
         name: updateData.full_name,
         email: updateData.email,
         phone: updateData.phone_number,
-        // ไม่อัพเดทรูปโปรไฟล์โดยตรง ให้ใช้ pending_profile_image_url แทน
-        // profile_image_url: updateData.profile_image_url,
       };
 
       // ตรวจสอบว่ามีโปรไฟล์ pet_sitter อยู่แล้วหรือไม่
       const { data: existingProfile, error: profileError } = await supabase
         .from("pet_sitter")
-        .select("user_id")
+        .select("*") // เปลี่ยนเป็นดึงข้อมูลทั้งหมดเพื่อใช้ในการเปรียบเทียบ
         .eq("user_id", userId)
         .single();
 
@@ -152,16 +176,74 @@ export default async function handler(req, res) {
         });
       }
 
-      // อัปเดตข้อมูล pet_sitter เฉพาะสถานะและ pending_data
+      // ตรวจสอบว่าพิกัดมีการเปลี่ยนแปลงหรือไม่
+      const isLocationChanged =
+        (updateData.lat !== undefined &&
+          updateData.lat !== existingProfile.lat) ||
+        (updateData.lng !== undefined &&
+          updateData.lng !== existingProfile.lng);
+
+      console.log("Location changed:", isLocationChanged);
+
+      // ถ้ามีการเปลี่ยนแปลงพิกัด ให้เก็บในข้อมูลที่รออนุมัติ
+      if (
+        isLocationChanged &&
+        updateData.lat !== undefined &&
+        updateData.lng !== undefined
+      ) {
+        // เก็บพิกัดใหม่ใน petSitterData
+        petSitterData.lat = updateData.lat;
+        petSitterData.lng = updateData.lng;
+      }
+
+      // ตรวจสอบว่ารูปมีการเปลี่ยนแปลงหรือไม่
+      const isProfileImageChanged =
+        updateData.profile_image_url !== existingProfile.profile_image_url;
+
+      // เปรียบเทียบ gallery images
+      let isGalleryChanged = false;
+      const currentGallery = existingProfile.gallery_image_url || [];
+      const newGallery = updateData.gallery_image_url || [];
+
+      // ตรวจสอบเปรียบเทียบ arrays
+      if (Array.isArray(currentGallery) && Array.isArray(newGallery)) {
+        if (currentGallery.length !== newGallery.length) {
+          isGalleryChanged = true;
+        } else {
+          // ตรวจสอบแต่ละ element
+          isGalleryChanged = !currentGallery.every(
+            (url, index) => url === newGallery[index]
+          );
+        }
+      } else if (
+        JSON.stringify(currentGallery) !== JSON.stringify(newGallery)
+      ) {
+        // กรณี format ไม่ใช่ array ให้เทียบเป็น string
+        isGalleryChanged = true;
+      }
+
+      console.log("Profile image changed:", isProfileImageChanged);
+      console.log("Gallery changed:", isGalleryChanged);
+
+      // สร้างข้อมูลที่จะอัปเดต
+      const updateFields = {
+        status: "waiting for approval",
+        pending_data: pendingData,
+      };
+
+      // เพิ่มข้อมูลรูปภาพที่รออนุมัติเฉพาะเมื่อมีการเปลี่ยนแปลง
+      if (isProfileImageChanged) {
+        updateFields.pending_profile_image_url = updateData.profile_image_url;
+      }
+
+      if (isGalleryChanged) {
+        updateFields.pending_gallery_image_url = updateData.gallery_image_url;
+      }
+
+      // อัปเดตข้อมูล pet_sitter
       const { data: updatedProfile, error: updateError } = await supabase
         .from("pet_sitter")
-        .update({
-          status: "waiting for approval",
-          pending_data: pendingData,
-          // เพิ่มคอลัมน์ใหม่สำหรับรูปที่รออนุมัติ
-          pending_profile_image_url: updateData.profile_image_url,
-          pending_gallery_image_url: updateData.gallery_image_url,
-        })
+        .update(updateFields)
         .eq("user_id", userId)
         .select()
         .single();
@@ -178,8 +260,18 @@ export default async function handler(req, res) {
         email: userUpdateData.email,
         phone_number: userUpdateData.phone,
         profile_image_url: updatedProfile.profile_image_url, // แสดงรูปเดิมที่อนุมัติแล้ว
-        pending_profile_image_url: updateData.profile_image_url, // เพิ่มข้อมูลรูปที่รออนุมัติ
       };
+
+      // เพิ่มข้อมูลรูปที่รออนุมัติเฉพาะเมื่อมีการเปลี่ยนแปลง
+      if (isProfileImageChanged) {
+        completeProfile.pending_profile_image_url =
+          updateData.profile_image_url;
+      }
+
+      if (updateData.lat && updateData.lng) {
+        petSitterData.lat = updateData.lat;
+        petSitterData.lng = updateData.lng;
+      }
 
       return res.status(200).json({
         success: true,

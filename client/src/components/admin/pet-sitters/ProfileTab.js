@@ -58,7 +58,7 @@ export const MapSitterWithNoSSR = dynamic(
   () => import("@/components/profile/MapSitter"),
   {
     ssr: false,
-    loading: () => <LoadingSpinner text="กำลังโหลดแผนที่..." />,
+    loading: () => <LoadingSpinner text="Loading map..." />,
   }
 );
 
@@ -83,6 +83,13 @@ const ADDRESS_FIELDS = [
   "province",
   "post_code",
 ];
+
+// แยก field พิกัดออกมาต่างหาก
+const LOCATION_FIELDS = [
+  "lat", // พิกัดละติจูด
+  "lng", // พิกัดลองจิจูด
+];
+
 const PROFILE_FIELDS = [
   "full_name",
   "experience",
@@ -252,10 +259,17 @@ const ProfileTab = memo(({ sitter }) => {
     [hasFieldChanged]
   );
 
+  // ตรวจสอบว่ามีการเปลี่ยนแปลงในกลุ่มของพิกัดหรือไม่
+  const hasLocationChanged = useMemo(
+    () => LOCATION_FIELDS.some((field) => hasFieldChanged(field)),
+    [hasFieldChanged]
+  );
+
   // ฟังก์ชันสำหรับสร้างที่อยู่เต็มรูปแบบ
   const fullAddress = useMemo(() => {
     const address = {};
-    ADDRESS_FIELDS.forEach((field) => {
+    // รวม field ทั้งหมดที่เกี่ยวข้องกับที่อยู่
+    [...ADDRESS_FIELDS].forEach((field) => {
       address[field] = getDisplayValue(field);
     });
 
@@ -290,6 +304,13 @@ const ProfileTab = memo(({ sitter }) => {
       }
     });
 
+    // ตรวจสอบฟิลด์พิกัด
+    LOCATION_FIELDS.forEach((field) => {
+      if (hasFieldChanged(field)) {
+        changedFields.push(field === "lat" ? "latitude" : "longitude");
+      }
+    });
+
     // ตรวจสอบฟิลด์พิเศษ
     if (hasFieldChanged("pet_type")) changedFields.push("pet type");
     if (hasFieldChanged("gallery_image_url"))
@@ -300,13 +321,37 @@ const ProfileTab = memo(({ sitter }) => {
     return changedFields;
   }, [isPending, hasFieldChanged]);
 
-  // สร้าง Map component ตามข้อมูลที่อยู่
+  // สร้าง Map component ตามข้อมูลที่อยู่และพิกัดของแต่ละ pet sitter
   const mapComponent = useMemo(() => {
     const province = getDisplayValue("province");
     const district = getDisplayValue("district");
     const subDistrict = getDisplayValue("sub_district");
     const postCode = getDisplayValue("post_code");
     const addressDetail = getDisplayValue("address_detail");
+
+    // ดึงพิกัดจาก pending data หรือ ค่าปัจจุบัน (ใช้ชื่อ column ที่ถูกต้อง: lat, lng)
+    let latitude = getDisplayValue("lat");
+    let longitude = getDisplayValue("lng");
+
+    // Fallback ถ้าไม่มีพิกัดใน pending data ให้ใช้พิกัดปัจจุบัน
+    if (!latitude) {
+      latitude = sitter.pet_sitter.lat;
+    }
+
+    if (!longitude) {
+      longitude = sitter.pet_sitter.lng;
+    }
+
+    console.log(
+      `Rendering map for pet sitter ID ${sitter.pet_sitter.id} at coordinates:`,
+      { latitude, longitude }
+    );
+
+    // สร้าง initialPosition ถ้ามีพิกัด
+    const initialPosition =
+      latitude && longitude
+        ? [parseFloat(latitude), parseFloat(longitude)]
+        : null;
 
     if (province && district) {
       return (
@@ -318,20 +363,30 @@ const ProfileTab = memo(({ sitter }) => {
             postalCode: postCode,
             addressDetail,
           }}
+          initialPosition={initialPosition}
+          allowManualPin={false} // ไม่อนุญาตให้ปักหมุดใหม่
+          key={`map-${sitter.pet_sitter.id}-${latitude}-${longitude}`} // เพิ่ม coordinates ใน key เพื่อให้ re-render เมื่อพิกัดเปลี่ยน
         />
       );
     }
 
     return (
       <div className="w-full h-full flex items-center justify-center">
-        <p className="text-gray-500">กรุณาเลือกจังหวัดและอำเภอก่อน</p>
+        <p className="text-gray-500">
+          Please select province and district first
+        </p>
       </div>
     );
-  }, [getDisplayValue]);
+  }, [
+    getDisplayValue,
+    sitter.pet_sitter.id,
+    sitter.pet_sitter.lat,
+    sitter.pet_sitter.lng,
+  ]);
 
   return (
     <div className="bg-[#F6F6F9] w-full gap-10">
-      <div className="w-full flex flex-col items-center bg-white md:rounded-tr-2xl rounded-br-2xl rounded-bl-2xl gap-10 p-10">
+      <div className="w-full flex flex-col items-center bg-white md:rounded-tr-2xl rounded-br-2xl rounded-bl-2xl gap-5 md:gap-10 p-5 md:p-10">
         {/* Changes Summary */}
         {changeSummary.length > 0 && (
           <div className="p-4 bg-amber-50 rounded-lg border border-amber-200 w-full">
@@ -443,7 +498,10 @@ const ProfileTab = memo(({ sitter }) => {
             label="Image Gallery"
             hasChanged={hasFieldChanged("gallery_image_url")}
           >
-            <div ref={galleryRef} className="w-full h-full flex gap-4 overflow-x-auto">
+            <div
+              ref={galleryRef}
+              className="w-full h-full flex gap-4 overflow-x-auto"
+            >
               {galleryImages.length > 0 ? (
                 galleryImages
                   .filter(isValidImageUrl)
@@ -475,6 +533,49 @@ const ProfileTab = memo(({ sitter }) => {
           <div className="bg-gray-300 rounded-lg overflow-hidden relative w-full h-[400px]">
             {mapComponent}
           </div>
+
+          {/* แสดงพิกัดถ้ามี */}
+          <InfoField label="Coordinates" hasChanged={hasLocationChanged}>
+            {(() => {
+              // พิกัดจาก pending data
+              const pendingLat = getPendingValue("lat");
+              const pendingLng = getPendingValue("lng");
+
+              // พิกัดปัจจุบัน
+              const currentLat = sitter.pet_sitter.lat;
+              const currentLng = sitter.pet_sitter.lng;
+
+              // พิกัดที่จะแสดง (pending ถ้ามี หรือไม่ก็ current)
+              const displayLat = getDisplayValue("lat");
+              const displayLng = getDisplayValue("lng");
+
+              const hasBothCoordinates = displayLat && displayLng;
+              const hasCoordinatesChanged =
+                hasFieldChanged("lat") || hasFieldChanged("lng");
+
+              return (
+                <div>
+                  {hasBothCoordinates ? (
+                    <div className="font-mono">
+                      {parseFloat(displayLat).toFixed(6)},{" "}
+                      {parseFloat(displayLng).toFixed(6)}
+                      {hasCoordinatesChanged && currentLat && currentLng && (
+                        <div className="mt-2 text-sm text-gray-500">
+                          <span className="block">Original coordinates:</span>
+                          {parseFloat(currentLat).toFixed(6)},{" "}
+                          {parseFloat(currentLng).toFixed(6)}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-gray-400">
+                      No coordinates available
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
+          </InfoField>
         </div>
       </div>
     </div>

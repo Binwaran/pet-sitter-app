@@ -11,6 +11,16 @@ export function ProvinceField({ onChange }) {
   const { values, errors, touched } = useFormikContext();
   const hasError = touched.province && errors.province;
 
+  // เพิ่ม wrapper function
+  const handleChange = (selectedProvince) => {
+    if (onChange) {
+      // ป้องกัน event propagation
+      setTimeout(() => {
+        onChange(selectedProvince);
+      }, 0);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-1 w-full">
       <label
@@ -25,7 +35,7 @@ export function ProvinceField({ onChange }) {
           id="province"
           name="province"
           value={values.province}
-          onChange={onChange}
+          onChange={handleChange} // ใช้ wrapper function
           className={`${hasError ? "border-red-500" : "border-[#DCDFED]"}`}
         />
         {hasError && (
@@ -46,6 +56,16 @@ export function DistrictField({ provinceCode, onChange }) {
   const { values, errors, touched } = useFormikContext();
   const hasError = touched.district && errors.district;
 
+  // เพิ่ม wrapper function
+  const handleChange = (selectedDistrict) => {
+    if (onChange) {
+      // ป้องกัน event propagation
+      setTimeout(() => {
+        onChange(selectedDistrict);
+      }, 0);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-1 w-full">
       <label
@@ -61,7 +81,7 @@ export function DistrictField({ provinceCode, onChange }) {
           name="district"
           provinceCode={provinceCode}
           value={values.district}
-          onChange={onChange}
+          onChange={handleChange} // ใช้ wrapper function
           className={`${hasError ? "border-red-500" : "border-[#DCDFED]"}`}
         />
         {hasError && (
@@ -82,6 +102,16 @@ export function SubdistrictField({ districtCode, onChange }) {
   const { values, errors, touched } = useFormikContext();
   const hasError = touched.sub_district && errors.sub_district;
 
+  // เพิ่ม wrapper function
+  const handleChange = (selectedSubdistrict) => {
+    if (onChange) {
+      // ป้องกัน event propagation
+      setTimeout(() => {
+        onChange(selectedSubdistrict);
+      }, 0);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-1 w-full">
       <label
@@ -97,7 +127,7 @@ export function SubdistrictField({ districtCode, onChange }) {
           name="sub_district"
           districtCode={districtCode}
           value={values.sub_district}
-          onChange={onChange}
+          onChange={handleChange} // ใช้ wrapper function
           className={`${hasError ? "border-red-500" : "border-[#DCDFED]"}`}
         />
         {hasError && (

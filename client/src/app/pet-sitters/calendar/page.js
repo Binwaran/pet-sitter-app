@@ -10,7 +10,7 @@ const Calendar = () => {
         <div className="flex-1 flex flex-col">
           <Topbar />
           {/* Sidebar: row on mobile, column on desktop */}
-          <Sidebar className="flex flex-row md:hidden sticky top-0 z-10 bg-white" />
+          <Sidebar className="flex flex-row md:hidden bg-white shadow-[4px_4px_24px_0px_#0000000A]"/>
           <div className="flex flex-col items-center justify-center h-screen">
             <h1 className="text-2xl font-bold">Calendar</h1>
             <p className="mt-4 text-gray-600">This is the calendar page.</p>

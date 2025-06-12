@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect, memo } from "react";
 import Image from "next/image";
 import plus from "/public/assets/profile/plus.svg";
-import profileImg from "/public/assets/profile/profileimg.svg";
+import bookBankImg from "/public/assets/payout/landmark.svg"; // ควรสร้างไฟล์นี้หรือใช้รูปที่เหมาะสม
 
 // เพิ่ม prop requiresApproval (default: false) เพื่อควบคุมการแสดง badge
-const ImageUpload = memo(
+const BookBankUpload = memo(
   ({ value, onChange, error, requiresApproval = false, isPending = false }) => {
     const [preview, setPreview] = useState(null);
     const inputRef = useRef(null);
@@ -35,30 +35,45 @@ const ImageUpload = memo(
 
     const handleFileChange = (e) => {
       const file = e.target.files?.[0];
-      if (file) onChange(file);
+      if (!file) return;
+
+      // ตรวจสอบขนาดไฟล์ (จำกัดที่ 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        alert("ไฟล์มีขนาดใหญ่เกินไป (สูงสุด 2MB)");
+        return;
+      }
+
+      // ตรวจสอบประเภทไฟล์
+      const validTypes = ["image/jpeg", "image/jpg", "image/png"];
+      if (!validTypes.includes(file.type)) {
+        alert("กรุณาอัพโหลดไฟล์รูปภาพเท่านั้น (.jpg, .jpeg, .png)");
+        return;
+      }
+
+      onChange(file);
     };
 
     const triggerFileSelect = () => inputRef.current?.click();
 
     return (
       <div>
-        <div className="relative w-30 h-30 sm:w-45 sm:h-45 md:w-60 md:h-60 rounded-full bg-[#DCDFED] flex items-center justify-center mx-auto">
-          {/* Display image or default profile */}
+        <div className="relative w-53.75 h-55 sm:w-77.5 sm:h-75 md:w-93.75 md:h-90 lg:w-125 lg:h-120 rounded-lg bg-[#DCDFED] flex items-center justify-center mx-auto">
+          {/* Display image or default book bank image */}
           {preview ? (
             <img
               src={preview}
-              alt="Profile Preview"
-              className="w-full h-full rounded-full object-cover"
+              alt="Book Bank Preview"
+              className="w-full h-full rounded-lg object-cover" // เปลี่ยนจาก rounded-full เป็น rounded-lg สำหรับสมุดบัญชี
               onError={() => setPreview(null)}
             />
           ) : (
             <Image
-              src={profileImg}
-              alt="Profile"
-              width={104}
-              height={104}
+              src={bookBankImg}
+              alt="Book Bank"
+              width={208}
+              height={208}
               priority={true}
-              className="w-10 h-10 sm:w-18 sm:h-18 md:w-26 md:h-26"
+              className="w-26 h-26 sm:w-32.5 sm:h-32.5 md:w-39 md:h-39 lg:w-52 lg:h-52"
             />
           )}
 
@@ -72,9 +87,9 @@ const ImageUpload = memo(
           {/* Upload button */}
           <button
             type="button"
-            className="absolute bottom-0 right-0 w-10 h-10 sm:w-12.5 sm:h-12.5 md:w-15 md:h-15 rounded-full bg-[#FFF1EC] flex items-center justify-center shadow"
+            className="absolute bottom-2 right-2 w-10 h-10 sm:w-11.25 sm:h-11.25 md:w-12.5 md:h-12.5 lg:w-15 lg:h-15 rounded-full bg-[#FFF1EC] flex items-center justify-center"
             onClick={triggerFileSelect}
-            aria-label="Upload image"
+            aria-label="Upload book bank"
           >
             <Image src={plus} alt="Add" width={18} height={18} />
           </button>
@@ -96,6 +111,6 @@ const ImageUpload = memo(
   }
 );
 
-ImageUpload.displayName = "ImageUpload";
+BookBankUpload.displayName = "BookBankUpload";
 
-export default ImageUpload;
+export default BookBankUpload;

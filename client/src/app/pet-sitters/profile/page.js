@@ -4,7 +4,7 @@ import Sidebar from "@/components/sitters/SidebarSitter";
 import Topbar from "@/components/sitters/TopbarSitter";
 import Image from "next/image";
 import { Formik, Form, useFormikContext } from "formik";
-import { useEffect, useState, useMemo, memo } from "react";
+import { useEffect, useState, useMemo, memo, useRef } from "react";
 import { profileSchema } from "@/components/form/validationSchema";
 import ImageUpload from "@/components/profile/ImageUpload";
 import GalleryUpload from "@/components/profile/GalleryUpload";
@@ -14,7 +14,7 @@ import { ButtonOrange } from "@/components/buttons/OrangeButtons";
 import { toast, Toaster } from "sonner";
 import dynamic from "next/dynamic";
 import subdistricts from "@/app/data/subdistricts.json";
-import { useAuth } from "@/context/AuthContext"; // เพิ่มการนำเข้า useAuth
+import { useAuth } from "@/context/AuthContext"; // Import useAuth
 
 // Components
 import FormField from "@/components/form/FormField";
@@ -33,12 +33,12 @@ import {
 } from "@/utils/addressHelpers";
 import { uploadFile, uploadMultipleFiles } from "@/utils/uploadHelpers";
 
-// Dynamic imports with loading state
+// Dynamic Import
 export const MapSitterWithNoSSR = dynamic(
   () => import("@/components/profile/MapSitter"),
   {
     ssr: false,
-    loading: () => <LoadingSpinner text="กำลังโหลดแผนที่..." />,
+    loading: () => <LoadingSpinner text="Loading map..." />,
   }
 );
 
@@ -73,6 +73,8 @@ export default function PetSitterProfilePage() {
     profile_image: null,
     gallery: [],
     pet_type: [],
+    latitude: null,
+    longitude: null,
   });
   const [sitterStatus, setSitterStatus] = useState(null);
   const [adminSuggestion, setAdminSuggestion] = useState("");
@@ -80,22 +82,20 @@ export default function PetSitterProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Fetch profile data
     const fetchProfile = async () => {
-      setIsLoading(true);
-
-      if (!user?.id) {
-        setIsLoading(false);
-        return;
-      }
+      if (!user?.id) return;
 
       try {
-        const res = await axios.get("/api/pet-sitters/update-profile", {
+        setIsLoading(true);
+        const response = await axios.get("/api/pet-sitters/update-profile", {
           withCredentials: true,
-          timeout: 10000,
         });
 
-        const data = res.data.data;
-        if (data) {
+        if (response.data?.data) {
+          const data = response.data.data;
+
+          // Update initialValues with data from API
           setInitialValues({
             full_name: data.full_name ?? "",
             experience: data.experience ?? "",
@@ -134,13 +134,23 @@ export default function PetSitterProfilePage() {
                 }
               : "",
             post_code: data.post_code ?? "",
-            // ใช้รูปภาพที่แสดงผล (pending หรือ approved แล้วแต่กรณี)
+            // Use displayed image (pending or approved as applicable)
             profile_image: data.display_profile_image_url ?? null,
             gallery: data.display_gallery_image_url ?? [],
             pet_type: data.pet_type ?? [],
-            // เพิ่มข้อมูลสถานะการรออนุมัติของรูปภาพ
+            // Add pending image status information
             has_pending_profile: data.has_pending_profile ?? false,
             has_pending_gallery: data.has_pending_gallery ?? false,
+            // Current approved coordinates
+            latitude: data.lat || null,
+            longitude: data.lng || null,
+
+            // Pending coordinates
+            pendingLatitude: data.pending_lat || null,
+            pendingLongitude: data.pending_lng || null,
+
+            // Check if there are pending location updates
+            has_pending_location: data.has_pending_location || false,
           });
 
           setSitterStatus(data.status);
@@ -148,7 +158,6 @@ export default function PetSitterProfilePage() {
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
-        // แสดงการแจ้งเตือน
         toast.error("Could not fetch profile data. Please try again later.");
       } finally {
         setIsLoading(false);
@@ -164,7 +173,7 @@ export default function PetSitterProfilePage() {
   ) => {
     // Basic validation check
     if (formikErrors && Object.keys(formikErrors).length > 0) {
-      toast.error("โปรดตรวจสอบข้อมูลที่กรอกให้ถูกต้อง");
+      toast.error("Please check your form inputs and correct any errors");
       setSubmitting(false);
       return;
     }
@@ -173,7 +182,7 @@ export default function PetSitterProfilePage() {
     try {
       await profileSchema.validate(values, { abortEarly: false });
     } catch (validationError) {
-      toast.error(`พบข้อผิดพลาด: ${validationError.errors.join(", ")}`);
+      toast.error(`Error: ${validationError.errors.join(", ")}`);
       setSubmitting(false);
       return;
     }
@@ -197,7 +206,7 @@ export default function PetSitterProfilePage() {
       if (values.profile_image instanceof File) {
         try {
           toast.loading("Uploading profile image...");
-          profileImageUrl = await uploadFile(values.profile_image, "profile"); // เพิ่มพารามิเตอร์ "profile"
+          profileImageUrl = await uploadFile(values.profile_image, "profile"); // Add "profile" parameter
           toast.dismiss();
           toast.success("Profile image uploaded successfully");
         } catch (error) {
@@ -213,9 +222,9 @@ export default function PetSitterProfilePage() {
         }
       }
 
-      // Handle gallery uploads - ปรับปรุงการจัดการการอัพโหลดแกลเลอรี่
+      // Handle gallery uploads - Improved gallery upload handling
       if (Array.isArray(values.gallery) && values.gallery.length > 0) {
-        // แยก File objects และ URLs ที่มีอยู่แล้ว
+        // Separate File objects and existing URLs
         const filesToUpload = values.gallery.filter(
           (item) => item instanceof File
         );
@@ -223,7 +232,7 @@ export default function PetSitterProfilePage() {
           (item) => typeof item === "string"
         );
 
-        galleryUrls = [...existingUrls]; // เริ่มต้นด้วย URLs ที่มีอยู่แล้ว
+        galleryUrls = [...existingUrls]; // Start with existing URLs
 
         if (filesToUpload.length > 0) {
           try {
@@ -233,7 +242,7 @@ export default function PetSitterProfilePage() {
 
             let uploadedCount = 0;
 
-            // อัพโหลดทีละไฟล์และแสดงความคืบหน้า
+            // Upload one file at a time and show progress
             for (const file of filesToUpload) {
               try {
                 toast.loading(
@@ -257,7 +266,7 @@ export default function PetSitterProfilePage() {
                 toast.error(`Failed to upload image: ${file.name}`, {
                   id: "upload-error",
                 });
-                // รอสักครู่ก่อนดำเนินการต่อ
+                // Wait a moment before continuing
                 await new Promise((r) => setTimeout(r, 1000));
               }
             }
@@ -283,7 +292,7 @@ export default function PetSitterProfilePage() {
 
       // Create API payload
       const payload = {
-        // User ID จะถูกดึงจาก cookie บน server
+        // User ID will be extracted from cookie on server
         full_name: values.full_name,
         email: values.email,
         phone_number: values.phone_number,
@@ -311,8 +320,18 @@ export default function PetSitterProfilePage() {
         gallery_image_url: galleryUrls.filter(
           (url) => url && typeof url === "string"
         ),
-        lat: values.latitude,
-        lng: values.longitude,
+        lat:
+          values.has_pending_location && values.pendingLatitude
+            ? parseFloat(values.pendingLatitude)
+            : values.latitude
+            ? parseFloat(values.latitude)
+            : null,
+        lng:
+          values.has_pending_location && values.pendingLongitude
+            ? parseFloat(values.pendingLongitude)
+            : values.longitude
+            ? parseFloat(values.longitude)
+            : null,
       };
 
       // Submit to API
@@ -322,6 +341,9 @@ export default function PetSitterProfilePage() {
         payload,
         {
           withCredentials: true,
+          headers: {
+            "X-Form-Submit": "true",
+          },
         }
       );
 
@@ -333,9 +355,9 @@ export default function PetSitterProfilePage() {
         );
         setSitterStatus("waiting for approval");
 
-        // เพิ่มโค้ดส่วนนี้เพื่ออัพเดท AuthContext
+        // Add code to update AuthContext
         if (profileImageUrl && typeof profileImageUrl === "string") {
-          // อัพเดทข้อมูล user ใน context โดยตรงด้วยรูปใหม่
+          // Directly update user in context with new image
           updateUserData({
             ...user,
             profile_image_url: profileImageUrl,
@@ -345,7 +367,7 @@ export default function PetSitterProfilePage() {
             profileImageUrl
           );
         } else {
-          // ถ้าไม่ได้อัพโหลดรูปใหม่ แต่ต้องการให้แน่ใจว่าข้อมูล user เป็นข้อมูลล่าสุด
+          // If no new image uploaded, ensure user data is latest
           await fetchUserData();
           console.log("Fetched updated user data after profile save");
         }
@@ -367,7 +389,7 @@ export default function PetSitterProfilePage() {
   const FormikErrorLogger = () => {
     const formik = useFormikContext();
     useEffect(() => {
-      // ตรวจสอบว่า formik.errors มีค่าและไม่ใช่ object ว่าง
+      // Check if formik.errors exists and isn't empty
       if (formik?.errors && Object.keys(formik.errors).length > 0) {
         console.error("Form validation errors:", formik.errors);
       }
@@ -424,7 +446,7 @@ export default function PetSitterProfilePage() {
           <div className="fixed top-0 left-0 right-0 z-50 md:left-[240px] flex flex-col">
             <Topbar className="w-full" />
             <div className="md:hidden w-full">
-              <Sidebar className="flex flex-row md:hidden bg-white border-b border-[#DCDFED]" />
+              <Sidebar className="flex flex-row md:hidden bg-white shadow-[4px_4px_24px_0px_#0000000A]" />
             </div>
           </div>
 
@@ -436,8 +458,11 @@ export default function PetSitterProfilePage() {
               validationSchema={profileSchema}
               onSubmit={handleSubmit}
             >
-              {({ values, setFieldValue, errors, touched }) => (
-                <Form className="w-full flex flex-col gap-6 px-4 py-6 md:px-10 md:pb-20 md:pt-10">
+              {({ values, setFieldValue, errors, touched, submitForm }) => (
+                <Form
+                  noValidate
+                  className="w-full flex flex-col gap-6 px-4 py-6 md:px-10 md:pb-20 md:pt-10"
+                >
                   <FormikErrorLogger />
 
                   {/* Header with status indicator */}
@@ -455,7 +480,7 @@ export default function PetSitterProfilePage() {
                     />
                   </div>
 
-                  {/* Admin Suggestion (เฉพาะ rejected) */}
+                  {/* Admin Suggestion (only for rejected) */}
                   {sitterStatus === "rejected" && (
                     <div className="bg-[#E9EAF6] text-[#EA1010] px-6 py-3 rounded-lg mt-4 flex items-center gap-2">
                       <Image
@@ -514,8 +539,8 @@ const BasicInfoSection = memo(({ values, setFieldValue, errors, touched }) => {
             value={values.profile_image}
             onChange={(file) => setFieldValue("profile_image", file)}
             error={touched.profile_image && errors.profile_image}
-            requiresApproval={true} // แสดง badge pending approval เสมอเมื่อมีการอัพโหลดใหม่
-            isPending={values.has_pending_profile} // บอกว่ารูปนี้กำลังรออนุมัติอยู่ (สำหรับรูปที่มาจาก API)
+            requiresApproval={true}
+            isPending={values.has_pending_profile} // This value should only exist when there's an actual pending image approval
           />
         </div>
 
@@ -624,8 +649,8 @@ const PetSitterInfoSection = memo(
             value={values.gallery}
             onChange={(files) => setFieldValue("gallery", files)}
             error={touched.gallery && errors.gallery}
-            requiresApproval={true} // แสดง badge pending approval เสมอเมื่อมีการอัพโหลดใหม่
-            isPending={values.has_pending_gallery} // บอกว่ามีรูปในแกลเลอรี่ที่กำลังรออนุมัติอยู่
+            requiresApproval={true} // Always show pending approval badge when new uploads occur
+            isPending={values.has_pending_gallery} // Indicates there are gallery images pending approval
           />
         </div>
       </section>
@@ -638,6 +663,7 @@ PetSitterInfoSection.displayName = "PetSitterInfoSection";
 // Address Section Component
 const AddressSection = memo(() => {
   const { values, setFieldValue, errors, touched } = useFormikContext();
+  const lastPositionRef = useRef({ lat: null, lng: null });
 
   // Update postal code when subdistrict changes
   useEffect(() => {
@@ -686,6 +712,15 @@ const AddressSection = memo(() => {
           : values.sub_district,
       postalCode: values.post_code,
       addressDetail: values.address_detail,
+      // Add database info
+      provinceId:
+        typeof values.province === "object" ? values.province.value : null,
+      districtId:
+        typeof values.district === "object" ? values.district.value : null,
+      subdistrictId:
+        typeof values.sub_district === "object"
+          ? values.sub_district.value
+          : null,
     }),
     [
       values.province,
@@ -695,6 +730,41 @@ const AddressSection = memo(() => {
       values.address_detail,
     ]
   );
+
+  // Create initialPosition for MapSitter
+  const initialPosition = useMemo(() => {
+    // Use pending coordinates first if available
+    if (
+      values.has_pending_location &&
+      values.pendingLatitude &&
+      values.pendingLongitude
+    ) {
+      const lat = parseFloat(values.pendingLatitude);
+      const lng = parseFloat(values.pendingLongitude);
+
+      if (!isNaN(lat) && !isNaN(lng)) {
+        return [lat, lng];
+      }
+    }
+
+    // Otherwise use approved coordinates
+    if (values.latitude && values.longitude) {
+      const lat = parseFloat(values.latitude);
+      const lng = parseFloat(values.longitude);
+
+      if (!isNaN(lat) && !isNaN(lng)) {
+        return [lat, lng];
+      }
+    }
+
+    return null;
+  }, [
+    values.latitude,
+    values.longitude,
+    values.pendingLatitude,
+    values.pendingLongitude,
+    values.has_pending_location,
+  ]);
 
   return (
     <section className="bg-white flex flex-col rounded-2xl px-4 sm:px-6 md:px-20 py-6 sm:py-10 gap-6">
@@ -714,6 +784,7 @@ const AddressSection = memo(() => {
       <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 w-full">
         <ProvinceField
           onChange={(selectedProvince) => {
+            console.log("Province change in form state only");
             setFieldValue("province", selectedProvince);
             setFieldValue("district", "");
             setFieldValue("sub_district", "");
@@ -752,14 +823,68 @@ const AddressSection = memo(() => {
         />
       </div>
 
-      <div className="bg-gray-300 rounded-lg overflow-hidden relative w-full h-[400px]">
+      <div className="bg-gray-300 z-0 rounded-lg overflow-hidden relative w-full h-[400px]">
         {showMap ? (
-          <MapSitterWithNoSSR addressDetails={addressDetails} />
+          <MapSitterWithNoSSR
+            initialPosition={initialPosition}
+            addressDetails={addressDetails}
+            autoSave={false}
+            allowManualPin={true}
+            onPositionChange={(lat, lng) => {
+              if (
+                lastPositionRef.current.lat !== lat ||
+                lastPositionRef.current.lng !== lng
+              ) {
+                lastPositionRef.current = { lat, lng };
+
+                // Store coordinates as pending approval values
+                setFieldValue("pendingLatitude", lat);
+                setFieldValue("pendingLongitude", lng);
+                setFieldValue("has_pending_location", true);
+
+                // Don't update latitude/longitude to preserve approved coordinates
+                // Removed setFieldValue for latitude and longitude
+
+                // Keep original values and only add to payload when sending API
+              }
+            }}
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <p className="text-gray-500">กรุณาเลือกจังหวัดและอำเภอก่อน</p>
+            <p className="text-gray-500">
+              Please select province and district first
+            </p>
           </div>
         )}
+      </div>
+
+      {/* Show both approved coordinates and pending coordinates */}
+      <div className="flex flex-col gap-3 w-full">
+        {/* Currently approved coordinates */}
+        <div className="text-xs text-gray-500 flex gap-2">
+          <span>Current coordinates (approved):</span>
+          {values.latitude && values.longitude ? (
+            <span className="font-medium">
+              {parseFloat(values.latitude).toFixed(6)},
+              {parseFloat(values.longitude).toFixed(6)}
+            </span>
+          ) : (
+            <span className="italic">No coordinates specified</span>
+          )}
+        </div>
+
+        {/* Pending coordinates */}
+        {values.has_pending_location &&
+          values.pendingLatitude &&
+          values.pendingLongitude && (
+            <div className="text-xs text-amber-600 flex gap-2">
+              <span>Pending coordinates:</span>
+              <span className="font-medium">
+                {parseFloat(values.pendingLatitude).toFixed(6)},
+                {parseFloat(values.pendingLongitude).toFixed(6)}
+              </span>
+            </div>
+          )}
       </div>
     </section>
   );
