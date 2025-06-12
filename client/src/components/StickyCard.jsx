@@ -150,7 +150,7 @@ const StickyCard = ({ sitter }) => {
           </div>
           <BookingModal 
           key = {showBooking? "open" : "closed"}
-          sitterId={sitter.id} 
+          sitterId={sitter.user_id} 
           isOpen={showBooking} 
           onClose={() => setShowBooking(false)} />
         </div>

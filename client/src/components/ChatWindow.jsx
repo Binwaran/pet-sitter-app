@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import Image from 'next/image';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/utils/supabase';
+import BookNowButton from './BookNowButton'
 
 export default function ChatWindow({
   user,
@@ -151,6 +152,7 @@ export default function ChatWindow({
             className="w-10 h-10 rounded-full object-cover"
           />
           <div className="font-semibold text-2xl">{user?.name || "Unknown"}</div>
+          <BookNowButton sitterId={user?.id}/>
         </div>
         <div>
           <button onClick={onClose}>
@@ -180,10 +182,10 @@ export default function ChatWindow({
           messages.map((msg) => (
             <div
               key={msg.id}
-              className={`px-4 py-2 rounded-xl max-w-sm ${
+              className={`px-5 py-2 max-w-sm ${
                 msg.senderId === currentUser.id
-                  ? 'self-end bg-orange-500 text-white'
-                  : 'self-start bg-white border text-gray-700'
+                  ? 'self-end bg-orange-500 text-white rounded-3xl rounded-br-none'
+                  : 'self-start bg-white border text-gray-700 rounded-3xl rounded-bl-none'
               }`}
             >
               <div>{msg.content}</div>
@@ -191,7 +193,7 @@ export default function ChatWindow({
                 <img
                   src={msg.image_url}
                   alt="attachment"
-                  className="mt-2 max-w-xs rounded-lg"
+                  className="mt-2 max-w-xs rounded-3xl"
                 />
               )}
             </div>

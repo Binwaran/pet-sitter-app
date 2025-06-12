@@ -67,7 +67,6 @@ nav:hover {
   }
 }
 
-
 .custom-input:focus {
   outline: none;
   border-color: #FF7037;
@@ -273,4 +272,10 @@ nav:hover {
 
 .nav-arrow:hover {
   color: #ff4400;
+}
+
+.react-select__option--is-disabled {
+  color: #bbb !important;
+  cursor: not-allowed !important;
+  background-color: #f9f9f9 !important;
 }
