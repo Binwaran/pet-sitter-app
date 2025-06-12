@@ -92,7 +92,7 @@ export default function MapSitter({
   const [userInfo, setUserInfo] = useState({ tradeName: "Pet Sitter" });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [draggable, setDraggable] = useState(allowManualPin);
+  const [draggable, setDraggable] = useState(true);
   const [showConfirmManualPin, setShowConfirmManualPin] = useState(false);
   const { user } = useAuth();
   const lastSearchRef = useRef("");
@@ -185,23 +185,32 @@ export default function MapSitter({
 
   // สำหรับการอัพเดตพิกัดเมื่อลากหมุด
   const handleMarkerDrag = useCallback(
-    (e) => {
-      if (!allowManualPin) return;
+  (e) => {
+    if (!allowManualPin) return;
+    
+    // แก้ไขจาก e.latlng เป็น e.target._latlng
+    const { lat, lng } = e.target._latlng;
+    const newLat = parseFloat(lat);
+    const newLng = parseFloat(lng);
 
-      const { lat, lng } = e.latlng;
-      const newLat = parseFloat(lat);
-      const newLng = parseFloat(lng);
+    if (!isNaN(newLat) && !isNaN(newLng)) {
+      setPosition([newLat, newLng]);
+      
+      // แสดงข้อความยืนยันว่าปรับตำแหน่งแล้ว
+      setShowConfirmManualPin(true);
+      
+      // หลังจากแสดงข้อความ 3 วินาที ให้ซ่อนข้อความ
+      setTimeout(() => {
+        setShowConfirmManualPin(false);
+      }, 3000);
 
-      if (!isNaN(newLat) && !isNaN(newLng)) {
-        setPosition([newLat, newLng]);
-
-        if (onPositionChange) {
-          onPositionChange(newLat, newLng);
-        }
+      if (onPositionChange) {
+        onPositionChange(newLat, newLng);
       }
-    },
-    [allowManualPin, onPositionChange]
-  );
+    }
+  },
+  [allowManualPin, onPositionChange]
+);
 
   // เพิ่ม component สำหรับให้สามารถคลิกบนแผนที่ได้
   const MapEvents = () => {
@@ -371,29 +380,23 @@ export default function MapSitter({
         </div>
       )}
 
-      {/* ย้าย Control มาไว้ข้างนอก MapContainer */}
-      {allowManualPin && (
-        <div className="absolute bottom-4 right-4 z-[1000]">
-          <div className="bg-white p-2 rounded shadow">
-            <button
-              type="button"
-              className="bg-orange-500 text-white rounded p-2 text-sm"
-              onClick={() => setDraggable(!draggable)}
-            >
-              {draggable ? "หยุดปรับตำแหน่งหมุด" : "ปรับตำแหน่งหมุด"}
-            </button>
-          </div>
-        </div>
-      )}
+      {/* ข้อความแนะนำการใช้งานแผนที่ */}
+  {allowManualPin && (
+  <div className="absolute bottom-5 right-4 z-[1000]">
+    <div className="bg-white p-2 rounded shadow-md border border-orange-400 text-center max-w-[200px]">
+      <p className="text-xs font-medium">คลิกบนแผนที่เพื่อปรับตำแหน่งหมุด</p>
+      <p className="text-xs text-gray-500">
+        หรือลากหมุดไปยังตำแหน่งที่ต้องการ
+      </p>
+    </div>
+  </div>
+)}
 
       {/* ย้าย confirmation message มาไว้ข้างนอก MapContainer */}
       {showConfirmManualPin && (
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000]">
           <div className="bg-white p-3 rounded shadow-lg border-2 border-orange-500 text-center">
             <p className="text-sm font-medium">ปักหมุดที่ตำแหน่งนี้แล้ว</p>
-            <p className="text-xs text-gray-600 mt-1">
-              คุณสามารถปรับตำแหน่งได้โดยลากหมุดหรือคลิกบนแผนที่
-            </p>
           </div>
         </div>
       )}
@@ -413,7 +416,7 @@ export default function MapSitter({
           <Marker
             position={position}
             icon={petSitterIcon}
-            draggable={draggable}
+            draggable={allowManualPin}
             eventHandlers={{
               dragend: handleMarkerDrag,
             }}
