@@ -204,13 +204,13 @@ export default function MapSitter({
           setShowConfirmManualPin(false);
         }, 3000);
 
-        if (onPositionChange) {
-          onPositionChange(newLat, newLng);
-        }
+      if (onPositionChange) {
+        onPositionChange(newLat, newLng);
       }
-    },
-    [allowManualPin, onPositionChange]
-  );
+    }
+  },
+  [allowManualPin, onPositionChange]
+);
 
   // เพิ่ม component สำหรับให้สามารถคลิกบนแผนที่ได้
   const MapEvents = () => {
