@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export const AuthContext = createContext(null);
 
@@ -77,6 +78,7 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     await fetch("/api/logout", { method: "POST", credentials: "include" });
     setUser(null);
+    toast.success("Logged out successfully");
   };
 
   return (

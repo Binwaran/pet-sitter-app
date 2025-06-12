@@ -69,9 +69,11 @@ const BookingSummaryCard = ({ bookingDetails }) => {
           <p className="ml-2">{petDisplay}</p>
         </div>
       </div>
-      <div className="border-t border-gray-200 my-4 pt-4 flex justify-between items-center">
-        <span className="font-bold text-lg">Total</span>
-        <span className="font-bold text-orange-500 text-lg">{total}</span>
+      <div className="border-t border-gray-200 my-4 pt-4">
+      </div>
+      <div className="-mx-6 -mb-6 bg-black text-white rounded-b-2xl flex justify-between items-center px-6 py-5 text-lg font-semibold">
+        <span>Total</span>
+        <span>{total}</span>
       </div>
     </div>
   );

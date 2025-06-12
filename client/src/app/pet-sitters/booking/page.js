@@ -62,7 +62,7 @@ export default function BookingPage() {
             </div>
 
             <div className="bg-white rounded-2xl shadow-md p-6">
-              <h2 className="text-xl font-bold mb-2 text-gray-800">Choose your pet</h2>
+              <h2 className="text-xl  mb-2 my-2 text-gray-800">Choose your pet</h2>
               <div className="w-full mt-2">
                 {loading ? (
                   <div className="text-gray-500">Loading pets...</div>

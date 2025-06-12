@@ -13,15 +13,22 @@ const bookingSteps = ({ currentStep }) => {
         <div key={step.number} className="flex items-center min-w-[120px]">
           <div
             className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-base border-2 transition-all duration-200
-              ${currentStep === step.number ? 'bg-orange-500 border-orange-500 text-white' :
-                'bg-[#F5F5F7] border-[#F5F5F7] text-gray-400'}
+              ${currentStep === step.number
+                ? 'bg-orange-500 border-orange-500 text-white'
+                : step.number < currentStep
+                  ? 'bg-black border-black text-orange-400'
+                  : 'bg-[#F5F5F7] border-[#F5F5F7] text-gray-400'}
             `}
           >
             {step.number}
           </div>
           <span
             className={`ml-3 text-base whitespace-nowrap transition-all duration-200
-              ${currentStep === step.number ? 'text-orange-500 font-semibold' : 'text-gray-400'}
+              ${currentStep === step.number
+                ? 'text-orange-500 font-semibold'
+                : step.number < currentStep
+                  ? 'text-black font-semibold'
+                  : 'text-gray-400'}
             `}
           >
             {step.name}
