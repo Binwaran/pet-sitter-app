@@ -152,7 +152,7 @@ const PaginationControls = memo(({ count, page, onChange }) => (
 PaginationControls.displayName = "PaginationControls";
 
 // Component สำหรับแสดงแต่ละ review
-const ReviewCard = memo(({ review, onReject }) => {
+const ReviewCard = memo(({ review, onReject, onToggleApprove }) => {
   // Format review date
   const formattedDate = useMemo(() => {
     try {
@@ -189,8 +189,26 @@ const ReviewCard = memo(({ review, onReject }) => {
           <p className="font-medium text-black text-lg leading-[26px] whitespace-nowrap">
             {review.reviewer_name || "Anonymous"}
           </p>
-          <div className="font-medium text-sm text-[#7B7E8F] whitespace-nowrap">
-            {formattedDate}
+          <div className="flex flex-col">
+            <div className="font-medium text-sm text-[#7B7E8F] whitespace-nowrap">
+              {formattedDate}
+            </div>
+            {review.verified && (
+              <div className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-medium mt-1 inline-flex items-center">
+                <svg
+                  className="w-3 h-3 mr-1"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                Verified
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -222,22 +240,44 @@ const ReviewCard = memo(({ review, onReject }) => {
           </svg>
         </button>
         <button
-          onClick={() => alert("Feature coming soon!")}
-          className="flex items-center justify-center w-15 h-15 rounded-full bg-[#FEF3ED] hover:bg-[#FF7037]/10 text-[#FF7037] hover:text-[#FF7037] transition-colors duration-200 cursor-pointer"
-          aria-label="Approve review"
+          onClick={() => onToggleApprove(review)}
+          className={`flex items-center justify-center w-15 h-15 rounded-full transition-colors duration-200 cursor-pointer ${
+            review.verified
+              ? "bg-[#E7FDF4] text-[#1CCD83] hover:bg-[#E7FDF4]/80"
+              : "bg-[#FEF3ED] hover:bg-[#FEF3ED]/80 text-[#FF7037]"
+          }`}
+          aria-label={review.verified ? "Unapprove review" : "Approve review"}
         >
-          <svg
-            width="16"
-            height="12"
-            viewBox="0 0 16 12"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M15.6335 0.347263C15.5276 0.237227 15.4017 0.149889 15.263 0.0902873C15.1243 0.0306856 14.9755 0 14.8252 0C14.6749 0 14.5261 0.0306856 14.3873 0.0902873C14.2486 0.149889 14.1227 0.237227 14.0168 0.347263L5.53519 9.10519L1.97176 5.41888C1.86187 5.30942 1.73215 5.22335 1.59 5.16558C1.44786 5.10782 1.29607 5.07949 1.14331 5.08222C0.990548 5.08494 0.839803 5.11867 0.699681 5.18147C0.559559 5.24427 0.432805 5.33491 0.326655 5.44823C0.220505 5.56154 0.137038 5.69531 0.0810208 5.84189C0.0250032 5.98846 -0.00246884 6.14498 0.000174094 6.30251C0.00281703 6.46004 0.035523 6.61548 0.0964241 6.75997C0.157325 6.90447 0.245229 7.03518 0.355117 7.14464L4.72687 11.6527C4.83271 11.7628 4.95862 11.8501 5.09736 11.9097C5.23609 11.9693 5.3849 12 5.53519 12C5.68548 12 5.83429 11.9693 5.97302 11.9097C6.11176 11.8501 6.23767 11.7628 6.34351 11.6527L15.6335 2.07302C15.749 1.96309 15.8413 1.82966 15.9044 1.68115C15.9674 1.53264 16 1.37227 16 1.21014C16 1.04801 15.9674 0.88764 15.9044 0.739132C15.8413 0.590623 15.749 0.457197 15.6335 0.347263Z"
-              fill="#FF7037"
-            />
-          </svg>
+          {review.verified ? (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="lucide lucide-circle-check-big-icon lucide-circle-check-big"
+            >
+              <path d="M21.801 10A10 10 0 1 1 17 3.335" />
+              <path d="m9 11 3 3L22 4" />
+            </svg>
+          ) : (
+            <svg
+              width="16"
+              height="12"
+              viewBox="0 0 16 12"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M15.6335 0.347263C15.5276 0.237227 15.4017 0.149889 15.263 0.0902873C15.1243 0.0306856 14.9755 0 14.8252 0C14.6749 0 14.5261 0.0306856 14.3873 0.0902873C14.2486 0.149889 14.1227 0.237227 14.0168 0.347263L5.53519 9.10519L1.97176 5.41888C1.86187 5.30942 1.73215 5.22335 1.59 5.16558C1.44786 5.10782 1.29607 5.07949 1.14331 5.08222C0.990548 5.08494 0.839803 5.11867 0.699681 5.18147C0.559559 5.24427 0.432805 5.33491 0.326655 5.44823C0.220505 5.56154 0.137038 5.69531 0.0810208 5.84189C0.0250032 5.98846 -0.00246884 6.14498 0.000174094 6.30251C0.00281703 6.46004 0.035523 6.61548 0.0964241 6.75997C0.157325 6.90447 0.245229 7.03518 0.355117 7.14464L4.72687 11.6527C4.83271 11.7628 4.95862 11.8501 5.09736 11.9097C5.23609 11.9693 5.3849 12 5.53519 12C5.68548 12 5.83429 11.9693 5.97302 11.9097C6.11176 11.8501 6.23767 11.7628 6.34351 11.6527L15.6335 2.07302C15.749 1.96309 15.8413 1.82966 15.9044 1.68115C15.9674 1.53264 16 1.37227 16 1.21014C16 1.04801 15.9674 0.88764 15.9044 0.739132C15.8413 0.590623 15.749 0.457197 15.6335 0.347263Z"
+                fill="#FF7037"
+              />
+            </svg>
+          )}
         </button>
       </div>
     </div>
@@ -343,10 +383,38 @@ function useReviewData(sitterId) {
     }
   }, []);
 
+  const toggleApproveReview = useCallback(async (review) => {
+    try {
+      const isApproving = !review.verified;
+
+      const response = await axios.put(`/api/admin/pet-sitters/reviews`, {
+        id: review.id,
+        verified: isApproving,
+      });
+
+      // อัพเดตสถานะ review ในข้อมูลท้องถิ่น
+      setState((prev) => ({
+        ...prev,
+        reviews: prev.reviews.map((r) =>
+          r.id === review.id ? { ...r, verified: isApproving } : r
+        ),
+      }));
+
+      return true;
+    } catch (err) {
+      console.error(
+        `Error ${review.verified ? "unapproving" : "approving"} review:`,
+        err
+      );
+      return false;
+    }
+  }, []);
+
   return {
     ...state,
     setPage,
     deleteReview,
+    toggleApproveReview,
   };
 }
 
@@ -371,6 +439,7 @@ export default function ReviewsTab({ sitterId }) {
     totalPages,
     setPage,
     deleteReview,
+    toggleApproveReview,
   } = useReviewData(sitterId);
 
   // State สำหรับ modal ลบ review
@@ -388,6 +457,25 @@ export default function ReviewsTab({ sitterId }) {
       isDeleting: false,
     });
   }, []);
+
+  const handleToggleApprove = useCallback(
+    async (review) => {
+      try {
+        const success = await toggleApproveReview(review);
+        if (!success) {
+          throw new Error("Failed to update review status");
+        }
+      } catch (err) {
+        console.error("Error toggling review approval:", err);
+        alert(
+          `Failed to ${
+            review.verified ? "remove verification" : "verify"
+          } review: ${err.message}`
+        );
+      }
+    },
+    [toggleApproveReview]
+  );
 
   const handleCancelDelete = useCallback(() => {
     setModalState({
@@ -477,6 +565,7 @@ export default function ReviewsTab({ sitterId }) {
                 key={review.id}
                 review={review}
                 onReject={handleRejectClick}
+                onToggleApprove={handleToggleApprove}
               />
             ))}
           </div>

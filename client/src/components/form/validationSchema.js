@@ -49,6 +49,9 @@ export const profileSchema = Yup.object().shape({
     .email("Invalid email format")
     .matches(/^[\w-.]+@[\w-]+\.[\w-.]+$/, "Email must be a valid email address")
     .required("Email is required"),
+  date_of_birth: Yup.date()
+    .nullable()
+    .transform((curr, orig) => (orig === "" ? null : curr)),
 
   // แก้ไข validation สำหรับ profile_image
   profile_image: Yup.mixed()

@@ -75,6 +75,7 @@ export default function PetSitterProfilePage() {
     pet_type: [],
     latitude: null,
     longitude: null,
+    date_of_birth: "",
   });
   const [sitterStatus, setSitterStatus] = useState(null);
   const [adminSuggestion, setAdminSuggestion] = useState("");
@@ -151,6 +152,7 @@ export default function PetSitterProfilePage() {
 
             // Check if there are pending location updates
             has_pending_location: data.has_pending_location || false,
+            date_of_birth: data.date_of_birth || "",
           });
 
           setSitterStatus(data.status);
@@ -298,6 +300,7 @@ export default function PetSitterProfilePage() {
         phone_number: values.phone_number,
         profile_image_url: profileImageUrl,
         experience: values.experience,
+        date_of_birth: values.date_of_birth,
         introduction: values.introduction,
         trade_name: values.trade_name,
         services: values.services,
@@ -582,6 +585,17 @@ const BasicInfoSection = memo(({ values, setFieldValue, errors, touched }) => {
             touched={touched}
             errors={errors}
             autoComplete="email"
+          />
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 w-full">
+          <FormField
+            label="Date of Birth"
+            name="date_of_birth"
+            type="date"
+            touched={touched}
+            errors={errors}
+            autoComplete="bday"
           />
         </div>
 

@@ -46,18 +46,27 @@ export default async function handler(req, res) {
     // นำข้อมูลจาก pending_data มาอัพเดทเป็นข้อมูลหลัก
     const pendingData = checkData.pending_data;
     const userData = pendingData?.user_data || {};
-    const petSitterData = pendingData?.pet_sitter_data || {};
+    // Extract pet sitter data, making sure to remove date_of_birth if present
+    const petSitterData = { ...pendingData?.pet_sitter_data } || {};
+    
+    // Remove date_of_birth from petSitterData if it exists
+    if (petSitterData.date_of_birth !== undefined) {
+      delete petSitterData.date_of_birth;
+    }
 
     // อัพเดทข้อมูล users table ก่อน (ถ้ามี)
     if (Object.keys(userData).length > 0) {
       const { error: userUpdateError } = await supabase
         .from("users")
         .update({
-          name: userData.name,
-          email: userData.email,
-          phone: userData.phone,
+          name: userData.name || checkData.users?.name,
+          email: userData.email || checkData.users?.email,
+          phone: userData.phone || checkData.users?.phone,
+          birthday: userData.birthday || userData.date_of_birth || checkData.users?.birthday, // Add birthday field
           profile_image_url:
-            checkData.pending_profile_image_url || userData.profile_image_url,
+            checkData.pending_profile_image_url ||
+            userData.profile_image_url ||
+            checkData.users?.profile_image_url,
         })
         .eq("id", userId);
 
@@ -66,6 +75,7 @@ export default async function handler(req, res) {
         return res.status(500).json({ message: userUpdateError.message });
       }
     }
+    
 
     // อัพเดทข้อมูล pet_sitter table
     const { data: updateData, error: updateError } = await supabase
