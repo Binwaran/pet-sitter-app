@@ -1,6 +1,13 @@
 import React from 'react';
 
-const BookingSummaryCard = ({ bookingDetails }) => {
+// Helper to format time as HH:mm
+function formatTimeHM(isoString) {
+  if (!isoString) return '';
+  const d = new Date(isoString);
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
+const BookingSummaryCard = ({ bookingDetails, sitterTradeName }) => {
   if (!bookingDetails) {
     return (
       <div className="bg-white rounded-2xl shadow-md p-6 text-gray-500">
@@ -14,13 +21,20 @@ const BookingSummaryCard = ({ bookingDetails }) => {
   const email = bookingDetails.email || 'N/A';
   const phone = bookingDetails.phone || 'N/A';
   const message = bookingDetails.message || '-';
-  // Sitter info: try both possible field names
-  const sitterName = bookingDetails.sitterName || bookingDetails.sitter || 'Unknown';
+  // Sitter info: prefer trade_name if passed, else fallback
+  const sitterName = sitterTradeName || bookingDetails.trade_name || bookingDetails.sitterName || bookingDetails.sitter || 'Unknown';
   const sitterHouse = bookingDetails.sitterHouse || bookingDetails.sitterHouseName || '';
   // Date & Time
   const date = bookingDetails.date || '-';
-  const time = bookingDetails.time || '-';
-  const duration = bookingDetails.duration || '-';
+  // Prefer start_time/end_time for time range
+  let timeRange = '-';
+  if (bookingDetails.start_time && bookingDetails.end_time) {
+    timeRange = `${formatTimeHM(bookingDetails.start_time)} - ${formatTimeHM(bookingDetails.end_time)}`;
+  } else if (bookingDetails.time) {
+    timeRange = bookingDetails.time;
+  }
+  // Duration
+  const durationHour = bookingDetails.duration_hour || bookingDetails.duration || '-';
   // Pet: show names if pets is array, else fallback
   let petDisplay = '-';
   if (Array.isArray(bookingDetails.pets) && bookingDetails.pets.length > 0) {
@@ -58,11 +72,11 @@ const BookingSummaryCard = ({ bookingDetails }) => {
         </div>
         <div className="text-sm">
           <p className="font-medium">Date & Time:</p>
-          <p className="ml-2">{date} | {time}</p>
+          <p className="ml-2">{date} | {timeRange}</p>
         </div>
         <div className="text-sm">
           <p className="font-medium">Duration:</p>
-          <p className="ml-2">{duration}</p>
+          <p className="ml-2">{durationHour}</p>
         </div>
         <div className="text-sm">
           <p className="font-medium">Pet:</p>

@@ -5,32 +5,52 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import NavBar from '@/components/NavBar';
 import {generateTransactionNo} from '@/utils/generateTransactionNo';
+import { supabase } from '@/utils/supabase';
 
 export default function BookingThankYouPage() {
   const [booking, setBooking] = useState(null);
+  const [sitter, setSitter] = useState(null);
   const router = useRouter();
 
-    useEffect(() => {
+  useEffect(() => {
     const stored = localStorage.getItem('bookingDetails');
     if (stored) {
       const parsed = JSON.parse(stored);
-
       if (!parsed.transactionNo) {
         parsed.transactionNo = generateTransactionNo();
-        console.log('Generated new transactionNo:', parsed.transactionNo);//log check
-        localStorage.setItem('bookingDetails', JSON.stringify(parsed)); 
+        localStorage.setItem('bookingDetails', JSON.stringify(parsed));
       }
-
       setBooking(parsed);
+      // ดึงข้อมูล pet_sitter จาก Supabase
+      if (parsed.sitter_id) {
+        supabase
+          .from('pet_sitter')
+          .select('trade_name')
+          .eq('user_id', parsed.sitter_id)
+          .single()
+          .then(({ data }) => {
+            setSitter(data);
+          });
+      }
     } else {
       router.push('/');
     }
   }, [router]);
 
-  if (!booking) return null; 
+  if (!booking) return null;
   const data = booking;
-
-
+  // ใช้ชื่อร้าน (trade_name) ที่เลือกมาตั้งแต่ต้น ถ้ามีใน bookingDetails
+  const sitterName = data.trade_name || sitter?.trade_name || 'Pet Sitter';
+  const durationHour = data.duration_hour || data.duration || '-';
+  // ฟังก์ชันแปลง ISO string เป็น HH:mm
+  function formatTimeHM(isoString) {
+    if (!isoString) return '';
+    const d = new Date(isoString);
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+  }
+  const timeRange = data.start_time && data.end_time
+    ? `${formatTimeHM(data.start_time)} - ${formatTimeHM(data.end_time)}`
+    : data.time || '-';
 
   return (
     <>
@@ -53,7 +73,7 @@ export default function BookingThankYouPage() {
           <div className="flex items-center justify-between mb-2">
             <div>
               <div className="text-xs text-gray-400">Pet Sitter:</div>
-              <div className="text-sm text-gray-800 font-medium">{data.sitter}</div>
+              <div className="text-sm text-gray-800 font-medium">{sitterName}</div>
             </div>
             <a href="#" className="flex items-center text-orange-500 text-sm font-medium hover:underline">
               <Image src="/assets/icon=map-marker.png" alt="map" width={18} height={18} className="mr-1" style={{ filter: 'invert(48%) sepia(99%) saturate(749%) hue-rotate(359deg) brightness(101%) contrast(101%)' }} />
@@ -66,12 +86,12 @@ export default function BookingThankYouPage() {
               <div className="flex items-center gap-2">
                 <div className="text-sm text-gray-800 font-medium">{data.date}</div>
                 <span className="mx-2 text-gray-300">|</span>
-                <div className="text-sm text-gray-800 font-medium">{data.time}</div>
+                <div className="text-sm text-gray-800 font-medium">{timeRange}</div>
               </div>
             </div>
             <div className="flex flex-col">
               <div className="text-xs text-gray-400 mb-0.5">Duration:</div>
-              <div className="text-sm text-gray-800 font-medium">{data.duration}</div>
+              <div className="text-sm text-gray-800 font-medium">{durationHour}</div>
             </div>
           </div>
           <div className="mb-4">
@@ -88,7 +108,6 @@ export default function BookingThankYouPage() {
             <span>{parseFloat(data.total).toLocaleString(undefined, { minimumFractionDigits: 2 })} THB</span>
           </div>
         </div>
-       
       </div>
      <div className="flex justify-center gap-4 py-6 ">
           <button className="px-6 py-2 rounded-full bg-[#FFF6F0] text-orange-500 font-semibold hover:bg-orange-100 transition">Booking Detail</button>

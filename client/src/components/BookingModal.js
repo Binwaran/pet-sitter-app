@@ -118,9 +118,29 @@ export default function BookingModal({ sitterId, isOpen, onClose }) {
       return;
     }
 
-    onClose();
+    // ✅ ดึง trade_name ของ sitter ปัจจุบันจาก Supabase แล้วอัปเดต bookingDetails ใน localStorage
+    const { data: sitterData } = await supabase
+      .from('pet_sitter')
+      .select('trade_name')
+      .eq('user_id', sitterId)
+      .single();
 
-    // ✅ ไปหน้า step 2
+    // โหลด bookingDetails เดิม (ถ้ามี)
+    const prev = localStorage.getItem('bookingDetails');
+    let bookingDetails = prev ? JSON.parse(prev) : {};
+    bookingDetails = {
+      ...bookingDetails,
+      sitter_id: sitterId,
+      trade_name: sitterData?.trade_name || '',
+      start_time: startDateTime,
+      end_time: endDateTime,
+      date: startDateTime.split("T")[0],
+      duration_hour: hours,
+      booking_id: bookingId,
+    };
+    localStorage.setItem('bookingDetails', JSON.stringify(bookingDetails));
+
+    onClose();
     router.push("/pet-sitters/booking");
   };
 

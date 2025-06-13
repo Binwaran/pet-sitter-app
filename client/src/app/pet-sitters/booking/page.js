@@ -7,6 +7,7 @@ import BookingSummaryCard from '@/components/booking/BookingSummaryCard';
 import { PetSelectionList } from '@/components/booking/PetSelectionCard';
 import { useAuth } from '@/context/AuthContext';
 import axios from 'axios';
+import { supabase } from '@/utils/supabase';
 
 
 export default function BookingPage() {
@@ -15,6 +16,8 @@ export default function BookingPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedPetIds, setSelectedPetIds] = useState([]);
+  const [sitter, setSitter] = useState(null);
+  const [total, setTotal] = useState(0);
 
   const handlePetSelect = (petId) => {
     setSelectedPetIds((prevSelected) =>
@@ -23,6 +26,19 @@ export default function BookingPage() {
         : [...prevSelected, petId]
     );
   };
+
+  // ดึงข้อมูล pet_sitter (สมมติ sitter_id มาจาก query หรือ prop หรือ fix ไว้ก่อน)
+  const sitterId = user?.sitter_id || process.env.NEXT_PUBLIC_DEFAULT_SITTER_ID;
+  useEffect(() => {
+    if (sitterId) {
+      supabase
+        .from('pet_sitter')
+        .select('trade_name')
+        .eq('user_id', sitterId)
+        .single()
+        .then(({ data }) => setSitter(data));
+    }
+  }, [sitterId]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -46,10 +62,56 @@ export default function BookingPage() {
       });
   }, [user, authLoading]);
 
+  // คำนวณราคาเบื้องต้นหลังเลือกการ์ดสัตว์เลี้ยง
+  useEffect(() => {
+    const calcPrice = async () => {
+      let sum = 0;
+      const selectedPets = pets.filter((pet) => selectedPetIds.includes(pet.pet_id));
+      for (const pet of selectedPets) {
+        if (!pet.type || !pet.weight) continue;
+        const res = await fetch('/api/calculate-price', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: pet.type?.toLowerCase() || pet.type,
+            weight: pet.weight,
+            startDate: new Date().toISOString().slice(0, 10), // สมมติวันเริ่มต้นวันนี้
+            endDate: new Date().toISOString().slice(0, 10),
+            specialDayFlags: []
+          })
+        });
+        const data = await res.json();
+        if (data.totalPrice) sum += data.totalPrice;
+      }
+      setTotal(sum);
+    };
+    if (selectedPetIds.length > 0) {
+      calcPrice();
+    } else {
+      setTotal(0);
+    }
+  }, [selectedPetIds, pets]);
+
+  // สมมติว่าวันที่และเวลาเลือกได้จาก step ถัดไปหรือมี default เป็นวันนี้
+  const today = new Date();
+  const date = today.toISOString().slice(0, 10); // yyyy-mm-dd
+  const time = today.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
   const updatedBookingDetails = {
     pet: selectedPetIds.length > 0 ? selectedPetIds.join(', ') : 'No pet selected',
     pets: pets.filter((pet) => selectedPetIds.includes(pet.pet_id)),
+    sitterName: sitter?.trade_name || 'Pet Sitter',
+    date,
+    time,
+    total,
   };
+
+  // โหลด bookingDetails จาก localStorage (หลัง BookingModal จะมีข้อมูลครบ)
+  const [bookingDetails, setBookingDetails] = useState(null);
+  useEffect(() => {
+    const stored = localStorage.getItem('bookingDetails');
+    if (stored) setBookingDetails(JSON.parse(stored));
+  }, []);
 
   return (
     <>
@@ -107,7 +169,7 @@ export default function BookingPage() {
           </div>
           <div className="w-full lg:w-1/3">
             <div className="lg:sticky lg:top-8 z-10">
-              <BookingSummaryCard bookingDetails={updatedBookingDetails} />
+              <BookingSummaryCard bookingDetails={bookingDetails || updatedBookingDetails} />
             </div>
           </div>
         </div>

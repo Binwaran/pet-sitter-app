@@ -17,12 +17,19 @@ export default function BookingInformationPage() {
   });
   const [errors, setErrors] = useState({});
   const [selectedPets, setSelectedPets] = useState([]);
+  const [bookingDetails, setBookingDetails] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
     // Load selected pets from localStorage
     const pets = JSON.parse(localStorage.getItem('bookingPets') || '[]');
     setSelectedPets(pets);
+  }, []);
+
+  useEffect(() => {
+    // โหลด bookingDetails จาก localStorage (หลัง BookingModal จะมีข้อมูลครบ)
+    const stored = localStorage.getItem('bookingDetails');
+    if (stored) setBookingDetails(JSON.parse(stored));
   }, []);
 
   const handleChange = (e) => {
@@ -183,7 +190,7 @@ export default function BookingInformationPage() {
         </div>
         <div className="w-full lg:w-1/3">
           <div className="lg:sticky lg:top-24 z-10">
-            <BookingSummaryCard bookingDetails={{ ...form, pets: selectedPets }} />
+            <BookingSummaryCard bookingDetails={bookingDetails || { ...form, pets: selectedPets }} />
           </div>
         </div>
       </div>
