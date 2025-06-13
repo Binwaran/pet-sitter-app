@@ -43,7 +43,7 @@ export default async function handler(req, res) {
             email,
             phone,
             password: hashedPassword,
-            role: "owner",
+            role: req.body.role || "owner", // ใช้ role ที่ส่งมาจาก frontend
           },
         ]);
 
