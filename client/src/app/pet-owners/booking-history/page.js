@@ -103,13 +103,16 @@ export default function BookingHistoryPage() {
   if (error) return <div className="text-red-500">{error}</div>;
 
   return (
-    <div className="bg-gray-100 min-h-screen">
-      <div className="px-20 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6">
-          <Sidebar />
-          <div className="self-start">
-            <div className="bg-white p-6 rounded-2xl shadow-md">
-              <h1 className="text-2xl font-bold mb-14">Booking History</h1>
+    <div className="bg-[#FAFAFB]">
+          <div className="md:px-20 md:pt-10 md:pb-20">
+            <div className="flex flex-col md:flex-row">
+              {/* Sidebar */}
+              <div className="w-full md:max-w-81 md:max-h-89 flex md:gap-6 md:pr-8">
+                <Sidebar />
+              </div>
+          <div className="w-full">
+            <div className="bg-white flex flex-col px-4 py-6 md:p-10 md:rounded-2xl gap-6 md:gap-15 w-full">
+              <h1 className="text-2xl font-bold">Booking History</h1>
               {bookings.length === 0 ? (
                 <p className="text-gray-500">No bookings found.</p>
               ) : (

@@ -69,10 +69,10 @@ export default function OwnerProfilePage() {
 
     if (profileImageFile) {
       try {
-        imageUrl = await uploadFile(profileImageFile, "profile"); // เพิ่มพารามิเตอร์ "profile"
+        imageUrl = await uploadFile(profileImageFile, "profile");
       } catch (error) {
         console.error("Upload error:", error.message);
-        alert("อัปโหลดรูปไม่สำเร็จ");
+        alert("Failed to upload image"); // Changed from "อัปโหลดรูปไม่สำเร็จ"
         return;
       }
     }
@@ -107,7 +107,7 @@ export default function OwnerProfilePage() {
 
       alert("Profile saved!");
     } else {
-      alert("บันทึกข้อมูลไม่สำเร็จ");
+      alert("Failed to save profile data"); // Changed from "บันทึกข้อมูลไม่สำเร็จ"
     }
   };
 
