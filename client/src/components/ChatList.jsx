@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/utils/supabase'
 import { useAuth } from '@/context/AuthContext'
-import useUnreadMessages from '@/hooks/message/useUnreadMessages'
+import useUnreadMap from '@/hooks/message/useUnreadMap'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 
@@ -12,7 +12,7 @@ export default function ChatList({ selectedUserId, onSelectUser }) {
   const { user } = useAuth()
   const [chatPreviewList, setChatPreviewList] = useState([])
   const router = useRouter()
-  const unreadMap = useUnreadMessages(user?.id)
+  const unreadMap = useUnreadMap(user?.id)
 
  useEffect(() => {
     if (!user?.id) return
@@ -103,7 +103,7 @@ export default function ChatList({ selectedUserId, onSelectUser }) {
             {/* 🔥 แจ้งเตือน New ถ้ายังไม่ได้อ่าน และไม่ใช่ข้อความของตัวเอง */}
             {message?.sender_id !== user.id && message?.is_read === false && (
                 <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                  {unreadMap[chatUser.id] || 0}
+                  {unreadMap.get(message.sender_id) || 0}
                 </span>
               )}
 
