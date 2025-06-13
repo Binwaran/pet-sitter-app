@@ -92,17 +92,17 @@ export default function BookingPage() {
   }, [selectedPetIds, pets]);
 
   // สมมติวันและเวลาเลือกได้จาก step ถัดไป หรือใช้วันนี้เป็นค่าเริ่มต้น
-  const today = new Date();
-  const date = today.toISOString().slice(0, 10); // yyyy-mm-dd
-  const time = today.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  // const today = new Date();
+  // const date = today.toISOString().slice(0, 10); // yyyy-mm-dd
+  // const time = today.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-  // base bookingDetails ที่จะอัปเดต
-  const baseBookingDetails = {
-    sitterName: sitter?.trade_name || 'Pet Sitter',
-    date,
-    time,
-    total,
-  };
+  // // base bookingDetails ที่จะอัปเดต
+  // const baseBookingDetails = {
+  //   sitterName: sitter?.trade_name || 'Pet Sitter',
+  //   date,
+  //   time,
+  //   total,
+  // };
 
   // state เก็บ bookingDetails ที่ใช้แสดง summary
   const [bookingDetails, setBookingDetails] = useState(null);
@@ -111,20 +111,25 @@ export default function BookingPage() {
   useEffect(() => {
     const stored = localStorage.getItem('bookingDetails');
     if (stored) setBookingDetails(JSON.parse(stored));
+
+    console.log('Initial bookingDetails loaded:', stored ? JSON.parse(stored) : null);
   }, []);
 
   // อัปเดต bookingDetails และเซฟลง localStorage เมื่อ selectedPetIds, pets, total หรือ sitter เปลี่ยน
   useEffect(() => {
+    const stored = localStorage.getItem('bookingDetails');
     const selectedPets = pets.filter(pet => selectedPetIds.includes(pet.pet_id));
 
     const newBookingDetails = {
-      ...baseBookingDetails,
+      ...stored ? JSON.parse(stored) : {},
       pets: selectedPets,
       pet: selectedPets.map(p => p.pet_name || p.name || '').join(', '),
     };
 
     setBookingDetails(newBookingDetails);
     localStorage.setItem('bookingDetails', JSON.stringify(newBookingDetails));
+
+    console.log('Updated bookingDetails:', newBookingDetails);
   }, [selectedPetIds, pets, total, sitter]);
 
   return (
@@ -184,7 +189,7 @@ export default function BookingPage() {
           </div>
           <div className="w-full lg:w-1/3">
             <div className="lg:sticky lg:top-8 z-10">
-             <BookingSummaryCard bookingDetails={bookingDetails || baseBookingDetails} />
+             <BookingSummaryCard bookingDetails={bookingDetails} />
             </div>
           </div>
         </div>

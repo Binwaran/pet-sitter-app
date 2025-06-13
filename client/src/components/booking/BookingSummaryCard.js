@@ -16,14 +16,20 @@ const BookingSummaryCard = ({ bookingDetails, sitterTradeName }) => {
     );
   }
 
+  // Debug logs for checking values
+  console.log('BookingSummaryCard bookingDetails:', bookingDetails);
+  console.log('BookingSummaryCard sitterTradeName:', sitterTradeName);
+
   // Use real data from bookingDetails, fallback if missing
   const name = bookingDetails.name || 'N/A';
   const email = bookingDetails.email || 'N/A';
   const phone = bookingDetails.phone || 'N/A';
   const message = bookingDetails.message || '-';
-  // Sitter info: prefer trade_name if passed, else fallback
-  const sitterName = sitterTradeName || bookingDetails.trade_name || bookingDetails.sitterName || bookingDetails.sitter || 'Unknown';
-  const sitterHouse = bookingDetails.sitterHouse || bookingDetails.sitterHouseName || '';
+
+  // Sitter info: prioritize sitterTradeName, then fallback to other fields
+  const sitterHouse = sitterTradeName || bookingDetails.trade_name || bookingDetails.sitterHouse || bookingDetails.sitterHouseName || '';
+  const sitterName = bookingDetails.trade_name || 'Unknown'; // Keep sitterName separate
+
   // Date & Time
   const date = bookingDetails.date || '-';
   // Prefer start_time/end_time for time range

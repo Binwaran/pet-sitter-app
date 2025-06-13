@@ -139,6 +139,7 @@ export default function BookingModal({ sitterId, isOpen, onClose }) {
       booking_id: bookingId,
     };
     localStorage.setItem('bookingDetails', JSON.stringify(bookingDetails));
+    console.log('Saved bookingDetails:', bookingDetails); // Debug: confirm trade_name is present
 
     onClose();
     router.push("/pet-sitters/booking");

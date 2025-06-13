@@ -5,7 +5,7 @@ import BookingSteps from '@/components/booking/BookingSteps';
 import BookingSummaryCard from '@/components/booking/BookingSummaryCard';
 import BookingConfirmationModal from '@/components/booking/BookingConfirmationModal';
 import { useRouter } from 'next/navigation';
-import { AlertCircle } from 'lucide-react'; // ✅ เพิ่มไอคอน
+import { AlertCircle } from 'lucide-react'; 
 import Image from 'next/image';
 import NavBar from '@/components/NavBar';
 
@@ -201,7 +201,7 @@ export default function BookingPaymentPage() {
         </div>
         <div className="w-full lg:w-1/3">
           <div className="lg:sticky lg:top-24 z-10">
-            <BookingSummaryCard bookingDetails={bookingDetails} />
+            <BookingSummaryCard bookingDetails={bookingDetails} sitterTradeName={bookingDetails?.trade_name} />
           </div>
         </div>
       </div>
