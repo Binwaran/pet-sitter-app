@@ -1,63 +1,50 @@
+
 import { useEffect, useState } from 'react'
 import { supabase } from '@/utils/supabase'
 
-export default function useUnreadMessages(currentUserId) {
-  const [unreadMap, setUnreadMap] = useState(new Map())
+export default function useUnreadMessages(userId) {
+  const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
-    if (!currentUserId) return
+    if (!userId) return
 
-    const fetchUnread = async () => {
-      console.log('📥 fetchUnread called for:', currentUserId)
-      const { data, error } = await supabase
+    const fetchUnreadCount = async () => {
+      const { count, error } = await supabase
         .from('messages')
-        .select('sender_id, is_read')
-        .eq('receiver_id', currentUserId)
+        .select('*', { count: 'exact', head: true })
+        .eq('receiver_id', userId)
         .eq('is_read', false)
 
       if (error) {
-        console.error('❌ Failed to fetch unread messages:', error)
+        console.error('Error fetching unread messages:', error)
         return
       }
 
-      console.log('📊 unread data:', data)
-
-      const map = new Map()
-      data.forEach((msg) => {
-        const senderId = msg.sender_id
-        map.set(senderId, (map.get(senderId) || 0) + 1)
-      })
-
-      setUnreadMap(map)
+      setUnreadCount(count || 0)
     }
 
-    fetchUnread()
+    fetchUnreadCount()
 
     const channel = supabase
-      .channel(`unread-message-count-${currentUserId}`)
+      .channel(`unread-messages-${userId}`)
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'messages',
-          filter: `receiver_id=eq.${currentUserId}`
+          filter: `receiver_id=eq.${userId}`,
         },
         (payload) => {
-            const msg = payload.new
-            // ✅ เงื่อนไขใหม่: ถ้า current user คือ “คนรับ” และยังไม่อ่าน
-            if (msg.receiver_id === currentUserId && msg.is_read === false) {
-                console.log('🟡 Realtime message for current user:', msg)
-                fetchUnread()
-            }
-            }
-        )
-        .subscribe()
+          fetchUnreadCount()
+        }
+      )
+      .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [currentUserId])
+  }, [userId])
 
-  return unreadMap
+  return unreadCount
 }

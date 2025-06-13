@@ -103,7 +103,7 @@ export default function ChatList({ selectedUserId, onSelectUser }) {
             {/* 🔥 แจ้งเตือน New ถ้ายังไม่ได้อ่าน และไม่ใช่ข้อความของตัวเอง */}
             {message?.sender_id !== user.id && message?.is_read === false && (
                 <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                  {unreadMap.get(chatUser.id) || 0}
+                  {unreadMap[chatUser.id] || 0}
                 </span>
               )}
 

@@ -4,15 +4,19 @@ import { useRouter } from "next/navigation";
 import NavBarMobile from "./navbar/NavBarMobile";
 import NavBarDesktop from "./navbar/NavBarDesktop";
 import { useAuth } from "@/context/AuthContext";
+import useUnreadMessages from "@/hooks/message/useUnreadMessages";
+
 
 const NavBar = () => {
   const { user, loading, logout } = useAuth();
   const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [hasNewMessage, setHasNewMessage] = useState(false);
   const [hasNewNotification, setHasNewNotification] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const router = useRouter();
+
+  const unreadCount = useUnreadMessages(user?.id);
+  const hasNewMessage = unreadCount > 0;
 
   // เพิ่ม useEffect นี้เพื่ออัพเดท isLoggedIn จาก user
   useEffect(() => {
@@ -29,14 +33,6 @@ const NavBar = () => {
     alert("Logout successful");
     router.push("/");
   };
-
-  useEffect(() => {
-    if (!isLoggedIn) return
-    fetch('/api/unread-messages', { credentials: 'include' })
-      .then((res) => res.json())
-      .then((data) => setHasNewMessage(data.unread > 0))
-      .catch((err) => console.error('message error', err))
-  }, [isLoggedIn])
 
   useEffect(() => {
     if (!user) return
