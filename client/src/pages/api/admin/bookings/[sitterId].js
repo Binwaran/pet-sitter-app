@@ -249,6 +249,7 @@ export default async function handler(req, res) {
             message: booking.message || "",
             total_price: booking.total_price || 0,
             transaction_no: booking.transaction_no || "",
+            transaction_date: booking.transaction_date || null,
             start_time: booking.start_time, // เพิ่มเพื่อใช้ในการ sort
             end_time: booking.end_time, // เพิ่มเพื่อใช้ในการ sort
           };

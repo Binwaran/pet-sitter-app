@@ -94,6 +94,7 @@ const PROFILE_FIELDS = [
   "full_name",
   "experience",
   "phone_number",
+  "date_of_birth",
   "introduction",
   "trade_name",
   "services",
@@ -102,7 +103,7 @@ const PROFILE_FIELDS = [
 const SPECIAL_FIELDS = ["pet_type", "gallery_image_url", "profile_image_url"];
 
 // User data fields ที่อยู่ในตาราง users
-const USER_FIELDS = ["full_name", "email", "phone_number", "profile_image_url"];
+const USER_FIELDS = ["full_name", "email", "phone_number", "profile_image_url", "date_of_birth"];
 
 // Validate URL helper function
 const isValidImageUrl = (url) => {
@@ -151,6 +152,7 @@ const ProfileTab = memo(({ sitter }) => {
       const mapping = {
         full_name: "name",
         phone_number: "phone",
+        date_of_birth: "birthday",
       };
       return mapping[fieldName] || fieldName;
     };
@@ -453,7 +455,7 @@ const ProfileTab = memo(({ sitter }) => {
                 hasChanged={hasFieldChanged("phone_number")}
               />
 
-              <InfoField label="Date of Birth" value={sitter.users.birthday} />
+              <InfoField label="Date of Birth" value={getDisplayValue("date_of_birth") || sitter.users.birthday} hasChanged={hasFieldChanged("date_of_birth")} />
 
               <InfoField
                 label="Introduction"

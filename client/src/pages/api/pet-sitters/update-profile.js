@@ -32,7 +32,7 @@ export default async function handler(req, res) {
       // 1. ดึงข้อมูลจากตาราง users ก่อน
       const { data: userData, error: userError } = await supabase
         .from("users")
-        .select("name, email, phone, profile_image_url")
+        .select("name, email, phone, profile_image_url, birthday")
         .eq("id", userId)
         .single();
 
@@ -55,6 +55,7 @@ export default async function handler(req, res) {
         email: userData?.email || "",
         phone_number: userData?.phone || "",
         profile_image_url: userData?.profile_image_url || null,
+        date_of_birth: userData?.birthday || null,
 
         // เพิ่มข้อมูลพิกัดที่รออนุมัติจาก pending_data
         // พิกัดปัจจุบันที่อนุมัติแล้ว
@@ -110,6 +111,7 @@ export default async function handler(req, res) {
         name: updateData.full_name,
         email: updateData.email,
         phone: updateData.phone_number,
+        birthday: updateData.date_of_birth, // แปลงเป็น Date object
       };
 
       // ตรวจสอบว่ามีโปรไฟล์ pet_sitter อยู่แล้วหรือไม่

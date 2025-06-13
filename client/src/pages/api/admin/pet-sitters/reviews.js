@@ -45,7 +45,7 @@ export default async function handler(req, res) {
         console.error("Error fetching average rating:", avgError);
       }
 
-      // ดึงข้อมูล reviews พร้อมข้อมูลผู้รีวิว
+      // ดึงข้อมูล reviews พร้อมข้อมูลผู้รีวิว และรวมถึง verified status
       const { data: reviews, error: reviewsError } = await supabase
         .from("reviews")
         .select(
@@ -55,6 +55,7 @@ export default async function handler(req, res) {
           comment,
           created_at,
           reviewer_id,
+          verified,
           users:reviewer_id (
             name,
             profile_image_url
@@ -80,6 +81,7 @@ export default async function handler(req, res) {
             rating: review.rating,
             comment: review.comment,
             created_at: review.created_at,
+            verified: review.verified || false,
             reviewer_name: review.users?.name || "Unknown",
             reviewer_image: review.users?.profile_image_url || null,
           }))
@@ -166,6 +168,41 @@ export default async function handler(req, res) {
     } catch (error) {
       console.error("Server error:", error);
       return res.status(500).json({ message: "Internal server error" });
+    }
+  }
+
+  // Add PUT method to update review status
+  else if (req.method === "PUT") {
+    try {
+      const { id, verified } = req.body;
+
+      if (!id) {
+        return res.status(400).json({ message: "Review ID is required" });
+      }
+
+      // ตรวจสอบสิทธิ์ admin role ที่นี่...
+
+      const { data, error } = await supabase
+        .from("reviews")
+        .update({ verified })
+        .eq("id", id)
+        .select();
+
+      if (error) {
+        console.error("Error updating review:", error);
+        return res.status(500).json({ message: error.message });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: verified
+          ? "Review verified successfully"
+          : "Verification removed",
+        data,
+      });
+    } catch (err) {
+      console.error("Server error in review update:", err);
+      return res.status(500).json({ message: err.message });
     }
   }
 
