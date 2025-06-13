@@ -170,101 +170,107 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen relative bg-white">
+    <div className="flex flex-col md:flex-row min-h-screen bg-white">
       <AuthIllustrations />
-      <div className="z-10 flex flex-1 justify-center items-center w-full gap-10 px-4 py-15">
-        <div className="flex flex-col gap-14 max-w-[440px] w-full">
-          {/* Header */}
-          <div className="flex items-center justify-center gap-6 md:pb-6 w-full">
-            <div className="text-center flex flex-col gap-2 w-full">
-              <h1 className="text-4xl md:text-[56px] font-bold text-black leading-[44px] md:leading-[64px]">
+
+      {/* ปรับ padding และ spacing ให้กระชับขึ้น */}
+      <div className="z-10 flex flex-1 justify-center items-center w-full px-4 py-6">
+        <div className="flex flex-col gap-6 max-w-[440px] w-full">
+          {/* Header section - ลด spacing */}
+          <div className="flex items-center justify-center w-full">
+            <div className="text-center flex flex-col gap-1">
+              <h1 className="text-2xl md:text-3xl lg:text-6xl font-bold text-black">
                 {text.header}
               </h1>
-              <p className="text-[#7B7E8F] text-lg md:text-2xl font-medium md:font-bold leading-[26px] md:leading-[32px]">
+              <p className="text-[#7B7E8F] text-sm md:text-base lg:text-lg font-medium">
                 {text.subHeader}
               </p>
             </div>
           </div>
-          {/* Registration Form */}
-          <div className="w-full flex flex-col gap-8">
-            <form onSubmit={handleSubmit} className="flex flex-col gap-8">
-              <InputField
-                label="Email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                error={errors.email}
-                placeholder="email@company.com"
-              />
-              <InputField
-                label="Phone"
-                name="phone"
-                type="text"
-                value={formData.phone}
-                onChange={handleChange}
-                error={errors.phone}
-                placeholder="Your phone number"
-              />
-              <InputField
-                label="Password"
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-                error={errors.password}
-                placeholder="Create your password"
-              />
-              <InputField
-                label="Confirm Password"
-                name="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                error={errors.confirmPassword}
-                placeholder="Confirm your password"
-              />
+
+          {/* Form section - ปรับ gap ให้กระชับ */}
+          <div className="w-full flex flex-col gap-4">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+              {/* Input fields */}
+              <div className="flex flex-col gap-3">
+                <InputField
+                  label="Email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  error={errors.email}
+                  placeholder="email@company.com"
+                />
+                <InputField
+                  label="Phone"
+                  name="phone"
+                  type="text"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  error={errors.phone}
+                  placeholder="Your phone number"
+                />
+                <InputField
+                  label="Password"
+                  name="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  error={errors.password}
+                  placeholder="Create your password"
+                />
+                <InputField
+                  label="Confirm Password"
+                  name="confirmPassword"
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  error={errors.confirmPassword}
+                  placeholder="Confirm your password"
+                />
+              </div>
+
+              {/* Register button */}
               <button
                 type="submit"
-                className="flex justify-center items-center w-full min-w-30 bg-[#FF7037] hover:bg-[#FF986F] active:bg-[#E44A0C] h-12 px-6 py-3 gap-2 rounded-full transition"
+                className="w-full bg-[#FF7037] text-white py-2.5 rounded-full font-bold hover:bg-[#FF986F] active:bg-[#E44A0C]"
               >
-                <p className="text-white text-base font-bold w-[59px]">
-                  Register
-                </p>
+                Register
               </button>
-              {errors.general && (
-                <p className="text-red-500 text-sm mt-2">{errors.general}</p>
-              )}
             </form>
 
-            <div className="flex items-center gap-3 w-full">
+            {/* Divider - ลด margin */}
+            <div className="flex items-center gap-3 w-full my-1">
               <div className="flex-grow border-t border-[#DCDFED]"></div>
-              <span className="text-lg text-[#7B7E8F]">Or Continue With</span>
+              <span className="text-sm md:text-base text-[#7B7E8F]">
+                Or Continue With
+              </span>
               <div className="flex-grow border-t border-[#DCDFED]"></div>
             </div>
 
+            {/* Social buttons */}
             <SocialLoginButtons />
 
-            <div className="flex flex-row justify-center items-center gap-2 w-full">
-              <p className="text-lg font-medium text-[#060D18] leading-6.5">
-                {text.already}{" "}
-              </p>
-              <div className="flex py-1 px-0.5 gap-1">
+            {/* Login link และ Role switch - ปรับ spacing */}
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex items-center gap-1">
+                <p className="text-sm md:text-base font-medium text-[#060D18]">
+                  {text.already}
+                </p>
                 <Link
                   href="/login"
-                  className="text-[#FF7037] hover:text-[#FF986F] active:text-[#E44A0C] font-bold w-[61px] hover:underline"
+                  className="text-[#FF7037] hover:text-[#FF986F] font-bold hover:underline text-sm md:text-base"
                 >
                   Login
                 </Link>
               </div>
-            </div>
 
-            {/* ปุ่มสลับ role */}
-            <div className="flex flex-row justify-center items-center mt-2">
+              {/* Role switch button */}
               {role === "owner" ? (
                 <button
                   type="button"
-                  className="text-[#FF7037] hover:underline font-bold"
+                  className="text-[#FF7037] hover:underline font-bold text-sm md:text-base cursor-pointer"
                   onClick={() => router.push("/register/sitter")}
                 >
                   Become A Pet Sitter
@@ -272,7 +278,7 @@ const RegisterPage = () => {
               ) : (
                 <button
                   type="button"
-                  className="text-[#FF7037] hover:underline font-bold"
+                  className="text-[#FF7037] hover:underline font-bold text-sm md:text-base cursor-pointer"
                   onClick={() => router.push("/register/owner")}
                 >
                   Become A Pet Owner

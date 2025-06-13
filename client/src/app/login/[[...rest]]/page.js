@@ -94,13 +94,26 @@ export default function CustomLogin({ params }) {
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen relative bg-white">
+    <div className="flex flex-col md:flex-row min-h-screen bg-white">
       <AuthIllustrations />
+      
+      {/* ปรับ padding และ spacing ให้เหมือน register */}
+      <div className="z-10 flex flex-1 justify-center items-center w-full px-4">
+        <div className="flex flex-col gap-6 max-w-[440px] w-full">
+          {/* Header section - ปรับ style ให้เหมือน register */}
+          <div className="flex items-center justify-center w-full mb-2">
+            <div className="text-center flex flex-col gap-1">
+              <h1 className="text-2xl md:text-3xl lg:text-6xl font-bold text-black">
+                Welcome Back!
+              </h1>
+              <p className="text-[#7B7E8F] text-sm md:text-base lg:text-lg font-medium">
+                Sign in to continue to Pet Society
+              </p>
+            </div>
+          </div>
 
-      <div className="z-10 flex flex-1 justify-center items-center w-full gap-10 px-4 py-15">
-        <div className="flex flex-col gap-14 max-w-[440px] w-full">
-          <AuthHeader />
-          <div className="w-full flex flex-col gap-8">
+          {/* Form section - ปรับ gap ให้กระชับ */}
+          <div className="w-full flex flex-col gap-4">
             <LoginForm
               email={email}
               password={password}
@@ -111,22 +124,27 @@ export default function CustomLogin({ params }) {
               passwordError={passwordError}
             />
 
-            <div className="flex items-center gap-3 w-full">
+            {/* Divider - ปรับ style */}
+            <div className="flex items-center gap-3 w-full my-2">
               <div className="flex-grow border-t border-[#DCDFED]"></div>
-              <span className="text-lg text-[#7B7E8F]">Or Continue With</span>
+              <span className="text-sm md:text-base text-[#7B7E8F]">
+                Or Continue With
+              </span>
               <div className="flex-grow border-t border-[#DCDFED]"></div>
             </div>
 
+            {/* Social buttons */}
             <SocialLoginButtons />
 
-            <div className="flex flex-row justify-center items-center gap-2 w-full">
-              <p className="text-lg font-medium text-[#060D18] leading-6.5">
-                Don&apos;t have any account?{" "}
-              </p>
-              <div className="flex py-1 px-0.5 gap-1">
+            {/* Register link - ปรับ style */}
+            <div className="flex flex-col items-center gap-2 mt-2">
+              <div className="flex items-center gap-1">
+                <p className="text-sm md:text-base font-medium text-[#060D18]">
+                  Don&apos;t have any account?
+                </p>
                 <Link
                   href="/register"
-                  className="text-[#FF7037] hover:text-[#FF986F] active:text-[#E44A0C] font-bold w-[61px] hover:underline"
+                  className="text-[#FF7037] hover:text-[#FF986F] active:text-[#E44A0C] font-bold hover:underline text-sm md:text-base"
                 >
                   Register
                 </Link>
