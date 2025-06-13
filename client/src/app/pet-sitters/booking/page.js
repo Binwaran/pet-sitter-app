@@ -9,7 +9,6 @@ import { useAuth } from '@/context/AuthContext';
 import axios from 'axios';
 import { supabase } from '@/utils/supabase';
 
-
 export default function BookingPage() {
   const { user, loading: authLoading } = useAuth();
   const [pets, setPets] = useState([]);
@@ -27,7 +26,7 @@ export default function BookingPage() {
     );
   };
 
-  // ดึงข้อมูล pet_sitter (สมมติ sitter_id มาจาก query หรือ prop หรือ fix ไว้ก่อน)
+  // ดึงข้อมูล pet_sitter (สมมติ sitter_id มาจาก user หรือ env)
   const sitterId = user?.sitter_id || process.env.NEXT_PUBLIC_DEFAULT_SITTER_ID;
   useEffect(() => {
     if (sitterId) {
@@ -92,26 +91,41 @@ export default function BookingPage() {
     }
   }, [selectedPetIds, pets]);
 
-  // สมมติว่าวันที่และเวลาเลือกได้จาก step ถัดไปหรือมี default เป็นวันนี้
+  // สมมติวันและเวลาเลือกได้จาก step ถัดไป หรือใช้วันนี้เป็นค่าเริ่มต้น
   const today = new Date();
   const date = today.toISOString().slice(0, 10); // yyyy-mm-dd
   const time = today.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-  const updatedBookingDetails = {
-    pet: selectedPetIds.length > 0 ? selectedPetIds.join(', ') : 'No pet selected',
-    pets: pets.filter((pet) => selectedPetIds.includes(pet.pet_id)),
+  // base bookingDetails ที่จะอัปเดต
+  const baseBookingDetails = {
     sitterName: sitter?.trade_name || 'Pet Sitter',
     date,
     time,
     total,
   };
 
-  // โหลด bookingDetails จาก localStorage (หลัง BookingModal จะมีข้อมูลครบ)
+  // state เก็บ bookingDetails ที่ใช้แสดง summary
   const [bookingDetails, setBookingDetails] = useState(null);
+
+  // โหลด bookingDetails จาก localStorage ตอนแรก
   useEffect(() => {
     const stored = localStorage.getItem('bookingDetails');
     if (stored) setBookingDetails(JSON.parse(stored));
   }, []);
+
+  // อัปเดต bookingDetails และเซฟลง localStorage เมื่อ selectedPetIds, pets, total หรือ sitter เปลี่ยน
+  useEffect(() => {
+    const selectedPets = pets.filter(pet => selectedPetIds.includes(pet.pet_id));
+
+    const newBookingDetails = {
+      ...baseBookingDetails,
+      pets: selectedPets,
+      pet: selectedPets.map(p => p.pet_name || p.name || '').join(', '),
+    };
+
+    setBookingDetails(newBookingDetails);
+    localStorage.setItem('bookingDetails', JSON.stringify(newBookingDetails));
+  }, [selectedPetIds, pets, total, sitter]);
 
   return (
     <>
@@ -157,6 +171,7 @@ export default function BookingPage() {
                       localStorage.setItem('selectedPetIds', JSON.stringify(selectedPetIds));
                       const selectedPets = pets.filter((pet) => selectedPetIds.includes(pet.pet_id));
                       localStorage.setItem('bookingPets', JSON.stringify(selectedPets));
+                      // bookingDetails ก็เซฟแล้วจาก useEffect
                       window.location.href = '/pet-sitters/booking/information';
                     }
                   }}
@@ -169,7 +184,7 @@ export default function BookingPage() {
           </div>
           <div className="w-full lg:w-1/3">
             <div className="lg:sticky lg:top-8 z-10">
-              <BookingSummaryCard bookingDetails={bookingDetails || updatedBookingDetails} />
+             <BookingSummaryCard bookingDetails={bookingDetails || baseBookingDetails} />
             </div>
           </div>
         </div>

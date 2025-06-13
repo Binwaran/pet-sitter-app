@@ -190,7 +190,7 @@ export default function BookingInformationPage() {
         </div>
         <div className="w-full lg:w-1/3">
           <div className="lg:sticky lg:top-24 z-10">
-            <BookingSummaryCard bookingDetails={bookingDetails || { ...form, pets: selectedPets }} />
+           <BookingSummaryCard bookingDetails={bookingDetails} />
           </div>
         </div>
       </div>
