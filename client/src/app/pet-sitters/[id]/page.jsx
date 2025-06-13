@@ -7,7 +7,7 @@ import { supabase } from '@/utils/supabase'
 import { Toaster, toast } from 'sonner'
 import ImageCarousel from '@/components/ImageCarousel'
 import StickyCard from '@/components/StickyCard'
-import ReatingAndReview from '@/components/ReatingAndReview'
+import ReviewSection from '@/components/pet-sitters/ReviewSection'
 
 const PetSitterDetails = () => {
   const { id } = useParams()
@@ -95,7 +95,7 @@ const PetSitterDetails = () => {
             </section>
           </div>
           <div className="w-full h-[2000px] my-15 py-10 ">
-            <ReatingAndReview />
+            <ReviewSection sitterId={sitter.user_id} averageRating={sitter.average_rating} />
           </div>
 
         </div>
@@ -140,8 +140,8 @@ const PetSitterDetails = () => {
           <div className="w-full sm:w-full lg:w-1/3 sm:sticky sm:top-24    self-start items-center sm:ml-10 sm:mr-10 mx-auto sm:m-auto">
             <StickyCard sitter={sitter} />
           </div>
-          <div className="w-full h-[2000px]">
-            <ReatingAndReview />
+          <div className="w-full h-[2000px] bg-stone-300">
+            <ReviewSection sitterId={sitter.user_id} averageRating={sitter.average_rating} />
           </div>
 
         </div>
@@ -152,5 +152,4 @@ const PetSitterDetails = () => {
   )
 }
 
-// รอใส่ข้อมูล Rating&Review
 export default PetSitterDetails
