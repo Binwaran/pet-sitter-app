@@ -4,10 +4,14 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/utils/supabase'
 import { useAuth } from '@/context/AuthContext'
 import useUnreadMessages from '@/hooks/message/useUnreadMessages'
+import { useRouter } from 'next/navigation'
+import Image from 'next/image'
+
 
 export default function ChatList({ selectedUserId, onSelectUser }) {
   const { user } = useAuth()
   const [chatPreviewList, setChatPreviewList] = useState([])
+  const router = useRouter()
   const unreadMap = useUnreadMessages(user?.id)
 
  useEffect(() => {
@@ -66,6 +70,18 @@ export default function ChatList({ selectedUserId, onSelectUser }) {
 
   return (
     <div className="divide-y divide-gray-700">
+      {/* 🔝 Logo = Home button */}
+      <div
+        onClick={() => router.push('/')}
+        className="cursor-pointer px-4 py-4 flex items-center justify-center hover:bg-gray-800"
+      >
+        <Image
+          src="/assets/sitter-logo-white.svg"  // ✅ รูปโลโก้นี้ต้องอยู่ใน public/assets
+          alt="Logo"
+          width={100}
+          height={100}
+        />
+      </div>
       {chatPreviewList.map(({ user: chatUser, message }) => (
         <div
           key={chatUser.id}

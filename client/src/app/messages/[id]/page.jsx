@@ -18,6 +18,8 @@ export default function MessagesPage() {
   const [otherUser, setOtherUser] = useState(null)
   const [chatList, setChatList] = useState([])
   const router = useRouter();
+  const [isOpen, setIsOpen] = useState(true)
+
 
   useEffect(() => {
     if (!user || !id) return
@@ -73,11 +75,14 @@ export default function MessagesPage() {
 
       {/* Right: Chat Window */}
       <div className="flex-1 flex flex-col min-h-0">
-        <ChatWindow
-          user={otherUser}
-          currentUser={user}
-          messages={messages}
-        />
+        {isOpen && (
+          <ChatWindow
+            user={otherUser}
+            currentUser={user}
+            messages={messages}
+            onClose={() => setIsOpen(false)}
+          />
+        )}
       </div>
     </div>
   )

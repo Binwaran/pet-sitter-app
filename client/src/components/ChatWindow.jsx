@@ -162,7 +162,7 @@ useEffect(() => {
         </div>
         <div>
           <button onClick={onClose}>
-            <X className="w-7 h-7 text-gray-500" />
+            <X className="w-7 h-7 text-gray-500 cursor-pointer" />
           </button>
         </div>
 
