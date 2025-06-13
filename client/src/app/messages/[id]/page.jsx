@@ -7,6 +7,8 @@ import { supabase } from '@/utils/supabase'
 import ChatList from '@/components/ChatList'
 import ChatWindow from '@/components/ChatWindow'
 import { useRouter } from 'next/navigation'
+import { markMessagesAsRead } from '@/hooks/message/useMarkMessagesAsRead'
+
 
 
 export default function MessagesPage() {
@@ -16,6 +18,7 @@ export default function MessagesPage() {
   const [otherUser, setOtherUser] = useState(null)
   const [chatList, setChatList] = useState([])
   const router = useRouter();
+  const [isOpen, setIsOpen] = useState(true)
 
 
   useEffect(() => {
@@ -49,6 +52,12 @@ export default function MessagesPage() {
     fetchChatList()
     fetchChatData()
   }, [id, user])
+  
+  useEffect(() => {
+    if (user?.id && id) {
+      markMessagesAsRead(id, user.id)
+    }
+  }, [id, user?.id])
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -66,11 +75,14 @@ export default function MessagesPage() {
 
       {/* Right: Chat Window */}
       <div className="flex-1 flex flex-col min-h-0">
-        <ChatWindow
-          user={otherUser}
-          currentUser={user}
-          messages={messages}
-        />
+        {isOpen && (
+          <ChatWindow
+            user={otherUser}
+            currentUser={user}
+            messages={messages}
+            onClose={() => setIsOpen(false)}
+          />
+        )}
       </div>
     </div>
   )

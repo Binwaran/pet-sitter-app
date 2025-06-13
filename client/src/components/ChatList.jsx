@@ -3,11 +3,16 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/utils/supabase'
 import { useAuth } from '@/context/AuthContext'
+import useUnreadMessages from '@/hooks/message/useUnreadMessages'
+import { useRouter } from 'next/navigation'
+import Image from 'next/image'
+
 
 export default function ChatList({ selectedUserId, onSelectUser }) {
   const { user } = useAuth()
   const [chatPreviewList, setChatPreviewList] = useState([])
-  const [unreadCountMap, setUnreadCountMap] = useState(new Map())
+  const router = useRouter()
+  const unreadMap = useUnreadMessages(user?.id)
 
  useEffect(() => {
     if (!user?.id) return
@@ -25,7 +30,6 @@ export default function ChatList({ selectedUserId, onSelectUser }) {
       }
 
       const latestMap = new Map()
-      const unreadMap = new Map()
 
       messages.forEach((msg) => {
         const otherId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id
@@ -33,11 +37,6 @@ export default function ChatList({ selectedUserId, onSelectUser }) {
         // เก็บข้อความล่าสุดของแต่ละคู่แชท
         if (!latestMap.has(otherId)) {
           latestMap.set(otherId, msg)
-        }
-
-        // นับ unread ถ้าเราเป็น receiver และยังไม่ได้อ่าน
-        if (msg.receiver_id === user.id && msg.is_read === false) {
-          unreadMap.set(otherId, (unreadMap.get(otherId) || 0) + 1)
         }
       })
 
@@ -63,7 +62,6 @@ export default function ChatList({ selectedUserId, onSelectUser }) {
       })
 
       setChatPreviewList(chatList)
-      setUnreadCountMap(unreadMap)
     }
 
     fetchChatPreviews()
@@ -72,6 +70,18 @@ export default function ChatList({ selectedUserId, onSelectUser }) {
 
   return (
     <div className="divide-y divide-gray-700">
+      {/* 🔝 Logo = Home button */}
+      <div
+        onClick={() => router.push('/')}
+        className="cursor-pointer px-4 py-4 flex items-center justify-center hover:bg-gray-800"
+      >
+        <Image
+          src="/assets/sitter-logo-white.svg"  // ✅ รูปโลโก้นี้ต้องอยู่ใน public/assets
+          alt="Logo"
+          width={100}
+          height={100}
+        />
+      </div>
       {chatPreviewList.map(({ user: chatUser, message }) => (
         <div
           key={chatUser.id}
@@ -93,7 +103,7 @@ export default function ChatList({ selectedUserId, onSelectUser }) {
             {/* 🔥 แจ้งเตือน New ถ้ายังไม่ได้อ่าน และไม่ใช่ข้อความของตัวเอง */}
             {message?.sender_id !== user.id && message?.is_read === false && (
                 <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                  {unreadCountMap.get(chatUser.id) || 0}
+                  {unreadMap.get(chatUser.id) || 0}
                 </span>
               )}
 
