@@ -121,7 +121,7 @@ const NavBarDesktop = ({
                 <div className="relative w-12 h-12 rounded-full bg-[#F6F6F9] flex items-center justify-center">
                   <BellIcon color="#AEB1C3" width={24} height={24} />
                   {hasNewNotification && (
-                    <span className="absolute top-0 right-0 w-2 h-2 bg-orange-500 rounded-full" />
+                    <span className="absolute top-[2px] right-0 translate-x-[-1px] w-2 h-2 bg-orange-500 rounded-full" />
                   )}
                 </div>
               </Link>
@@ -131,7 +131,7 @@ const NavBarDesktop = ({
                 <div className="relative w-12 h-12 rounded-full bg-[#F6F6F9] flex items-center justify-center">
                   <MessageIcon color="#AEB1C3" width={24} height={24} />
                   {hasNewMessage && (
-                    <span className="absolute top-0 right-0 w-2 h-2 bg-orange-500 rounded-full" />
+                    <span className="absolute top-[2px] right-0 translate-x-[-1px] w-2 h-2 bg-orange-500 rounded-full" />
                   )}
                 </div>
               </Link>

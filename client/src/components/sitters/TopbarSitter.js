@@ -6,6 +6,8 @@ import axios from "axios";
 import { useRouter } from "next/navigation"; // เพิ่ม import useRouter
 import avatar from "/public/assets/profile/profileimg.svg";
 import message from "/public/assets/sidebar/message.svg";
+import useUnreadMessages from '@/hooks/message/useUnreadMessages'
+import UnreadMessageBadge from '@/components/common/UnreadMessageBadge'
 
 
 
@@ -21,6 +23,8 @@ const Topbar = memo(({ className }) => {
     user_id: null,
     error: null,
   });
+
+  const unreadCount = useUnreadMessages(state.user_id || '')
 
   // ฟังก์ชันสำหรับ navigate ไปยังหน้า profile
   const handleProfileClick = useCallback(() => {
@@ -109,10 +113,15 @@ const Topbar = memo(({ className }) => {
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.push('/messages')}
-          className="w-10 h-10 rounded-full bg-[#F6F6F9] hover:bg-[#EDEDF2] flex items-center justify-center cursor-pointer transition-colors"
+          className="relative w-10 h-10 rounded-full bg-[#F6F6F9] hover:bg-[#EDEDF2] flex items-center justify-center cursor-pointer transition-colors"
           aria-label="Messages"
         >
           <Image src={message} alt="Message" width={20} height={20} />
+          {unreadCount > 0 && (
+          <div className="absolute top-[2px] right-[2px]">
+            <UnreadMessageBadge count={unreadCount} size="sm" />
+          </div>
+          )}
         </button>
       </div>
     </header>
