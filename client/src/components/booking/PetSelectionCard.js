@@ -28,40 +28,49 @@ const PetSelectionCard = ({ pet, isSelected, onSelect }) => {
   if (pet.pet_type === 'create-new') {
     return (
       <div
-        className="w-48 h-56 bg-gray-50 border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors shadow-none"
+        className="w-60 h-64 bg-orange-50 border-2 border-orange-300 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-orange-100 transition-colors shadow-none"
         onClick={() => router.push('/add-pet')}
       >
-        <FontAwesomeIcon icon={faPlus} className="text-gray-400 text-4xl mb-3" />
-        <span className="text-gray-500 font-medium text-lg">Create New Pet</span>
+        <FontAwesomeIcon icon={faPlus} className="text-orange-400 text-5xl mb-3" />
+        <span className="text-orange-500 font-semibold text-xl">Create New Pet</span>
       </div>
     );
   }
   return (
     <div
-      className={`w-48 h-56 bg-white border-2 rounded-2xl flex flex-col items-center justify-between p-4 cursor-pointer transition-all duration-200 shadow-sm relative
+      className={`w-60 h-64 bg-white border-2 rounded-2xl flex flex-col items-center justify-between p-6 cursor-pointer transition-all duration-200 shadow-sm relative
         ${isSelected ? 'border-orange-500 shadow-md' : 'border-gray-200 hover:border-orange-300'}`}
       onClick={() => onSelect(pet.pet_id)}
     >
-      <div className="absolute top-2 right-2 p-1 rounded-full z-10">
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={e => { e.stopPropagation(); onSelect(pet.pet_id); }}
-          className="form-checkbox h-5 w-5 text-orange-600 rounded-full border-gray-300 focus:ring-orange-500"
-        />
+      <div className="absolute top-3 right-3 p-1 rounded-full z-10">
+        {/* Custom Checkbox */}
+        <span
+          className={`inline-flex items-center justify-center w-7 h-7 rounded-full border-2 transition-colors duration-150
+            ${isSelected ? 'bg-orange-500 border-orange-500' : 'bg-white border-gray-300'}`}
+          onClick={e => { e.stopPropagation(); onSelect(pet.pet_id); }}
+          role="checkbox"
+          aria-checked={isSelected}
+          tabIndex={0}
+        >
+          {isSelected && (
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+        </span>
       </div>
-      <div className="relative w-24 h-24 mb-2">
+      <div className="relative w-28 h-28 mb-2">
         <Image
           src={pet.pet_image_url || '/mock/image1.webp'}
           alt={pet.pet_name || 'Pet image'}
           className="rounded-full object-cover border-2 border-gray-200"
           fill={true}
-          sizes="96px"
+          sizes="112px"
           style={{ objectFit: 'cover' }}
         />
       </div>
       <div className="w-full flex flex-col items-center">
-        <p className="font-semibold text-gray-800 text-base mb-1 truncate w-full text-center">{pet.pet_name}</p>
+        <p className="font-bold text-gray-800 text-lg mb-1 truncate w-full text-center">{pet.pet_name}</p>
         {Array.isArray(pet.pet_type) ? (
           <div className="flex gap-2 justify-center items-center mt-1">
             {pet.pet_type.map((type) => (

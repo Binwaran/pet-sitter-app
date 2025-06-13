@@ -1,50 +1,166 @@
-
-import { useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
 import DatePicker from "react-datepicker";
 import Select from 'react-select';
 import { format } from "date-fns";
-
+import useUnavailableTimes from "@/hooks/booking/useUnavailableTimes";
+import { supabase } from "@/utils/supabase";
 
 
 export default function BookingModal({ sitterId, isOpen, onClose }) {
   const router = useRouter();
   const { user, loading } = useAuth();
 
-  const timeOptions = [
-  "05:00 AM", "05:30 AM", "06:00 AM", "06:30 AM", "07:00 AM", "07:30 AM",
-  "08:00 AM", "08:30 AM", "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM",
-  "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM", "01:00 PM", "01:30 PM",
-  "02:00 PM", "02:30 PM", "03:00 PM", "03:30 PM", "04:00 PM", "04:30 PM",
-  "05:00 PM", "05:30 PM", "06:00 PM", "06:30 PM", "07:00 PM", "07:30 PM",
-  "08:00 PM", "08:30 PM", "09:00 PM", "09:30 PM", "10:00 PM", "10:30 PM",
-  "11:00 PM", "11:30 PM", "12:00 AM", "12:30 AM", "01:00 AM", "01:30 AM",
-  "02:00 AM", "02:30 AM", "03:00 AM", "03:30 AM", "04:00 AM", "04:30 AM"
-].map(time => ({ value: time, label: time }));
-
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
 
-  const handleContinue = () => {
+  const unavailableTimes = useUnavailableTimes(sitterId, date);
+
+  const timeOptions = useMemo(() => {
+    return Array.from({ length: 48 }, (_, i) => {
+      const hour = String(Math.floor(i / 2)).padStart(2, "0");
+      const minute = i % 2 === 0 ? "00" : "30";
+      const time = `${hour}:${minute}`;
+      return {
+        value: time,
+        label: time,
+        isDisabled: unavailableTimes.includes(time),
+      };
+    });
+  }, [unavailableTimes]);
+  console.log("timeOptions", timeOptions);
+
+  const buildDateTime = (date, timeStr) => {
+    const [hourStr, minuteStr] = timeStr.split(":");
+    const hour = parseInt(hourStr, 10);
+    const minute = parseInt(minuteStr, 10);
+
+    const result = new Date(date);
+    result.setHours(hour);
+    result.setMinutes(minute);
+    result.setSeconds(0);
+    result.setMilliseconds(0);
+    return result.toLocaleString("sv-SE").replace(" ", "T");// ✅ แปลงเป็น ISO string
+  };
+
+
+  const handleContinue = async () => {
     if (!date || !startTime || !endTime) {
-      alert("Please select all required fields.");
+      toast.error("Please select all required fields.");
       return;
     }
-    console.log("Booking confirmed", { sitterId, date, startTime, endTime });
+
+    const startDateTime = buildDateTime(date, startTime);
+    const endDateTime = buildDateTime(date, endTime);
+
+    if (startDateTime >= endDateTime) {
+      toast.error("End time must be after start time.");
+      return;
+    }
+    
+    // ✅ เช็คว่าระยะเวลาน้อยกว่า 1 ชั่วโมงมั้ย
+  const diffMs = new Date(endDateTime) - new Date(startDateTime);
+    const hours = diffMs / (60 * 60 * 1000);
+
+    if (hours < 1) {
+      toast.error("Booking must be at least 1 hour.");
+      return;
+    }
+
+    console.log("Blocked times: ", unavailableTimes);
+    if (!Array.isArray(unavailableTimes)) {
+      toast.error("Booking data is still loading. Please wait a moment.");
+      return;
+    }
+
+    const isOverlapping = unavailableTimes.some((time) => {
+      const [hour, minute] = time.split(":").map(Number);
+      const blocked = new Date(date);
+      blocked.setHours(hour, minute, 0, 0);
+      const isoBlocked = blocked.toISOString();
+      return isoBlocked >= startDateTime && isoBlocked < endDateTime;
+    });
+
+    if (isOverlapping) {
+      
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("booking")
+      .insert([
+        {
+          owner_id: user?.id, // ✅ สำคัญมาก
+          sitter_id: sitterId,
+          start_time: startDateTime,
+          end_time: endDateTime,
+          date: startDateTime.split("T")[0], // ✅ แยก date เก็บเฉพาะวัน
+          duration_hour: hours,
+          status: "pending",
+          created_at: new Date().toISOString(),
+        },
+      ])
+      .select(); // ✅ เพื่อเอา booking_id กลับมา
+
+    if (error) {
+      toast.error("Failed to create booking. Please try again.");
+      console.error("Insert booking error:", JSON.stringify(error, null, 2));
+      return;
+    }
+
+    const bookingId = data[0]?.booking_id;
+    if (!bookingId) {
+      toast.error("Booking created but booking ID not returned.");
+      return;
+    }
+
     onClose();
+
+    // ✅ ไปหน้า step 2
+    router.push("/pet-sitters/booking");
   };
-  console.log("BookingModal mounted", { isOpen });
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-100 sm:z-50 bg-black/50 flex items-start sm:items-center justify-center w-[375px] sm:w-full h-full">
+      <Toaster
+        position="top-center"
+        containerStyle={{
+          top: '50%',
+          transform: 'translateY(-50%)',
+        }}
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#fff',
+            color: '#333',
+            fontSize: '16px',
+            border: '1px solid #eee',
+            boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
+          },
+          success: {
+            iconTheme: {
+              primary: 'green',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: 'red',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
       <div className="bg-white rounded-lg p-6 w-full max-w-md h-full sm:h-[300px]">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Booking</h2>
-          <button onClick={onClose}>✕</button>
+          <button className="cursor-pointer" onClick={onClose}>✕</button>
         </div>
         <p className="mb-4">Select date and time you want to schedule the service.</p>
 
@@ -64,7 +180,7 @@ export default function BookingModal({ sitterId, isOpen, onClose }) {
                 onChange={(date) => setDate(date)}
                 dateFormat="dd MMM, yyyy"
                 placeholderText="Select date"
-                className="custom-input"
+                className="custom-input hover:border-orange-500 transition-colors duration-200"
                 calendarClassName="custom-calendar"
                 popperPlacement="bottom-start"
                 formatWeekDay={(nameOfDay) => nameOfDay.charAt(0)}
@@ -125,6 +241,17 @@ export default function BookingModal({ sitterId, isOpen, onClose }) {
                   className=" w-[140px] sm:w-[177px] cursor-text"
                   classNamePrefix="react-select"
                   placeholder="Start Time"
+                  isOptionDisabled={(option) => option.isDisabled}
+                  styles={{
+                  control: (base, state) => ({
+                    ...base,
+                    borderColor: state.isFocused ? "#f97316" : "#d1d5db", // 🧡 ส้มตอน focus, เทาตอนปกติ
+                    boxShadow: state.isFocused ? "0 0 0 1px #f97316" : "none",
+                    "&:hover": {
+                      borderColor: "#f97316"
+                    },
+                  }),
+                }}
                 />
               </div>
               <h2 className="flex justify-center items-center">-</h2>
@@ -137,12 +264,26 @@ export default function BookingModal({ sitterId, isOpen, onClose }) {
                   className="w-[140px] sm:w-[177px] cursor-text"
                   classNamePrefix="react-select"
                   placeholder="End Time"
+                  isOptionDisabled={(option) => option.isDisabled}
+                  styles={{
+                  control: (base, state) => ({
+                    ...base,
+                    borderColor: state.isFocused ? "#f97316" : "#d1d5db", // 🧡 ส้มตอน focus, เทาตอนปกติ
+                    boxShadow: state.isFocused ? "0 0 0 1px #f97316" : "none",
+                    "&:hover": {
+                      borderColor: "#f97316"
+                    },
+                  }),
+                }}
                 />
               </div>
             </div>
         </div>
 
-        <button onClick={handleContinue} className="mt-6 w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 rounded cursor-pointer">
+        <button
+          onClick={handleContinue}
+          className="mt-6 w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 rounded cursor-pointer"
+        >
           Continue
         </button>
       </div>

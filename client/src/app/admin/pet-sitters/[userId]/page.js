@@ -272,7 +272,7 @@ export default function AdminPetSitterDetailPage() {
         <div className="hidden md:flex h-full sticky top-0 z-30">
           <Sidebar />
         </div>
-        <div className="bg-[#F6F6F9] flex flex-col px-10 pb-20 pt-10 gap-6 w-full h-full overflow-auto">
+        <div className="bg-[#F6F6F9] flex flex-col px-5 md:px-10 pb-20 pt-10 gap-6 w-full h-full overflow-auto">
           {/* Header */}
           <div className="w-full flex flex-col md:flex-col lg:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex flex-col w-full gap-4">

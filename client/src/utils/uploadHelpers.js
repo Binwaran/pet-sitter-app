@@ -18,7 +18,7 @@ export const uploadFile = async (file, type = "gallery") => {
 
   try {
     console.log(`Uploading ${type} file: ${file.name}`);
-    
+
     const response = await axios.post("/api/upload", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
@@ -57,9 +57,9 @@ export const uploadMultipleFiles = async (files) => {
       try {
         // เพิ่ม delay ระหว่างการอัพโหลดแต่ละไฟล์เพื่อลดโอกาสการ overload server
         if (uploadedUrls.length > 0) {
-          await new Promise(r => setTimeout(r, 500));
+          await new Promise((r) => setTimeout(r, 500));
         }
-        
+
         const url = await uploadFile(file);
         if (url) {
           uploadedUrls.push(url);
@@ -81,5 +81,38 @@ export const uploadMultipleFiles = async (files) => {
     console.error("Error in uploadMultipleFiles:", error);
     // Return just existing URLs on error
     return existingUrls;
+  }
+};
+
+// Upload book bank image and get URL back
+export const uploadBookBankImage = async (file) => {
+  if (!file || !(file instanceof File)) {
+    console.error("Invalid book bank image:", file);
+    return null;
+  }
+
+  // ตรวจสอบขนาดไฟล์
+  if (file.size > 2 * 1024 * 1024) {
+    throw new Error(`File ${file.name} is too large. Maximum size is 2MB.`);
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("uploadType", "book-bank"); // ระบุประเภทการอัพโหลด
+
+  try {
+    console.log(`Uploading book bank image: ${file.name}`);
+
+    const response = await axios.post("/api/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+      withCredentials: true,
+    });
+
+    return response.data?.url || null;
+  } catch (error) {
+    console.error("Book bank image upload error:", error);
+    throw new Error("Failed to upload book bank image");
   }
 };

@@ -535,7 +535,7 @@ export default function BookingDetailPage() {
             <div className="fixed top-0 left-0 right-0 z-50 md:left-[240px] flex flex-col">
               <Topbar className="w-full" />
               <div className="md:hidden w-full">
-                <Sidebar className="flex flex-row md:hidden bg-white border-b border-[#DCDFED]" />
+                <Sidebar className="flex flex-row md:hidden bg-white shadow-[4px_4px_24px_0px_#0000000A]"/>
               </div>
             </div>
             <div className="flex-1 flex items-center justify-center mt-[123px] md:mt-[72px]">
@@ -556,7 +556,7 @@ export default function BookingDetailPage() {
             <div className="fixed top-0 left-0 right-0 z-50 md:left-[240px] flex flex-col">
               <Topbar className="w-full" />
               <div className="md:hidden w-full">
-                <Sidebar className="flex flex-row md:hidden bg-white border-b border-[#DCDFED]" />
+                <Sidebar className="flex flex-row md:hidden bg-white shadow-[4px_4px_24px_0px_#0000000A]"/>
               </div>
             </div>
             <div className="flex-1 flex items-center justify-center mt-[123px] md:mt-[72px]">
@@ -579,7 +579,7 @@ export default function BookingDetailPage() {
           <div className="fixed top-0 left-0 right-0 z-50 md:left-[240px] flex flex-col">
             <Topbar className="w-full" />
             <div className="md:hidden w-full">
-              <Sidebar className="flex flex-row md:hidden bg-white shadow-[4px_4px_24px_0px_#0000000A]" />
+              <Sidebar className="flex flex-row md:hidden bg-white shadow-[4px_4px_24px_0px_#0000000A]"/>
             </div>
           </div>
 

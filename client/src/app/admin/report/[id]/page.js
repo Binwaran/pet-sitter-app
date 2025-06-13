@@ -123,13 +123,13 @@ export default function ReportDetailPage() {
               <div className="flex gap-4">
                 <button
                   onClick={() => setShowCancel(true)}
-                  className="bg-orange-100 text-orange-600 text-[18px] px-4 py-2 rounded cursor-pointer rounded-full"
+                  className="bg-orange-100 text-orange-600 text-[18px] px-4 py-2 cursor-pointer rounded-full"
                 >
                   Cancel Report
                 </button>
                 <button
                   onClick={() => setShowResolve(true)}
-                  className="bg-orange-500 text-white text-[18px] px-6 py-3 rounded cursor-pointer rounded-full"
+                  className="bg-orange-500 text-white text-[18px] px-6 py-3 cursor-pointer rounded-full"
                 >
                   Resolve
                 </button>

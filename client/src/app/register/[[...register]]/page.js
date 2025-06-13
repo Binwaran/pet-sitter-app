@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import InputField from "@/components/register/InputField.js";
 import {
   validateEmail,
@@ -11,13 +11,46 @@ import {
 import Link from "next/link";
 import AuthIllustrations from "@/components/Auth/AuthIllustrations";
 import SocialLoginButtons from "@/components/Auth/SocialLoginButtons";
-import { useAuth } from "@/context/AuthContext"; // เพิ่มบรรทัดนี้
+import { useAuth } from "@/context/AuthContext";
 
-const RegisterPage = ({ params }) => {
+const RegisterPage = () => {
   const router = useRouter();
-  const { user } = useAuth(); // เพิ่มบรรทัดนี้
+  const params = useParams();
+  const { user } = useAuth();
 
-  // เพิ่ม useEffect สำหรับ redirect ถ้า login อยู่แล้ว
+  let role = "owner";
+
+  if (params?.register) {
+    // ถ้าเป็น array (เช่น ["sitter"])
+    if (
+      Array.isArray(params.register) &&
+      params.register.length > 0 &&
+      params.register[0]
+    ) {
+      role = params.register[0];
+    }
+    // ถ้าเป็น string (เช่น "sitter")
+    else if (typeof params.register === "string" && params.register) {
+      role = params.register;
+    }
+  }
+
+  // กำหนดข้อความตาม role
+  const roleText = {
+    owner: {
+      header: "Join Us!",
+      subHeader: "Find your perfect pet sitter with us",
+      already: "Already have an account?",
+    },
+    sitter: {
+      header: "Join Us!",
+      subHeader: "Become the best Pet Sitter with us",
+      already: "Already have Pet Sitter account?",
+    },
+  };
+
+  const text = roleText[role] || roleText.owner;
+
   useEffect(() => {
     if (user) {
       if (user.role === "owner") {
@@ -94,6 +127,7 @@ const RegisterPage = ({ params }) => {
             email: formData.email,
             phone: formData.phone,
             password: formData.password,
+            role, // ส่ง role ไปด้วย
           }),
         });
 
@@ -118,10 +152,8 @@ const RegisterPage = ({ params }) => {
     const { name, value } = e.target;
     let newFormData = { ...formData, [name]: value };
 
-    // Reset error ของ field ที่เปลี่ยน
     setErrors((prev) => ({ ...prev, [name]: "" }));
 
-    // ถ้าเปลี่ยน password หรือ confirmPassword ให้ reset error confirmPassword ด้วย
     if (name === "password" || name === "confirmPassword") {
       setErrors((prev) => ({
         ...prev,
@@ -129,7 +161,6 @@ const RegisterPage = ({ params }) => {
       }));
     }
 
-    // ถ้าเป็น phone ให้กรองเฉพาะตัวเลข
     if (name === "phone") {
       const onlyNums = value.replace(/[^0-9]/g, "");
       newFormData = { ...formData, [name]: onlyNums };
@@ -147,10 +178,10 @@ const RegisterPage = ({ params }) => {
           <div className="flex items-center justify-center gap-6 md:pb-6 w-full">
             <div className="text-center flex flex-col gap-2 w-full">
               <h1 className="text-4xl md:text-[56px] font-bold text-black leading-[44px] md:leading-[64px]">
-                Join Us!
+                {text.header}
               </h1>
               <p className="text-[#7B7E8F] text-lg md:text-2xl font-medium md:font-bold leading-[26px] md:leading-[32px]">
-                Find your perfect pet sitter with us
+                {text.subHeader}
               </p>
             </div>
           </div>
@@ -198,7 +229,8 @@ const RegisterPage = ({ params }) => {
                 className="flex justify-center items-center w-full min-w-30 bg-[#FF7037] hover:bg-[#FF986F] active:bg-[#E44A0C] h-12 px-6 py-3 gap-2 rounded-full transition"
               >
                 <p className="text-white text-base font-bold w-[59px]">
-                Register</p>
+                  Register
+                </p>
               </button>
               {errors.general && (
                 <p className="text-red-500 text-sm mt-2">{errors.general}</p>
@@ -215,7 +247,7 @@ const RegisterPage = ({ params }) => {
 
             <div className="flex flex-row justify-center items-center gap-2 w-full">
               <p className="text-lg font-medium text-[#060D18] leading-6.5">
-                Already have an account?{" "}
+                {text.already}{" "}
               </p>
               <div className="flex py-1 px-0.5 gap-1">
                 <Link
@@ -225,6 +257,27 @@ const RegisterPage = ({ params }) => {
                   Login
                 </Link>
               </div>
+            </div>
+
+            {/* ปุ่มสลับ role */}
+            <div className="flex flex-row justify-center items-center mt-2">
+              {role === "owner" ? (
+                <button
+                  type="button"
+                  className="text-[#FF7037] hover:underline font-bold"
+                  onClick={() => router.push("/register/sitter")}
+                >
+                  Become A Pet Sitter
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="text-[#FF7037] hover:underline font-bold"
+                  onClick={() => router.push("/register/owner")}
+                >
+                  Become A Pet Owner
+                </button>
+              )}
             </div>
           </div>
         </div>
