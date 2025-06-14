@@ -72,7 +72,7 @@ export default function CalendarPage() {
 
 
   const handleSelectEvent = (event) => {
-    router.push(`/pet-sitters/booking-list/${event.id}`);
+    router.push(`/pet-sitters/booking-list`);
   };
 
   return (

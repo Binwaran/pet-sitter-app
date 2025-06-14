@@ -23,7 +23,7 @@ export default function FullCalendarWrapper({ events, onEventClick }) {
   };
 
   return (
-    <div>
+    <div className="cursor-pointer">
         <CalendarHeader 
         currentDate={currentDate} 
         viewType={viewType}
