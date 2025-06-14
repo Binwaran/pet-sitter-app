@@ -1,0 +1,88 @@
+.fc .fc-button {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #6B7280;
+  cursor: pointer;
+}
+
+.fc .fc-button.customToday {
+  background-color: #FFF7ED; /* orange-50 */
+  color: #F97316; /* orange-500 */
+  font-weight: bold;
+  padding: 6px 16px;
+  border-radius: 9999px;
+}
+
+.fc .fc-button.customPrev,
+.fc .fc-button.customNext {
+  background-color: transparent;
+  color: #9CA3AF;
+  font-size: 20px;
+}
+
+/* 🔥 ลบแค่เส้นขอบนอกสุด */
+.fc-scrollgrid {
+  border: none !important;
+}
+
+/* ป้องกันไม่ให้หัวตารางมี border บน-ล่าง */
+.fc-scrollgrid-section-header,
+.fc-scrollgrid-section-body {
+  border: none !important;
+}
+
+/* ปรับหัวตารางวันให้เหมือน Figma */
+.fc-col-header-cell-cushion {
+  display: flex !important;
+  flex-direction: column;
+  align-items: flex-start !important;
+  justify-content: flext-start !important;
+  font-weight: 500;
+  text-transform: uppercase;
+  line-height: 1.2;
+  gap: 5px;
+}
+
+.fc-col-header-cell-cushion > div:nth-child(1) {
+  font-size: 1rem; /* ชื่อวัน */
+  color: #6B7280;
+  padding-bottom: 10px;
+}
+
+.fc-col-header-cell-cushion > div:nth-child(2) {
+  font-size: 1.5rem; /* ตัวเลขวัน */
+  font-weight: 700;
+  color: #111827;
+}
+
+/* ✅ ชื่อวัน เช่น SUN */
+.fc-col-header-cell-cushion div:first-child {
+  font-size: 1rem; /* text-sm */
+  font-weight: 300;
+  color: #6B7280; /* gray-500 */
+  text-transform: uppercase;
+}
+
+/* ✅ ตัวเลขวัน เช่น 23 */
+.fc-col-header-cell-cushion div:last-child {
+  font-size: 1.5rem; /* text-xl */
+  font-weight: 500;
+  color: #111827; /* gray-900 */
+  margin-top: 4px;
+}
+
+.fc-timegrid-slot-label {
+  font-size: 1rem;
+  color: #374151;      /* gray-700 */
+}
+
+.fc-timegrid-slot {
+  height: 80px !important;
+}
+
+.fc-event {
+  background-color: unset !important;
+  border: unset !important;
+  color: unset !important;
+}

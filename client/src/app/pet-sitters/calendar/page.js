@@ -1,24 +1,24 @@
-
 'use client'
 
 import { useEffect, useState } from 'react';
-import { Calendar, dayjsLocalizer } from 'react-big-calendar';
 import dayjs from 'dayjs';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase';
 import SidebarSitter from '@/components/sitters/SidebarSitter';
 import TopbarSitter from '@/components/sitters/TopbarSitter'
-import CustomToolbar from '@/components/sitters/CalendarToolbar'
-
-
-const localizer = dayjsLocalizer(dayjs);
+import Image from 'next/image';
+import FullCalendarWrapper from '@/components/sitters/FullCalendarWrapper.jsx';
 
 export default function CalendarPage() {
   const [events, setEvents] = useState([]);
   const [filters, setFilters] = useState('all');
-
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentView, setCurrentView] = useState('week');
+
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -31,13 +31,27 @@ export default function CalendarPage() {
         return;
       }
 
-      const formatted = data.map((item) => ({
-        id: item.booking_id,
-        title: item.owner?.name || 'Unknown',
-        start: new Date(item.start_time),
-        end: new Date(item.end_time),
-        status: item.status,
-      }));
+      const formatted = data
+        .filter(item => item.start_time && item.end_time)
+        .map((item) => {
+          let mappedStatus = 'default'; // fallback
+
+          if (item.status === 'pending' || item.status === 'waiting for confirm' || item.status === 'waiting for service') {
+            mappedStatus = 'waiting';
+          } else if (item.status === 'in service') {
+            mappedStatus = 'booked';
+          } else if (item.status === 'success') {
+            mappedStatus = 'success';
+          }
+
+          return {
+            id: item.booking_id,
+            title: item.owner?.name || 'Unknown',
+            start: new Date(item.start_time),
+            end: new Date(item.end_time),
+            status: mappedStatus,
+          };
+        });
 
       setEvents(formatted);
     };
@@ -50,25 +64,15 @@ export default function CalendarPage() {
     setSearchTerm(e.target.value.toLowerCase());
   };
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  const eventStyleGetter = (event) => {
-    let bgColor = '#f3f3f3';
-    if (event.status === 'waiting') bgColor = '#fcd6ea';
-    if (event.status === 'booked') bgColor = '#fde9d6';
-    if (event.status === 'success') bgColor = '#d6fce6';
-    return {
-      style: {
-        backgroundColor: bgColor,
-        border: '1px solid #f97316',
-        color: '#000',
-        fontWeight: 500,
-        fontSize: '14px',
-      },
-    };
-  };
+  if (!mounted) return null;
+
 
   const handleSelectEvent = (event) => {
-    router.push(`/pet-sitters/booking/${event.id}`);
+    router.push(`/pet-sitters/booking-list/${event.id}`);
   };
 
   return (
@@ -80,37 +84,36 @@ export default function CalendarPage() {
           <div className="mb-6 flex flex-row justify-between items-center">
               <h1 className="text-2xl font-semibold mb-4">Calendar</h1>
 
-              {/* ✅ Search Box ต้องอยู่นอก Calendar */}
-              <div className="mb-4">
+              {/* ✅ Search Box*/}
+              <div className="mb-4 relative w-full max-w-sm">
                 <input
                   type="text"
                   placeholder="Search..."
                   value={searchTerm}
                   onChange={handleSearchChange}
-                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg w-full max-w-md focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  className="pl-4 pr-1 py-2 bg-white border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-orange-400"
                 />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <Image
+                    src="/assets/searchicon.png"
+                    alt="Search"
+                    width={20}
+                    height={20}
+                    priority
+                    unoptimized
+                  />
+                </div>
               </div>
+
             </div>
-            <div className="bg-white rounded-lg shadow-md p-4">
-              <Calendar
-                localizer={localizer}
-                events={events.filter(event =>
-                  (filters === 'all' || event.status === filters) &&
-                  event.title.toLowerCase().includes(searchTerm)
-                )}
-                defaultView="week"
-                views={['week']}
-                startAccessor="start"
-                endAccessor="end"
-                style={{ height: 'calc(100vh - 64px)' }}
-                eventPropGetter={eventStyleGetter}
-                onSelectEvent={handleSelectEvent}
-                components={{
-                  toolbar: (props) => (
-                    <CustomToolbar {...props} filters={filters} setFilters={setFilters} />
-                  )
-                }}
-              />
+            <div className="bg-white rounded-lg shadow-md p-4 overflow-y-hidden">
+              <FullCalendarWrapper
+              events={events.filter(event =>
+                (filters === 'all' || event.status === filters) &&
+                event.title.toLowerCase().includes(searchTerm)
+              )}
+              onEventClick={handleSelectEvent}
+            />
           </div>
         </div>
     </div>
