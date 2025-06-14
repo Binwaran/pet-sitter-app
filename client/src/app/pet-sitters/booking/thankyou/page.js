@@ -12,6 +12,7 @@ export default function BookingThankYouPage() {
   const [sitter, setSitter] = useState(null);
   const router = useRouter();
 
+  // Fetch and update total price if bookingDetails is present
   useEffect(() => {
     const stored = localStorage.getItem('bookingDetails');
     if (stored) {
@@ -21,7 +22,7 @@ export default function BookingThankYouPage() {
         localStorage.setItem('bookingDetails', JSON.stringify(parsed));
       }
       setBooking(parsed);
-      // ดึงข้อมูล pet_sitter จาก Supabase
+      // Fetch sitter trade_name if needed
       if (parsed.sitter_id) {
         supabase
           .from('pet_sitter')

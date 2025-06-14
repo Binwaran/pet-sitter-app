@@ -74,7 +74,7 @@ const BookingSummaryCard = ({ bookingDetails, sitterTradeName }) => {
         <hr className="my-2 border-gray-200" />
         <div className="text-sm">
           <p className="font-medium">Pet Sitter:</p>
-          <p className="ml-2">{sitterHouse ? `${sitterHouse} by ${sitterName}` : sitterName}</p>
+          <p className="ml-2">{sitterHouse ? `${sitterHouse} ` : sitterName}</p>
         </div>
         <div className="text-sm">
           <p className="font-medium">Date & Time:</p>

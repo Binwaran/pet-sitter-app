@@ -41,12 +41,13 @@ export default function handler(req, res) {
     return 0;
   }
 
-  function calculateTotalPrice(weight, startDate, endDate, duration_hour = null, specialDayFlags = []) {
+  function calculateTotalPrice(weight, duration_hour = null, startDate, endDate, specialDayFlags = []) {
     let totalPrice = 0;
     const basePrice = getPricePerDay(weight);
     const pricePerHour = basePrice / 24;
 
     if (duration_hour !== null && !isNaN(duration_hour)) {
+      // กรณีมี duration_hour ให้คิดตามชั่วโมง
       const start = new Date(startDate);
       for (let i = 0; i < duration_hour; i++) {
         const hourDate = new Date(start.getTime() + i * 60 * 60 * 1000);
@@ -54,18 +55,17 @@ export default function handler(req, res) {
         totalPrice += pricePerHour * (1 + multiplier);
       }
     } else {
+      // fallback: คิดตามช่วงเวลา startDate-endDate
       let currentDate = new Date(startDate);
       const end = new Date(endDate);
       const diffMs = end - currentDate;
       const hours = Math.ceil(diffMs / (1000 * 60 * 60)) + 1;
-
       for (let i = 0; i < hours; i++) {
         const hourDate = new Date(currentDate.getTime() + i * 60 * 60 * 1000);
         const multiplier = getSpecialDayMultiplier(hourDate, specialDayFlags);
         totalPrice += pricePerHour * (1 + multiplier);
       }
     }
-
     totalPrice = totalPrice * 2; // เพิ่มราคาอีก 1 เท่าตัว
     return Math.round(totalPrice);
   }
@@ -83,7 +83,7 @@ export default function handler(req, res) {
 
       for (const pet of pets) {
         if (!pet.weight) continue;
-        totalPrice += calculateTotalPrice(pet.weight, startDate, endDate, duration_hour, specialDayFlags);
+        totalPrice += calculateTotalPrice(pet.weight, duration_hour, startDate, endDate, specialDayFlags);
       }
 
       details = { pets, startDate, endDate, duration_hour, specialDayFlags };
@@ -94,7 +94,7 @@ export default function handler(req, res) {
         return res.status(400).json({ error: 'Missing required fields: weight, startDate' });
       }
 
-      totalPrice = calculateTotalPrice(weight, startDate, endDate, duration_hour, specialDayFlags);
+      totalPrice = calculateTotalPrice(weight, duration_hour, startDate, endDate, specialDayFlags);
       details = { weight, startDate, endDate, duration_hour, specialDayFlags };
     }
 

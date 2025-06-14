@@ -57,51 +57,19 @@ export default function BookingInformationPage() {
     const existingBookingDetails = JSON.parse(localStorage.getItem('bookingDetails') || '{}');
 
     // สร้างหมายเลข transaction ที่นี่ก่อนบันทึก
-    const currentTransactionNo = existingBookingDetails.transactionNo || generateTransactionNo(); 
-
+    const currentTransactionNo = existingBookingDetails.transactionNo || generateTransactionNo();
     // สร้าง Transaction Date ปัจจุบัน
     const transactionDate = new Date().toLocaleDateString('en-GB', { 
         weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
     });
 
-    // --- เรียก API คำนวณราคา ---
-    let total = 0;
-    try {
-      if (selectedPets.length > 0 && existingBookingDetails.date && existingBookingDetails.duration) {
-        const startDate = existingBookingDetails.date;
-        const daysMatch = existingBookingDetails.duration.match(/(\d+)/);
-        const numDays = daysMatch ? parseInt(daysMatch[1], 10) : 1;
-        const endDate = new Date(startDate);
-        endDate.setDate(endDate.getDate() + numDays - 1);
-        // รวมราคาทุกตัวจากข้อมูลใน state
-        for (const pet of selectedPets) {
-          if (!pet.type || !pet.weight) continue; // ข้ามถ้าไม่มีข้อมูลจำเป็น
-          const res = await fetch('/api/calculate-price', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              type: pet.type?.toLowerCase() || pet.type,
-              weight: pet.weight,
-              startDate,
-              endDate: endDate.toISOString().slice(0, 10),
-              specialDayFlags: []
-            })
-          });
-          const data = await res.json();
-          if (data.totalPrice) total += data.totalPrice;
-        }
-      }
-    } catch (err) {
-      total = 0;
-    }
-
+    // ไม่ต้อง fetch total ใหม่ ใช้ total เดิมจาก bookingDetails
     const bookingDetails = {
       ...existingBookingDetails, 
       ...form,
       pets: selectedPets,
       transactionNo: currentTransactionNo, 
-      transactionDate: transactionDate, 
-      total,
+      transactionDate: transactionDate
     };
     localStorage.setItem('bookingDetails', JSON.stringify(bookingDetails));
     localStorage.removeItem('bookingPets');

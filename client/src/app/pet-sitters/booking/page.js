@@ -74,7 +74,7 @@ export default function BookingPage() {
           body: JSON.stringify({
             type: pet.type?.toLowerCase() || pet.type,
             weight: pet.weight,
-            startDate: new Date().toISOString().slice(0, 10), // สมมติวันเริ่มต้นวันนี้
+            startDate: new Date().toISOString().slice(0, 10), 
             endDate: new Date().toISOString().slice(0, 10),
             specialDayFlags: []
           })
@@ -91,18 +91,6 @@ export default function BookingPage() {
     }
   }, [selectedPetIds, pets]);
 
-  // สมมติวันและเวลาเลือกได้จาก step ถัดไป หรือใช้วันนี้เป็นค่าเริ่มต้น
-  // const today = new Date();
-  // const date = today.toISOString().slice(0, 10); // yyyy-mm-dd
-  // const time = today.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-  // // base bookingDetails ที่จะอัปเดต
-  // const baseBookingDetails = {
-  //   sitterName: sitter?.trade_name || 'Pet Sitter',
-  //   date,
-  //   time,
-  //   total,
-  // };
 
   // state เก็บ bookingDetails ที่ใช้แสดง summary
   const [bookingDetails, setBookingDetails] = useState(null);
@@ -120,16 +108,39 @@ export default function BookingPage() {
     const stored = localStorage.getItem('bookingDetails');
     const selectedPets = pets.filter(pet => selectedPetIds.includes(pet.pet_id));
 
+    // สร้าง bookingDetails เบื้องต้น (ยังไม่รวม total)
     const newBookingDetails = {
       ...stored ? JSON.parse(stored) : {},
       pets: selectedPets,
       pet: selectedPets.map(p => p.pet_name || p.name || '').join(', '),
     };
 
-    setBookingDetails(newBookingDetails);
-    localStorage.setItem('bookingDetails', JSON.stringify(newBookingDetails));
-
-    console.log('Updated bookingDetails:', newBookingDetails);
+    // ถ้ามีข้อมูลที่จำเป็นครบ ให้ fetch total แล้วค่อยเซฟลง localStorage
+    const shouldFetchTotal = newBookingDetails.pets && newBookingDetails.pets.length > 0 && newBookingDetails.start_time;
+    if (shouldFetchTotal) {
+      (async () => {
+        const res = await fetch('/api/calculate-price', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pets: newBookingDetails.pets,
+            startDate: newBookingDetails.start_time,
+            endDate: newBookingDetails.end_time,
+            duration_hour: newBookingDetails.duration_hour,
+            specialDayFlags: []
+          })
+        });
+        const data = await res.json();
+        const bookingWithTotal = { ...newBookingDetails, total: data.totalPrice || 0 };
+        setBookingDetails(bookingWithTotal);
+        localStorage.setItem('bookingDetails', JSON.stringify(bookingWithTotal));
+        console.log('Updated bookingDetails (with total):', bookingWithTotal);
+      })();
+    } else {
+      setBookingDetails(newBookingDetails);
+      localStorage.setItem('bookingDetails', JSON.stringify(newBookingDetails));
+      console.log('Updated bookingDetails:', newBookingDetails);
+    }
   }, [selectedPetIds, pets, total, sitter]);
 
   return (
