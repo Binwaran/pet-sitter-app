@@ -21,13 +21,11 @@ export default function BookingInformationPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Load selected pets from localStorage
     const pets = JSON.parse(localStorage.getItem('bookingPets') || '[]');
     setSelectedPets(pets);
   }, []);
 
   useEffect(() => {
-    // โหลด bookingDetails จาก localStorage (หลัง BookingModal จะมีข้อมูลครบ)
     const stored = localStorage.getItem('bookingDetails');
     if (stored) setBookingDetails(JSON.parse(stored));
   }, []);
@@ -53,25 +51,20 @@ export default function BookingInformationPage() {
       return;
     }
 
-    // โหลดข้อมูลการจองที่มีอยู่แล้ว (เช่น ข้อมูล sitter, วันที่, เวลา, ยอดรวม)
     const existingBookingDetails = JSON.parse(localStorage.getItem('bookingDetails') || '{}');
-
-    // สร้างหมายเลข transaction ที่นี่ก่อนบันทึก
     const currentTransactionNo = existingBookingDetails.transactionNo || generateTransactionNo();
-    // สร้าง Transaction Date ปัจจุบัน
-    const transactionDate = new Date().toLocaleDateString('en-GB', { 
+    const transactionDate = new Date().toLocaleDateString('en-GB', {
         weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'
     });
 
-    // ไม่ต้อง fetch total ใหม่ ใช้ total เดิมจาก bookingDetails
-    const bookingDetails = {
-      ...existingBookingDetails, 
+    const updatedBookingDetails = {
+      ...existingBookingDetails,
       ...form,
       pets: selectedPets,
-      transactionNo: currentTransactionNo, 
+      transactionNo: currentTransactionNo,
       transactionDate: transactionDate
     };
-    localStorage.setItem('bookingDetails', JSON.stringify(bookingDetails));
+    localStorage.setItem('bookingDetails', JSON.stringify(updatedBookingDetails));
     localStorage.removeItem('bookingPets');
     router.push('/pet-sitters/booking/payment');
   };
@@ -85,7 +78,8 @@ export default function BookingInformationPage() {
           <div className="bg-white rounded-2xl shadow-md p-6">
             <BookingSteps currentStep={2} />
           </div>
-          <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-md p-6 flex flex-col gap-6">
+          {/* เพิ่ม id="bookingInformationForm" ให้กับ form นี้ */}
+          <form id="bookingInformationForm" onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-md p-6 flex flex-col gap-6">
             <h2 className="text-xl font-bold mb-6 text-gray-800">Information</h2>
             <div className="flex flex-col gap-2 relative w-full">
               <label htmlFor="name" className="font-medium">Your Name*</label>
@@ -139,7 +133,8 @@ export default function BookingInformationPage() {
                 placeholder="Type your message here..."
               />
             </div>
-            <div className="flex justify-between mt-8">
+            {/* ปุ่ม Back/Next ที่อยู่ใน form สำหรับ Desktop View เท่านั้น */}
+            <div className="flex justify-between mt-8 hidden md:flex">
               <button
                 type="button"
                 className="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors font-medium"
@@ -156,12 +151,31 @@ export default function BookingInformationPage() {
             </div>
           </form>
         </div>
+
         <div className="w-full lg:w-1/3">
           <div className="lg:sticky lg:top-24 z-10">
            <BookingSummaryCard bookingDetails={bookingDetails} />
           </div>
+          {/* ปุ่ม Back และ Next ใต้ BookingSummaryCard สำหรับ Mobile View เท่านั้น (ไม่ fix) */}
+          <div className="flex justify-between mt-6 md:hidden gap-4"> {/* ใช้ flex และ gap-4 เพื่อจัดเรียงปุ่ม */}
+            <button
+              type="button"
+              className="flex-1 px-6 py-3 rounded-[99px] border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors font-medium text-lg"
+              onClick={() => router.back()}
+            >
+              Back
+            </button>
+            <button
+              type="submit"
+              form="bookingInformationForm" // อ้างอิง ID ของ Form
+              className="flex-1 px-6 py-3 rounded-[99px] bg-orange-500 text-white hover:bg-orange-600 transition-colors font-medium text-lg "
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
+
       <img
         src="/assets/GraphicBookingPage.png"
         alt="Booking Graphic"

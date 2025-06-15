@@ -74,7 +74,7 @@ export default function BookingPage() {
           body: JSON.stringify({
             type: pet.type?.toLowerCase() || pet.type,
             weight: pet.weight,
-            startDate: new Date().toISOString().slice(0, 10), 
+            startDate: new Date().toISOString().slice(0, 10),
             endDate: new Date().toISOString().slice(0, 10),
             specialDayFlags: []
           })
@@ -99,8 +99,6 @@ export default function BookingPage() {
   useEffect(() => {
     const stored = localStorage.getItem('bookingDetails');
     if (stored) setBookingDetails(JSON.parse(stored));
-
-    console.log('Initial bookingDetails loaded:', stored ? JSON.parse(stored) : null);
   }, []);
 
   // อัปเดต bookingDetails และเซฟลง localStorage เมื่อ selectedPetIds, pets, total หรือ sitter เปลี่ยน
@@ -108,38 +106,43 @@ export default function BookingPage() {
     const stored = localStorage.getItem('bookingDetails');
     const selectedPets = pets.filter(pet => selectedPetIds.includes(pet.pet_id));
 
-    // สร้าง bookingDetails เบื้องต้น (ยังไม่รวม total)
     const newBookingDetails = {
       ...stored ? JSON.parse(stored) : {},
       pets: selectedPets,
       pet: selectedPets.map(p => p.pet_name || p.name || '').join(', '),
+      sitterTradeName: sitter?.trade_name,
     };
 
-    // ถ้ามีข้อมูลที่จำเป็นครบ ให้ fetch total แล้วค่อยเซฟลง localStorage
-    const shouldFetchTotal = newBookingDetails.pets && newBookingDetails.pets.length > 0 && newBookingDetails.start_time;
-    if (shouldFetchTotal) {
+    const hasRequiredBookingTimes = newBookingDetails.start_time && newBookingDetails.end_time && newBookingDetails.duration_hour;
+
+    if (newBookingDetails.pets && newBookingDetails.pets.length > 0 && hasRequiredBookingTimes) {
       (async () => {
-        const res = await fetch('/api/calculate-price', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            pets: newBookingDetails.pets,
-            startDate: newBookingDetails.start_time,
-            endDate: newBookingDetails.end_time,
-            duration_hour: newBookingDetails.duration_hour,
-            specialDayFlags: []
-          })
-        });
-        const data = await res.json();
-        const bookingWithTotal = { ...newBookingDetails, total: data.totalPrice || 0 };
-        setBookingDetails(bookingWithTotal);
-        localStorage.setItem('bookingDetails', JSON.stringify(bookingWithTotal));
-        console.log('Updated bookingDetails (with total):', bookingWithTotal);
+        try {
+          const res = await fetch('/api/calculate-price', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              pets: newBookingDetails.pets,
+              startDate: newBookingDetails.start_time,
+              endDate: newBookingDetails.end_time,
+              duration_hour: newBookingDetails.duration_hour,
+            })
+          });
+          const data = await res.json();
+          const bookingWithTotal = { ...newBookingDetails, total: data.totalPrice || 0 };
+          setBookingDetails(bookingWithTotal);
+          localStorage.setItem('bookingDetails', JSON.stringify(bookingWithTotal));
+        } catch (err) {
+          console.error("Error calculating price:", err);
+          const bookingWithTotal = { ...newBookingDetails, total: 0 };
+          setBookingDetails(bookingWithTotal);
+          localStorage.setItem('bookingDetails', JSON.stringify(bookingWithTotal));
+        }
       })();
     } else {
-      setBookingDetails(newBookingDetails);
-      localStorage.setItem('bookingDetails', JSON.stringify(newBookingDetails));
-      console.log('Updated bookingDetails:', newBookingDetails);
+      const bookingWithoutTotal = { ...newBookingDetails, total: 0 };
+      setBookingDetails(bookingWithoutTotal);
+      localStorage.setItem('bookingDetails', JSON.stringify(bookingWithoutTotal));
     }
   }, [selectedPetIds, pets, total, sitter]);
 
@@ -152,8 +155,15 @@ export default function BookingPage() {
             <div className="bg-white rounded-2xl shadow-md p-6 ">
               <BookingSteps currentStep={1} />
             </div>
-
-            <div className="bg-white rounded-2xl shadow-md p-6">
+            <form id="bookingPageForm" onSubmit={(e) => {
+              e.preventDefault();
+              if (selectedPetIds.length > 0) {
+                localStorage.setItem('selectedPetIds', JSON.stringify(selectedPetIds));
+                const selectedPets = pets.filter((pet) => selectedPetIds.includes(pet.pet_id));
+                localStorage.setItem('bookingPets', JSON.stringify(selectedPets));
+                window.location.href = '/pet-sitters/booking/information';
+              }
+            }} className="bg-white rounded-2xl shadow-md p-6 flex flex-col gap-6">
               <h2 className="text-xl  mb-2 my-2 text-gray-800">Choose your pet</h2>
               <div className="w-full mt-2">
                 {loading ? (
@@ -172,35 +182,45 @@ export default function BookingPage() {
                   />
                 )}
               </div>
-              <div className="flex justify-between mt-8">
+              <div className="flex justify-between mt-8 hidden md:flex">
                 <button
-                  className="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 bg-[#FFF6F0] hover:bg-gray-100 transition-colors font-medium"
-                  onClick={() => console.log('Go Back')}
+                  type="button"
+                  className="px-6 py-2 rounded-[99px] border border-gray-300 text-gray-700 bg-[#FFF6F0] hover:bg-gray-100 transition-colors font-medium"
+                  onClick={() => window.history.back()} 
                 >
                   Back
                 </button>
                 <button
-                  className="px-6 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors font-medium disabled:opacity-50"
-                  onClick={() => {
-                    if (selectedPetIds.length > 0) {
-                      // Save selected pets and ids to localStorage
-                      localStorage.setItem('selectedPetIds', JSON.stringify(selectedPetIds));
-                      const selectedPets = pets.filter((pet) => selectedPetIds.includes(pet.pet_id));
-                      localStorage.setItem('bookingPets', JSON.stringify(selectedPets));
-                      // bookingDetails ก็เซฟแล้วจาก useEffect
-                      window.location.href = '/pet-sitters/booking/information';
-                    }
-                  }}
+                  type="submit"
+                  className="px-6 py-2 rounded-[99px] bg-orange-500 text-white hover:bg-orange-600 transition-colors font-medium disabled:opacity-50"
                   disabled={selectedPetIds.length === 0}
                 >
                   Next
                 </button>
               </div>
-            </div>
+            </form> 
           </div>
+
           <div className="w-full lg:w-1/3">
             <div className="lg:sticky lg:top-8 z-10">
-             <BookingSummaryCard bookingDetails={bookingDetails} />
+             <BookingSummaryCard bookingDetails={bookingDetails} sitterTradeName={sitter?.trade_name} />
+            </div>
+            <div className="flex justify-between mt-6 md:hidden gap-4">
+              <button
+                type="button"
+                className="flex-1 px-6 py-3 rounded-[99px] border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors font-medium text-lg"
+                onClick={() => window.history.back()}
+              >
+                Back
+              </button>
+              <button
+                type="submit"
+                form="bookingPageForm" 
+                className="flex-1 px-6 py-3 rounded-[99px] bg-orange-500 text-white hover:bg-orange-600 transition-colors font-medium text-lg disabled:opacity-50"
+                disabled={selectedPetIds.length === 0}
+              >
+                Next
+              </button>
             </div>
           </div>
         </div>

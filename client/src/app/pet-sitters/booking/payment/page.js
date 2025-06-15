@@ -5,7 +5,7 @@ import BookingSteps from '@/components/booking/BookingSteps';
 import BookingSummaryCard from '@/components/booking/BookingSummaryCard';
 import BookingConfirmationModal from '@/components/booking/BookingConfirmationModal';
 import { useRouter } from 'next/navigation';
-import { AlertCircle } from 'lucide-react'; 
+import { AlertCircle } from 'lucide-react';
 import Image from 'next/image';
 import NavBar from '@/components/NavBar';
 
@@ -27,6 +27,7 @@ export default function BookingPaymentPage() {
     if (stored) {
       setBookingDetails(JSON.parse(stored));
     } else {
+      // If no booking details, redirect back to the first step
       router.push('/pet-sitters/booking');
     }
   }, [router]);
@@ -54,7 +55,8 @@ export default function BookingPaymentPage() {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      alert('Please fill in all required fields.');
+      // Optional: You might want to remove the alert and rely only on inline error messages
+      // alert('Please fill in all required fields.');
       return;
     }
     setShowModal(true);
@@ -62,6 +64,7 @@ export default function BookingPaymentPage() {
 
   const handleConfirmBooking = () => {
     setShowModal(false);
+    // ไม่ต้องลบ localStorage ที่นี่ ให้ลบในหน้า thankyou แทน
     router.push('/pet-sitters/booking/thankyou');
   };
 
@@ -74,7 +77,8 @@ export default function BookingPaymentPage() {
           <div className="bg-white rounded-2xl shadow-md p-6">
             <BookingSteps currentStep={3} />
           </div>
-          <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-md p-6 flex flex-col gap-6">
+          {/* เพิ่ม id="paymentForm" ให้กับ form นี้ */}
+          <form id="paymentForm" onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-md p-6 flex flex-col gap-6">
             {/* Payment Type Toggle */}
             <div className="flex gap-2 mb-6">
               <button
@@ -177,17 +181,19 @@ export default function BookingPaymentPage() {
               </div>
             )}
 
-            <div className="flex justify-between mt-8">
+            {/* ปุ่ม Back/Confirm Booking ที่อยู่ใน form สำหรับ Desktop View เท่านั้น */}
+            {/* hidden by default (mobile), flex on medium screens and up (desktop) */}
+            <div className="flex justify-between mt-8 hidden md:flex">
               <button
                 type="button"
-                className="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors font-medium"
+                className="px-6 py-2 rounded-[99px] border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors font-medium"
                 onClick={() => router.back()}
               >
                 Back
               </button>
               <button
                 type="submit"
-                className="px-6 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors font-medium"
+                className="px-6 py-2 rounded-[99px] bg-orange-500 text-white hover:bg-orange-600 transition-colors font-medium"
               >
                 Confirm Booking
               </button>
@@ -203,8 +209,31 @@ export default function BookingPaymentPage() {
           <div className="lg:sticky lg:top-24 z-10">
             <BookingSummaryCard bookingDetails={bookingDetails} sitterTradeName={bookingDetails?.trade_name} />
           </div>
+          {/* ปุ่ม Back และ Confirm Booking ใต้ BookingSummaryCard สำหรับ Mobile View เท่านั้น (ไม่ fix) */}
+          {/* flex by default (mobile), hidden on medium screens and up (desktop) */}
+          <div className="flex justify-between mt-6 md:hidden gap-4">
+            <button
+              type="button"
+              className="flex-1 px-6 py-3 rounded-[99px] border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors font-medium text-lg"
+              onClick={() => router.back()}
+            >
+              Back
+            </button>
+            <button
+              type="submit"
+              form="paymentForm" 
+              className="flex-1 px-6 py-3 rounded-[99px] bg-orange-500 text-white hover:bg-orange-600 transition-colors font-medium text-lg"
+            >
+              Confirm Booking
+            </button>
+          </div>
         </div>
       </div>
+      <img
+        src="/assets/GraphicBookingPage.png"
+        alt="Booking Graphic"
+        className="hidden md:block absolute bottom-0 right-0 w-32 lg:w-48 xl:w-60"
+      />
     </div>
     </>
   );
