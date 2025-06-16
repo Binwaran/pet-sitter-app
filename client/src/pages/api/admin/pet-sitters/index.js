@@ -25,7 +25,6 @@ export default async function handler(req, res) {
       .order("created_at", { ascending: false }); // ถ้าไม่มี updated_at ให้เรียงตาม created_at
 
     if (error) {
-      console.error("Supabase error:", error);
       return res.status(500).json({ error: error.message });
     }
 

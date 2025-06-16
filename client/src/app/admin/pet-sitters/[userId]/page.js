@@ -107,7 +107,7 @@ export default function AdminPetSitterDetailPage() {
       const response = await axios.get(`/api/admin/bookings/${userId}`); // ใช้ userId แทน params.userId
       setBookings(response.data.data || []);
     } catch (error) {
-      console.error("Error fetching bookings:", error);
+      setBookings([]);
     } finally {
       setBookingsLoading(false);
     }

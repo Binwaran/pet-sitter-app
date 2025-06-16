@@ -10,8 +10,6 @@ export default async function handler(req, res) {
     const { sitterId } = req.query;
 
     try {
-      console.log("Fetching bookings for sitter ID:", sitterId);
-
       // 1. ดึงข้อมูล bookings ตาม sitter_id
       const { data: bookings, error } = await supabase
         .from("booking")
@@ -21,7 +19,6 @@ export default async function handler(req, res) {
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Error fetching bookings:", error);
         throw error;
       }
 
@@ -43,7 +40,6 @@ export default async function handler(req, res) {
         .in("booking_id", bookingIds);
 
       if (bookingPetsError) {
-        console.error("Error fetching booking pets:", bookingPetsError);
       }
 
       // 4. จัดกลุ่ม pet_ids ตาม booking_id
@@ -83,7 +79,6 @@ export default async function handler(req, res) {
         .eq("role", "owner");
 
       if (usersError) {
-        console.error("Error fetching users:", usersError);
       }
 
       // สร้าง map ของ users
@@ -101,7 +96,6 @@ export default async function handler(req, res) {
         .in("pet_id", petIds);
 
       if (petsError) {
-        console.error("Error fetching pets:", petsError);
       }
 
       // สร้าง map ของ pets ตาม pet_id
@@ -119,7 +113,6 @@ export default async function handler(req, res) {
         .in("owner_id", ownerIds);
 
       if (ownerPetsError) {
-        console.error("Error fetching all owner pets:", ownerPetsError);
       }
 
       // จัดกลุ่มสัตว์เลี้ยงตามเจ้าของ
@@ -171,12 +164,8 @@ export default async function handler(req, res) {
             );
           });
 
-          // *** ปรับปรุงตาม [id].js ***
           // กรณีไม่พบข้อมูลสัตว์เลี้ยง หรือมี pet_id เป็น null ให้ดึงสัตว์เลี้ยงทั้งหมดของเจ้าของ
           if (bookingPetsData.length === 0 || booking.pet_id === null) {
-            console.log(
-              `No pets found for booking ${booking.booking_id}, using owner's pets`
-            );
             const ownerPets = petsByOwner[booking.owner_id] || [];
             if (ownerPets.length > 0) {
               bookingPetsData = ownerPets;
@@ -254,7 +243,6 @@ export default async function handler(req, res) {
             end_time: booking.end_time, // เพิ่มเพื่อใช้ในการ sort
           };
         } catch (formatError) {
-          console.error("Error formatting booking:", formatError);
           return {
             id: booking.booking_id || "error",
             owner_name: "Error processing booking",
@@ -268,12 +256,8 @@ export default async function handler(req, res) {
         }
       });
 
-      console.log(
-        `Successfully processed ${formattedBookings.length} bookings`
-      );
       return res.status(200).json({ data: formattedBookings });
     } catch (error) {
-      console.error("Error fetching bookings:", error);
       return res
         .status(500)
         .json({ error: error.message || "Failed to fetch bookings" });

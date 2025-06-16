@@ -43,9 +43,7 @@ const CheckUnreadBookings = memo(() => {
         );
 
         setHasUnread(hasUnreadBooking);
-      } catch (error) {
-        console.error("Error checking unread bookings:", error);
-      }
+      } catch (error) {}
     };
 
     // ตรวจสอบครั้งแรก
@@ -71,23 +69,19 @@ const CheckUnreadBookings = memo(() => {
             filter: `sitter_id=eq.${user.id}`,
           },
           (payload) => {
-            console.log("Booking change detected:", payload);
             checkUnreadBookings();
           }
         )
         .subscribe((status) => {
           if (status === "SUBSCRIBED") {
-            console.log("Successfully subscribed to booking changes");
             isSubscribed = true;
           } else if (status === "CHANNEL_ERROR") {
-            console.error("Subscription error");
             isSubscribed = false;
             // เริ่มใช้ polling เป็น fallback
             pollInterval = setInterval(checkUnreadBookings, 30000);
           }
         });
     } catch (error) {
-      console.error("Error setting up subscription:", error);
       // ใช้ polling แทนเมื่อ WebSocket ล้มเหลว
       pollInterval = setInterval(checkUnreadBookings, 30000);
     }
@@ -103,7 +97,6 @@ const CheckUnreadBookings = memo(() => {
 
     // เพิ่ม event listener สำหรับการกลับมา online
     const handleOnline = () => {
-      console.log("Browser back online, checking for updates");
       checkUnreadBookings();
     };
     window.addEventListener("online", handleOnline);
@@ -113,9 +106,7 @@ const CheckUnreadBookings = memo(() => {
       if (bookingChannel) {
         try {
           supabase.removeChannel(bookingChannel);
-        } catch (err) {
-          console.error("Error removing channel:", err);
-        }
+        } catch (err) {}
       }
 
       if (pollInterval) {
@@ -275,9 +266,7 @@ const Sidebar = memo(({ className = "" }) => {
         );
 
         setHasUnreadBookings(hasUnread);
-      } catch (error) {
-        console.error("Error checking unread bookings:", error);
-      }
+      } catch (error) {}
     };
 
     // ตรวจสอบครั้งแรก
@@ -285,9 +274,6 @@ const Sidebar = memo(({ className = "" }) => {
 
     // สร้าง unique channel name เพื่อป้องกันการซ้ำซ้อน
     const channelName = `sidebar-${user.id}-${Date.now()}`;
-
-    // ยกเลิกการใช้ supabase.channel ในส่วนนี้เพื่อไม่ให้เกิดการ subscribe ซ้ำ
-    // เนื่องจาก CheckUnreadBookings component ได้ทำการ subscribe ไปแล้ว
 
     // แทนที่จะใช้ WebSocket ซ้ำ ให้ใช้ polling เป็นการสำรอง
     pollInterval = setInterval(checkUnreadBookings, 30000);
@@ -335,7 +321,6 @@ const Sidebar = memo(({ className = "" }) => {
       await logout();
       window.location.href = "/";
     } catch (error) {
-      console.error("Logout error:", error);
       alert("Logout failed. Please try again.");
     }
   };

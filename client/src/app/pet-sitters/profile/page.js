@@ -159,7 +159,6 @@ export default function PetSitterProfilePage() {
           setAdminSuggestion(data.admin_suggestion);
         }
       } catch (error) {
-        console.error("Error fetching profile:", error);
         toast.error("Could not fetch profile data. Please try again later.");
       } finally {
         setIsLoading(false);
@@ -212,7 +211,6 @@ export default function PetSitterProfilePage() {
           toast.dismiss();
           toast.success("Profile image uploaded successfully");
         } catch (error) {
-          console.error("Profile image upload failed:", error);
           profileImageUrl =
             typeof values.profile_image === "string"
               ? values.profile_image
@@ -264,7 +262,6 @@ export default function PetSitterProfilePage() {
                   );
                 }
               } catch (fileError) {
-                console.error(`Failed to upload gallery image:`, fileError);
                 toast.error(`Failed to upload image: ${file.name}`, {
                   id: "upload-error",
                 });
@@ -285,7 +282,6 @@ export default function PetSitterProfilePage() {
               toast.error("Failed to upload gallery images");
             }
           } catch (error) {
-            console.error("Gallery upload error:", error);
             toast.dismiss();
             toast.error("Gallery uploads failed");
           }
@@ -365,14 +361,9 @@ export default function PetSitterProfilePage() {
             ...user,
             profile_image_url: profileImageUrl,
           });
-          console.log(
-            "Updated profile image in user context:",
-            profileImageUrl
-          );
         } else {
           // If no new image uploaded, ensure user data is latest
           await fetchUserData();
-          console.log("Fetched updated user data after profile save");
         }
       } else {
         toast.warning(
@@ -380,7 +371,6 @@ export default function PetSitterProfilePage() {
         );
       }
     } catch (error) {
-      console.error("Form submission error:", error);
       toast.error(error.response?.data?.error || "Failed to update profile");
     } finally {
       setSubmitting(false);
@@ -388,15 +378,8 @@ export default function PetSitterProfilePage() {
     }
   };
 
-  // Only log validation errors that actually occur
+  // Remove FormikErrorLogger component and related code
   const FormikErrorLogger = () => {
-    const formik = useFormikContext();
-    useEffect(() => {
-      // Check if formik.errors exists and isn't empty
-      if (formik?.errors && Object.keys(formik.errors).length > 0) {
-        console.error("Form validation errors:", formik.errors);
-      }
-    }, [formik?.errors]);
     return null;
   };
 
@@ -798,7 +781,6 @@ const AddressSection = memo(() => {
       <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 w-full">
         <ProvinceField
           onChange={(selectedProvince) => {
-            console.log("Province change in form state only");
             setFieldValue("province", selectedProvince);
             setFieldValue("district", "");
             setFieldValue("sub_district", "");
@@ -855,11 +837,6 @@ const AddressSection = memo(() => {
                 setFieldValue("pendingLatitude", lat);
                 setFieldValue("pendingLongitude", lng);
                 setFieldValue("has_pending_location", true);
-
-                // Don't update latitude/longitude to preserve approved coordinates
-                // Removed setFieldValue for latitude and longitude
-
-                // Keep original values and only add to payload when sending API
               }
             }}
           />

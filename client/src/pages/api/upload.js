@@ -38,8 +38,6 @@ export default async function handler(req, res) {
         .json({ error: "Unauthorized: Invalid token format" });
     }
 
-    console.log("Processing upload request from user ID:", decoded.id);
-
     // เพิ่มขนาดไฟล์เป็น 2MB ให้ตรงกับ client-side check
     const form = formidable({
       multiples: true,
@@ -53,11 +51,8 @@ export default async function handler(req, res) {
     const [fields, files] = await new Promise((resolve, reject) => {
       form.parse(req, (err, fields, files) => {
         if (err) {
-          console.error("Formidable parsing error:", err);
           reject(err);
         }
-        console.log("Files received:", Object.keys(files).length);
-        console.log("Fields received:", fields);
         resolve([fields, files]);
       });
     });
@@ -90,7 +85,6 @@ export default async function handler(req, res) {
 
     // ตรวจสอบว่าได้ไฟล์ที่ถูกต้องหรือไม่
     if (!fileToProcess || !fileToProcess.filepath) {
-      console.error("No valid file found in request");
       return res.status(400).json({ error: "Missing file in upload request" });
     }
 
@@ -108,10 +102,6 @@ export default async function handler(req, res) {
         error: "Invalid file type. Only JPG, JPEG, PNG and WebP are allowed.",
       });
     }
-
-    console.log(
-      `Processing file: ${fileToProcess.originalFilename}, type: ${fileToProcess.mimetype}, size: ${fileToProcess.size} bytes`
-    );
 
     try {
       // อ่านไฟล์จาก filepath
@@ -142,21 +132,14 @@ export default async function handler(req, res) {
       let bucketName;
       if (uploadType === "profile") {
         bucketName = "pet-sitter-images";
-        console.log("Detected PROFILE image upload");
       } else if (uploadType === "book-bank") {
         bucketName = "book-bank-images";
-        console.log("Detected BOOK BANK image upload");
       } else {
         bucketName = "pet-sitter-gallery";
-        console.log("Detected GALLERY image upload");
       }
 
       // ปรับโครงสร้างไฟล์ให้เป็นแบบแบนๆ ไม่มี subfolder
       const filePath = filename; // ใช้ filename เฉยๆ ไม่มี subfolder
-
-      console.log(
-        `Uploading to Supabase bucket: ${bucketName}, file: ${filePath}`
-      );
 
       // Upload to Supabase Storage
       const { data, error } = await supabase.storage
@@ -168,7 +151,6 @@ export default async function handler(req, res) {
         });
 
       if (error) {
-        console.error("Supabase upload error:", error);
         return res
           .status(500)
           .json({ error: `Storage upload failed: ${error.message}` });
@@ -183,16 +165,13 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: "Failed to get public URL" });
       }
 
-      console.log("Upload successful:", urlData.publicUrl);
       return res.status(200).json({ url: urlData.publicUrl });
     } catch (fsError) {
-      console.error("File system error:", fsError);
       return res
         .status(500)
         .json({ error: "File reading error: " + fsError.message });
     }
   } catch (error) {
-    console.error("Error processing upload:", error);
     return res
       .status(500)
       .json({ error: "Upload failed: " + (error.message || "Unknown error") });

@@ -30,7 +30,6 @@ export default async function handler(req, res) {
         .eq("sitter_id", sitter_id);
 
       if (countError) {
-        console.error("Error counting reviews:", countError);
         return res.status(500).json({ message: "Failed to count reviews" });
       }
 
@@ -42,7 +41,6 @@ export default async function handler(req, res) {
         .single();
 
       if (avgError && avgError.code !== "PGRST116") {
-        console.error("Error fetching average rating:", avgError);
       }
 
       // ดึงข้อมูล reviews พร้อมข้อมูลผู้รีวิว และรวมถึง verified status
@@ -67,12 +65,8 @@ export default async function handler(req, res) {
         .range(offset, offset + limitInt - 1);
 
       if (reviewsError) {
-        console.error("Error fetching reviews:", reviewsError);
         return res.status(500).json({ message: "Failed to fetch reviews" });
       }
-
-      // เพิ่ม console.log เพื่อตรวจสอบ
-      console.log("Reviews data from DB:", reviews);
 
       // ตรวจสอบว่า reviews มีข้อมูลก่อนแปลง
       const formattedReviews = reviews
@@ -87,8 +81,6 @@ export default async function handler(req, res) {
           }))
         : [];
 
-      console.log("Formatted reviews:", formattedReviews);
-
       // ส่งผลลัพธ์กลับไปยัง client
       return res.status(200).json({
         reviews: formattedReviews,
@@ -98,7 +90,6 @@ export default async function handler(req, res) {
         average_rating: avgData?.average_rating || 0,
       });
     } catch (error) {
-      console.error("Server error:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   }
@@ -120,7 +111,6 @@ export default async function handler(req, res) {
         .single();
 
       if (getError) {
-        console.error("Error getting review:", getError);
         return res.status(500).json({ message: "Failed to get review" });
       }
 
@@ -131,7 +121,6 @@ export default async function handler(req, res) {
         .eq("id", id);
 
       if (deleteError) {
-        console.error("Error deleting review:", deleteError);
         return res.status(500).json({ message: "Failed to delete review" });
       }
 
@@ -143,8 +132,6 @@ export default async function handler(req, res) {
           .eq("sitter_id", reviewData.sitter_id);
 
         if (ratingError) {
-          console.error("Error getting ratings:", ratingError);
-          // ไม่คืน error แค่ log ข้อผิดพลาด เพราะการลบ review สำเร็จแล้ว
         }
 
         let averageRating = 0;
@@ -160,13 +147,11 @@ export default async function handler(req, res) {
           .eq("user_id", reviewData.sitter_id);
 
         if (updateError) {
-          console.error("Error updating average rating:", updateError);
         }
       }
 
       return res.status(200).json({ message: "Review deleted successfully" });
     } catch (error) {
-      console.error("Server error:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   }
@@ -189,7 +174,6 @@ export default async function handler(req, res) {
         .select();
 
       if (error) {
-        console.error("Error updating review:", error);
         return res.status(500).json({ message: error.message });
       }
 
@@ -201,7 +185,6 @@ export default async function handler(req, res) {
         data,
       });
     } catch (err) {
-      console.error("Server error in review update:", err);
       return res.status(500).json({ message: err.message });
     }
   }

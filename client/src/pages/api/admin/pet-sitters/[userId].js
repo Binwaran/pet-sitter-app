@@ -27,7 +27,6 @@ export default async function handler(req, res) {
       .single();
 
     if (error || !data) {
-      console.error("Supabase error:", error);
       return res.status(500).json({ error: error?.message || "Not found" });
     }
 

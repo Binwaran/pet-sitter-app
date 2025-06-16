@@ -16,13 +16,6 @@ export default async function handler(req, res) {
     return res.status(400).json({ message: "Missing userId or reason" });
   }
 
-  console.log(
-    "Processing rejection request for userId:",
-    userId,
-    "with reason:",
-    reason
-  );
-
   try {
     // ตรวจสอบว่ามีข้อมูลอยู่หรือไม่
     const { data: checkData, error: checkError } = await supabase
@@ -30,22 +23,15 @@ export default async function handler(req, res) {
       .select("*")
       .eq("user_id", userId);
 
-    console.log("Check result:", { checkData, checkError });
-
     if (checkError) {
-      console.error("Check error:", checkError);
       return res.status(500).json({ message: checkError.message });
     }
 
     if (!checkData || checkData.length === 0) {
-      console.error("Pet sitter not found with userId:", userId);
       return res.status(404).json({ message: "Pet sitter not found" });
     }
 
-    console.log("Found pet sitter data:", checkData[0]);
-
-    // ดำเนินการอัพเดท พร้อมแสดงข้อมูลเพิ่มเติมเพื่อ debug
-    console.log("Updating status to 'rejected' for userId:", userId);
+    // ดำเนินการอัพเดท
     const { data: updateData, error } = await supabase
       .from("pet_sitter")
       .update({
@@ -56,10 +42,7 @@ export default async function handler(req, res) {
       .eq("user_id", userId)
       .select();
 
-    console.log("Update result:", { updateData, error, userId, reason });
-
     if (error) {
-      console.error("Update error:", error);
       return res.status(500).json({ message: error.message });
     }
 
@@ -78,7 +61,6 @@ export default async function handler(req, res) {
             },
     });
   } catch (err) {
-    console.error("Server error:", err);
     return res
       .status(500)
       .json({ message: "Internal server error", details: err.message });

@@ -52,7 +52,7 @@ export default function BankAccountPage() {
           });
         }
       } catch (error) {
-        console.error("Failed to fetch bank details:", error);
+        toast.error("Unable to load bank details. Please try again later.");
       }
     };
 
@@ -181,10 +181,7 @@ export default function BankAccountPage() {
         router.push("/pet-sitters/payout");
       }, 1000); // 1 second delay before redirect
     } catch (error) {
-      console.error("Error updating bank account:", error);
       setUploadError("An error occurred while saving. Please try again.");
-
-      // Show error toast notification
       toast.error("Error updating bank account. Please try again.", {
         position: "top-center",
         duration: 5000,

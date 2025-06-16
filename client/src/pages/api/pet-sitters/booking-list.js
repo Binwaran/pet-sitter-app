@@ -16,7 +16,6 @@ async function getPetsByOwners(ownerIds) {
     .in("owner_id", ownerIds);
 
   if (error) {
-    console.error("Error fetching pets by owner:", error);
     return {};
   }
 
@@ -29,9 +28,6 @@ async function getPetsByOwners(ownerIds) {
       }
       petsByOwner[pet.owner_id].push(pet);
     });
-    console.log(`Found pets for ${Object.keys(petsByOwner).length} owners`);
-  } else {
-    console.log("No pets found for any owners");
   }
 
   return petsByOwner;
@@ -66,7 +62,6 @@ export default async function handler(req, res) {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Error fetching bookings:", error);
       return res.status(500).json({ error: error.message });
     }
 
@@ -83,7 +78,6 @@ export default async function handler(req, res) {
       .in("booking_id", bookingIds);
 
     if (bookingPetsError) {
-      console.error("Error fetching booking pets:", bookingPetsError);
       return res.status(500).json({ error: "Failed to fetch booking pets" });
     }
 
@@ -96,8 +90,6 @@ export default async function handler(req, res) {
         }
         bookingPetsMap[item.booking_id].push(item.pet_id);
       });
-    } else {
-      console.log("No booking_pets records found");
     }
 
     // Gather all pet IDs
@@ -130,10 +122,6 @@ export default async function handler(req, res) {
     const { data: pets, error: petsError } = await supabase
       .from("pets")
       .select("pet_id, pet_name, pet_image_url, owner_id, pet_type");
-
-    if (petsError) {
-      console.error("Error fetching pets:", petsError);
-    }
 
     // Map pets by ID
     const petsMap = {};
@@ -236,7 +224,6 @@ export default async function handler(req, res) {
           message: booking.message || "",
         };
       } catch (error) {
-        console.error("Error formatting booking:", error);
         return {
           id: booking.booking_id || "error",
           owner_name: "Error processing booking",
@@ -250,10 +237,8 @@ export default async function handler(req, res) {
       }
     });
 
-    console.log(`Successfully processed ${formattedBookings.length} bookings`);
     return res.status(200).json({ data: formattedBookings });
   } catch (error) {
-    console.error("Auth error:", error);
     return res.status(401).json({ error: "Authentication failed" });
   }
 }

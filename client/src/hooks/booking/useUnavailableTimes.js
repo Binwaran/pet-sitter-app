@@ -9,26 +9,27 @@ export default function useUnavailableTimes(sitterId, selectedDate) {
     if (!sitterId || !selectedDate) return;
 
     const fetchUnavailable = async () => {
-      const startOfDay = new Date(Date.UTC(
-        selectedDate.getFullYear(),
-        selectedDate.getMonth(),
-        selectedDate.getDate(),
-        0, 0, 0
-      ));
+      const startOfDay = new Date(
+        Date.UTC(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          selectedDate.getDate(),
+          0,
+          0,
+          0
+        )
+      );
 
-      const endOfDay = new Date(Date.UTC(
-        selectedDate.getFullYear(),
-        selectedDate.getMonth(),
-        selectedDate.getDate(),
-        23, 59, 59
-      ));
-
-console.log("⏰ Time range for query:", {
-  sitterId,
-  selectedDate,
-  start: startOfDay.toISOString(),
-  end: endOfDay.toISOString()
-});
+      const endOfDay = new Date(
+        Date.UTC(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          selectedDate.getDate(),
+          23,
+          59,
+          59
+        )
+      );
 
       const { data, error } = await supabase
         .from("booking")
@@ -38,13 +39,12 @@ console.log("⏰ Time range for query:", {
           "pending",
           "waiting for confirm",
           "waiting for service",
-          "in service"
+          "in service",
         ])
         .gte("start_time", startOfDay.toISOString())
         .lte("end_time", endOfDay.toISOString());
 
       if (error) {
-        console.error("❌ Error fetching unavailable times:", error);
         return;
       }
 

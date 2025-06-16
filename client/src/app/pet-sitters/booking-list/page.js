@@ -234,13 +234,11 @@ const useBookings = () => {
             );
           }
         } catch (err) {
-          console.error("Error fetching viewed bookings:", err);
         }
       };
 
       fetchViewedBookings();
     } catch (e) {
-      console.error("Error loading viewed bookings:", e);
       localStorage.removeItem("sitterViewedBookings");
     }
   }, [user?.id]);
@@ -270,7 +268,6 @@ const useBookings = () => {
             { withCredentials: true }
           );
         } catch (err) {
-          console.error("Error marking booking as viewed:", err);
         }
       }
     },
@@ -281,7 +278,6 @@ const useBookings = () => {
     setLoading(true);
     try {
       if (!user?.id) {
-        console.error("No user found");
         setLoading(false);
         return;
       }
@@ -293,7 +289,6 @@ const useBookings = () => {
 
       setBookings(res.data.data || []);
     } catch (err) {
-      console.error("Error fetching bookings:", err);
       setBookings([]);
     } finally {
       setLoading(false);
@@ -493,7 +488,7 @@ const BookingPage = () => {
           <div className="fixed top-0 left-0 right-0 z-50 md:left-[240px] flex flex-col">
             <Topbar className="w-full" />
             <div className="md:hidden w-full">
-              <Sidebar className="flex flex-row md:hidden bg-white shadow-[4px_4px_24px_0px_#0000000A]"/>
+              <Sidebar className="flex flex-row md:hidden bg-white shadow-[4px_4px_24px_0px_#0000000A]" />
             </div>
           </div>
 

@@ -16,8 +16,6 @@ export default async function handler(req, res) {
     return res.status(400).json({ message: "Missing userId" });
   }
 
-  console.log("Processing approval request for userId:", userId);
-
   try {
     // ตรวจสอบว่ามีข้อมูลและ pending_data อยู่หรือไม่
     const { data: checkData, error: checkError } = await supabase
@@ -27,17 +25,14 @@ export default async function handler(req, res) {
       .single();
 
     if (checkError) {
-      console.error("Check error:", checkError);
       return res.status(500).json({ message: checkError.message });
     }
 
     if (!checkData) {
-      console.error("Pet sitter not found with userId:", userId);
       return res.status(404).json({ message: "Pet sitter not found" });
     }
 
     if (!checkData.pending_data) {
-      console.error("No pending data found for approval");
       return res
         .status(400)
         .json({ message: "No pending data found for approval" });
@@ -48,7 +43,7 @@ export default async function handler(req, res) {
     const userData = pendingData?.user_data || {};
     // Extract pet sitter data, making sure to remove date_of_birth if present
     const petSitterData = { ...pendingData?.pet_sitter_data } || {};
-    
+
     // Remove date_of_birth from petSitterData if it exists
     if (petSitterData.date_of_birth !== undefined) {
       delete petSitterData.date_of_birth;
@@ -62,7 +57,10 @@ export default async function handler(req, res) {
           name: userData.name || checkData.users?.name,
           email: userData.email || checkData.users?.email,
           phone: userData.phone || checkData.users?.phone,
-          birthday: userData.birthday || userData.date_of_birth || checkData.users?.birthday, // Add birthday field
+          birthday:
+            userData.birthday ||
+            userData.date_of_birth ||
+            checkData.users?.birthday, // Add birthday field
           profile_image_url:
             checkData.pending_profile_image_url ||
             userData.profile_image_url ||
@@ -71,11 +69,9 @@ export default async function handler(req, res) {
         .eq("id", userId);
 
       if (userUpdateError) {
-        console.error("Error updating user data:", userUpdateError);
         return res.status(500).json({ message: userUpdateError.message });
       }
     }
-    
 
     // อัพเดทข้อมูล pet_sitter table
     const { data: updateData, error: updateError } = await supabase
@@ -96,7 +92,6 @@ export default async function handler(req, res) {
       .select();
 
     if (updateError) {
-      console.error("Update error:", updateError);
       return res.status(500).json({ message: updateError.message });
     }
 
@@ -106,7 +101,6 @@ export default async function handler(req, res) {
       data: updateData[0],
     });
   } catch (err) {
-    console.error("Server error:", err);
     return res
       .status(500)
       .json({ message: "Internal server error", details: err.message });

@@ -71,8 +71,7 @@ export default function OwnerProfilePage() {
       try {
         imageUrl = await uploadFile(profileImageFile, "profile");
       } catch (error) {
-        console.error("Upload error:", error.message);
-        alert("Failed to upload image"); // Changed from "อัปโหลดรูปไม่สำเร็จ"
+        alert("Failed to upload image");
         return;
       }
     }
@@ -98,11 +97,9 @@ export default function OwnerProfilePage() {
           profile_image_url: imageUrl,
           name: profile.name, // อัพเดทชื่อด้วยในกรณีที่มีการเปลี่ยน
         });
-        console.log("Updated profile image in context:", imageUrl);
       } else {
         // ดึงข้อมูลใหม่จาก API เพื่อความมั่นใจ
         await fetchUser();
-        console.log("Fetched fresh user data");
       }
 
       alert("Profile saved!");
@@ -125,9 +122,6 @@ export default function OwnerProfilePage() {
       </div>
     );
   if (!authorized) return null; // หรือแสดง spinner
-
-  console.log("🧪 profile:", profile);
-  console.log("🧪 profile.profile_image_url:", profile.profile_image_url);
 
   const imageSrc =
     previewUrl ||

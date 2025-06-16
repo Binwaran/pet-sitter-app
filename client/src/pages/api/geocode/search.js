@@ -55,7 +55,6 @@ async function searchThaiAddress(query) {
 
     return [];
   } catch (error) {
-    console.error("Error in searchThaiAddress:", error);
     throw error;
   }
 }
@@ -74,14 +73,10 @@ export default async function handler(req, res) {
 
     // ตรวจสอบว่ามีผลลัพธ์ใน cache หรือไม่
     if (cachedResult && Date.now() - cachedResult.timestamp < CACHE_DURATION) {
-      console.log("Returning cached geocode result for:", q);
       return res.status(200).json(cachedResult.data);
     }
 
     // ถ้าไม่มี cache หรือ cache หมดอายุแล้ว ดึงข้อมูลใหม่
-    console.log("Geocoding address:", q);
-
-    // ใช้ฟังก์ชัน search แบบพิเศษสำหรับที่อยู่ในไทย
     const searchResults = await searchThaiAddress(q);
 
     // บันทึก cache
@@ -109,7 +104,6 @@ export default async function handler(req, res) {
 
     res.status(200).json(searchResults);
   } catch (error) {
-    console.error("Error in geocode search:", error);
     res.status(500).json({ error: "Failed to geocode address" });
   }
 }

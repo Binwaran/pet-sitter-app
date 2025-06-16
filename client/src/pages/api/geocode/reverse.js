@@ -27,11 +27,8 @@ export default async function handler(req, res) {
     // Check cache
     const cachedResult = coordsCache.get(cacheKey);
     if (cachedResult && Date.now() - cachedResult.timestamp < CACHE_DURATION) {
-      console.log("Returning cached reverse geocode result for:", cacheKey);
       return res.status(200).json(cachedResult.data);
     }
-
-    console.log("Reverse geocoding coordinates:", cacheKey);
 
     // Call Nominatim API for reverse geocoding
     const response = await axios.get(
@@ -75,7 +72,6 @@ export default async function handler(req, res) {
 
     res.status(200).json(response.data);
   } catch (error) {
-    console.error("Error in reverse geocoding:", error);
     res.status(500).json({ error: "Failed to reverse geocode coordinates" });
   }
 }

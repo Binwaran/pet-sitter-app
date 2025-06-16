@@ -35,8 +35,6 @@ const Payout = () => {
           withCredentials: true,
         });
 
-        console.log("Full API response:", response.data);
-
         if (response.data) {
           // Set total earning
           setTotalEarning(response.data.totalEarning || 0);
@@ -46,21 +44,11 @@ const Payout = () => {
             setTransactions(response.data.transactions);
           }
 
-          // Set bank account info
-          console.log("Bank info received:", response.data.bankInfo);
-
           if (response.data.bankInfo) {
             setBankAccount(response.data.bankInfo);
-            console.log(
-              "Bank account state after setting:",
-              response.data.bankInfo
-            );
-          } else {
-            console.log("No bank info in response");
           }
         }
       } catch (error) {
-        console.error("Failed to fetch payout data:", error);
         toast.error("Unable to load payment information");
       } finally {
         setLoading(false);
@@ -123,9 +111,7 @@ const Payout = () => {
   };
 
   const handleBankAccountClick = () => {
-    // Add navigation to edit bank account page or show modal
     router.push("/pet-sitters/payout/bank-account");
-    console.log("Edit bank account clicked");
   };
 
   // Function to handle sorting
