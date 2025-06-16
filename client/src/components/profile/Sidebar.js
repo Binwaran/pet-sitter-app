@@ -43,6 +43,15 @@ export default function Sidebar() {
     return () => nav.removeEventListener("wheel", onWheel);
   }, []);
 
+  // เพิ่มฟังก์ชันเช็ค active path
+  const isActivePath = (href) => {
+    // เช็คว่าเป็นหน้า edit-pet หรือไม่
+    if (pathname.includes('/pet-owners/edit-pet/')) {
+      return href === '/pet-owners/pets';
+    }
+    return pathname === href;
+  };
+
   return (
     <div className="w-full md:max-w-73 bg-white md:rounded-2xl md:py-6 shadow-sm self-start">
       <div className="hidden md:flex items-center justify-start pb-3 px-6">
@@ -62,7 +71,7 @@ export default function Sidebar() {
         `}</style>
 
         {menuItems.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = isActivePath(item.href);
           const Icon = item.icon;
 
           return (
