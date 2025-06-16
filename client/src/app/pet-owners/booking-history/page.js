@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import Sidebar from "@/components/profile/Sidebar";
 import BookingCard from "@/components/profile/BookingCard";
 import BookingDetailModal from "@/components/profile/BookingDetailModal";
+import ReviewModal from "@/components/reviews/reviews";
 
 function mapStatus(status) {
   if (
@@ -34,6 +35,8 @@ export default function BookingHistoryPage() {
   const [error, setError] = useState("");
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [statusFilter, setStatusFilter] = useState("All");
+  const [openReview, setOpenReview] = useState(false);
+  const [reviewBooking, setReviewBooking] = useState(null);
 
   function getStatusDate(booking) {
     const status = booking.status;
@@ -126,26 +129,19 @@ export default function BookingHistoryPage() {
 
   return (
     <div className="bg-[#FAFAFB]">
-          <div className="md:px-20 md:pt-10 md:pb-20">
-            <div className="flex flex-col md:flex-row">
-              {/* Sidebar */}
-              <div className="w-full md:max-w-81 md:max-h-89 flex md:gap-6 md:pr-8">
-                <Sidebar />
-              </div>
+      <div className="md:px-20 md:pt-10 md:pb-20">
+        <div className="flex flex-col md:flex-row">
+          {/* Sidebar */}
+          <div className="w-full md:max-w-81 md:max-h-89 flex md:gap-6 md:pr-8">
+            <Sidebar />
+          </div>
           <div className="w-full">
             <div className="bg-white flex flex-col px-4 py-6 md:p-10 md:rounded-2xl gap-6 md:gap-15 w-full">
               <h1 className="text-2xl font-bold">Booking History</h1>
-              {bookings.length === 0 ? (
-    <div className="bg-gray-100 min-h-screen">
-      <div className="px-20 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6">
-          <Sidebar />
-          <div className="self-start">
-            <div className="bg-white p-6 rounded-2xl shadow-md">
-              <h1 className="text-2xl font-bold mb-14">Booking History</h1>
+
               {/* Filter by status */}
-              <div className="mb-6">
-                <label className="mr-2 font-medium">Filter by status:</label>
+              <div className="mb-4 flex flex-row items-center gap-2">
+                <label className="font-medium">Filter by status:</label>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
@@ -158,15 +154,21 @@ export default function BookingHistoryPage() {
                   <option value="Cancelled">Cancelled</option>
                 </select>
               </div>
-              {filteredBookings.length === 0 ? (
+
+              {bookings.length === 0 ? (
                 <p className="text-gray-500">No bookings found.</p>
               ) : (
                 filteredBookings.map((booking, index) => (
-                  <BookingCard
-                    key={booking.booking_id || index}
-                    booking={booking}
-                    onClick={() => setSelectedBooking(booking)}
-                  />
+                  <div key={booking.booking_id || index}>
+                    <BookingCard
+                      booking={booking}
+                      onClick={() => setSelectedBooking(booking)}
+                      onReview={(b) => {
+                        setReviewBooking(b);
+                        setOpenReview(true);
+                      }}
+                    />
+                  </div>
                 ))
               )}
             </div>
@@ -181,6 +183,17 @@ export default function BookingHistoryPage() {
           onClose={() => setSelectedBooking(null)}
         />
       )}
+
+      {/* Review Modal */}
+      <ReviewModal
+        open={openReview}
+        onClose={() => setOpenReview(false)}
+        booking={reviewBooking}
+        onSuccess={() => {
+          setOpenReview(false);
+          // อัปเดต bookings หรือแจ้งเตือนสำเร็จ
+        }}
+      />
     </div>
   );
 }

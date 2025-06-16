@@ -35,7 +35,7 @@ const STATUS_MAP = {
   },
 };
 
-export default function BookingCard({ booking, onClick }) {
+export default function BookingCard({ booking, onClick, onReview }) {
   const {
     pet_name,
     service_name,
@@ -138,7 +138,13 @@ export default function BookingCard({ booking, onClick }) {
                 </span>
               </button>
             ) : (
-              <button className="flex items-center justify-center gap-2 bg-[#FF7037] py-3 px-6 rounded-full hover:bg-[#FF986F] cursor-pointer min-w-30">
+              <button
+                className="flex items-center justify-center gap-2 bg-[#FF7037] py-3 px-6 rounded-full hover:bg-[#FF986F] cursor-pointer min-w-30"
+                onClick={e => {
+                  e.stopPropagation();
+                  onReview?.(booking);
+                }}
+              >
                 <span className="font-bold leading-[150%] text-center text-white">
                   Review
                 </span>
@@ -154,12 +160,8 @@ export default function BookingCard({ booking, onClick }) {
 
   return (
     <div
-      className={`border-1 ${
-        statusInfo.border
-      } rounded-2xl bg-white flex flex-col gap-4 p-4 overflow-hidden transition hover:shadow-lg ${
-        onClick ? "cursor-pointer" : ""
-      }`}
-      onClick={() => onClick?.(booking.booking_id)} // ✅ ส่งเฉพาะ booking_id
+      className={`border-1 ${statusInfo.border} rounded-2xl bg-white flex flex-col gap-4 p-4 overflow-hidden transition hover:shadow-lg ${onClick ? "cursor-pointer" : ""}`}
+      onClick={() => onClick?.(booking.booking_id)}
     >
       <div className="flex flex-col gap-4">
         {/* Header */}

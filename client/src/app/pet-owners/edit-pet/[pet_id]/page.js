@@ -239,6 +239,7 @@ export default function EditPetPageInner() {
             className="w-full border rounded px-3 py-2"
             placeholder="Weight of your pet"
             min={0}
+            step="any"
             required
           />
         </div>
