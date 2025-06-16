@@ -22,102 +22,81 @@ import supabase from "@/utils/supabase";
 const CheckUnreadBookings = memo(() => {
   const [hasUnread, setHasUnread] = useState(false);
   const { user } = useAuth();
+  const lastChecked = useRef(0);
+
+  // อัพเดทวิธีการเช็ค unread bookings
+  const checkUnreadBookings = useCallback(async (force = false) => {
+    try {
+      // ไม่เช็คถ้ายังไม่ถึงเวลา except force=true
+      if (!force && Date.now() - lastChecked.current < 30000) {
+        return;
+      }
+
+      lastChecked.current = Date.now();
+
+      // เรียกใช้ API เฉพาะสำหรับเช็คว่ามี unread bookings หรือไม่
+      const res = await axios.get("/api/pet-sitters/unread-bookings-count", {
+        withCredentials: true,
+      });
+
+      if (res.data && typeof res.data.hasUnread === "boolean") {
+        setHasUnread(res.data.hasUnread);
+      }
+    } catch (error) {
+      console.error("Error checking unread bookings:", error);
+    }
+  }, []);
 
   useEffect(() => {
     if (!user?.id) return;
 
-    // ฟังก์ชันเช็คการจองที่ยังไม่ได้อ่าน
-    const checkUnreadBookings = async () => {
-      try {
-        const res = await axios.get("/api/pet-sitters/booking-list", {
-          withCredentials: true,
-        });
+    // เช็คตอนโหลดหน้า
+    checkUnreadBookings(true);
 
-        const viewedBookings = JSON.parse(
-          localStorage.getItem("sitterViewedBookings") || "[]"
-        );
-
-        const bookings = res.data.data || [];
-        const hasUnreadBooking = bookings.some(
-          (booking) => !viewedBookings.includes(booking.id)
-        );
-
-        setHasUnread(hasUnreadBooking);
-      } catch (error) {}
-    };
-
-    // ตรวจสอบครั้งแรก
-    checkUnreadBookings();
-
-    // สร้าง channel name ที่ unique เพื่อป้องกันการ subscribe ซ้ำซ้อน
+    // สร้าง channel name ที่ unique
     const channelName = `bookings-${user.id}-${Date.now()}`;
 
-    let bookingChannel;
-    let pollInterval;
-    let isSubscribed = false;
+    // ตั้งค่า Realtime subscription อย่างถูกต้อง
+    const bookingChannel = supabase
+      .channel(channelName)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "booking",
+          filter: `sitter_id=eq.${user.id}`,
+        },
+        (payload) => {
+          // เมื่อมีการเปลี่ยนแปลงใน booking เช็คทันที
+          checkUnreadBookings(true);
+        }
+      )
+      .subscribe();
 
-    try {
-      // สร้าง subscription แบบปรับปรุงใหม่
-      bookingChannel = supabase
-        .channel(channelName)
-        .on(
-          "postgres_changes",
-          {
-            event: "*", // รับทุกเหตุการณ์ (INSERT, UPDATE, DELETE)
-            schema: "public",
-            table: "booking",
-            filter: `sitter_id=eq.${user.id}`,
-          },
-          (payload) => {
-            checkUnreadBookings();
-          }
-        )
-        .subscribe((status) => {
-          if (status === "SUBSCRIBED") {
-            isSubscribed = true;
-          } else if (status === "CHANNEL_ERROR") {
-            isSubscribed = false;
-            // เริ่มใช้ polling เป็น fallback
-            pollInterval = setInterval(checkUnreadBookings, 30000);
-          }
-        });
-    } catch (error) {
-      // ใช้ polling แทนเมื่อ WebSocket ล้มเหลว
-      pollInterval = setInterval(checkUnreadBookings, 30000);
-    }
+    // ลด polling interval เป็น 2 นาที แทน 30 วินาที
+    const pollInterval = setInterval(() => checkUnreadBookings(true), 120000);
 
-    window.addEventListener("focus", checkUnreadBookings);
+    // อีเว้นต์อื่นๆ ที่ควรเช็ค unread bookings
+    window.addEventListener("focus", () => checkUnreadBookings(true));
 
     const handleStorageChange = (e) => {
       if (e.key === "sitterViewedBookings") {
-        checkUnreadBookings();
+        checkUnreadBookings(true);
       }
     };
     window.addEventListener("storage", handleStorageChange);
 
-    // เพิ่ม event listener สำหรับการกลับมา online
-    const handleOnline = () => {
-      checkUnreadBookings();
-    };
-    window.addEventListener("online", handleOnline);
-
-    // ยกเลิกการ subscribe และ event listeners
     return () => {
+      // Cleanup
+      clearInterval(pollInterval);
       if (bookingChannel) {
-        try {
-          supabase.removeChannel(bookingChannel);
-        } catch (err) {}
+        supabase.removeChannel(bookingChannel);
       }
-
-      if (pollInterval) {
-        clearInterval(pollInterval);
-      }
-
       window.removeEventListener("focus", checkUnreadBookings);
       window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("online", handleOnline);
     };
-  }, [user?.id]);
+  }, [user?.id, checkUnreadBookings]);
 
   return hasUnread ? (
     <span className="inline-block w-[8px] h-[8px] rounded-full bg-[#FF7037]" />
@@ -229,7 +208,6 @@ const Sidebar = memo(({ className = "" }) => {
   const pathname = usePathname();
   const navRef = useRef(null);
   const { logout, user } = useAuth();
-  const [hasUnreadBookings, setHasUnreadBookings] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -241,61 +219,6 @@ const Sidebar = memo(({ className = "" }) => {
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
-
-  // ตรวจสอบสถานะการอ่านการจองแบบ realtime
-  useEffect(() => {
-    if (!user?.id) return;
-
-    let bookingChannel;
-    let pollInterval;
-    let isSubscribed = false;
-
-    const checkUnreadBookings = async () => {
-      try {
-        const res = await axios.get("/api/pet-sitters/booking-list", {
-          withCredentials: true,
-        });
-
-        const viewedBookings = JSON.parse(
-          localStorage.getItem("sitterViewedBookings") || "[]"
-        );
-
-        const bookings = res.data.data || [];
-        const hasUnread = bookings.some(
-          (booking) => !viewedBookings.includes(booking.id)
-        );
-
-        setHasUnreadBookings(hasUnread);
-      } catch (error) {}
-    };
-
-    // ตรวจสอบครั้งแรก
-    checkUnreadBookings();
-
-    // สร้าง unique channel name เพื่อป้องกันการซ้ำซ้อน
-    const channelName = `sidebar-${user.id}-${Date.now()}`;
-
-    // แทนที่จะใช้ WebSocket ซ้ำ ให้ใช้ polling เป็นการสำรอง
-    pollInterval = setInterval(checkUnreadBookings, 30000);
-
-    window.addEventListener("focus", checkUnreadBookings);
-
-    const handleStorageChange = (e) => {
-      if (e.key === "sitterViewedBookings") {
-        checkUnreadBookings();
-      }
-    };
-    window.addEventListener("storage", handleStorageChange);
-
-    return () => {
-      if (pollInterval) {
-        clearInterval(pollInterval);
-      }
-
-      window.removeEventListener("focus", checkUnreadBookings);
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, [user?.id]);
 
   // Memoize the selected value
   const selected = useMemo(
@@ -385,7 +308,7 @@ const Sidebar = memo(({ className = "" }) => {
                 onClick={() => handleMenuClick(item.value)}
                 isActive={selected === item.value}
                 hasNotification={
-                  item.value === "booking-list" && hasUnreadBookings
+                  item.value === "booking-list" && <CheckUnreadBookings />
                 }
                 isMobile={isMobile}
               />
