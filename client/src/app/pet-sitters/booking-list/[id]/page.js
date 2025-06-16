@@ -573,7 +573,7 @@ export default function BookingDetailPage() {
           </div>
 
           {/* Main content */}
-          <main className="flex-1 flex flex-col w-full bg-[#F6F6F9] gap-6 px-10 pb-20 pt-10 relative mt-[123px] md:mt-[72px]">
+          <main className="flex-1 flex flex-col w-full bg-[#F6F6F9] gap-6 px-4 py-6 md:px-10 md:pb-20 md:pt-10 relative mt-[123px] md:mt-[72px]">
             {/* Header with back button and status */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 w-full">
               <div className="flex items-center gap-6">

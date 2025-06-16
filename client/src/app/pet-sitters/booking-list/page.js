@@ -493,7 +493,7 @@ const BookingPage = () => {
           </div>
 
           {/* Main content */}
-          <main className="flex-1 flex flex-col w-full max-w-full gap-6 px-10 pb-20 pt-10 mt-[123px] md:mt-[72px] transition-all duration-300 relative h-full min-w-0">
+          <main className="flex-1 flex flex-col w-full max-w-full gap-6 px-4 py-6 md:px-10 md:pb-20 md:pt-10 mt-[123px] md:mt-[72px] transition-all duration-300 relative h-full min-w-0">
             <div className="flex flex-col items-center lg:flex-row sm:justify-between gap-6 w-full">
               <h1 className="text-2xl font-bold whitespace-nowrap">
                 Booking List

@@ -204,7 +204,7 @@ const Payout = () => {
 
           {/* Main content */}
           <main className="flex-1 flex flex-col items-center w-full relative mt-[123px] md:mt-[72px] bg-[#F6F6F9]">
-            <div className="w-full px-10 pt-10 pb-20 flex flex-col gap-6">
+            <div className="w-full gap-6 px-4 py-6 md:px-10 md:pb-20 md:pt-10 flex flex-col">
               <h1 className="text-2xl font-bold text-[#2A2E3F] leading-8">
                 Payout Option
               </h1>

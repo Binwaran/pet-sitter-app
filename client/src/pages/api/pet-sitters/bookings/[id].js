@@ -202,7 +202,6 @@ export default async function handler(req, res) {
         .single();
 
       if (ownerError) {
-        // จัดการข้อผิดพลาดโดยไม่ใช้ console.error
       } else if (ownerData) {
         owner = ownerData;
       }
