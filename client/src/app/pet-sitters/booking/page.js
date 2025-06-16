@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import NavBar from '@/components/NavBar';
-import BookingSteps from '@/components/booking/BookingSteps';
-import BookingSummaryCard from '@/components/booking/BookingSummaryCard';
-import { PetSelectionList } from '@/components/booking/PetSelectionCard';
-import { useAuth } from '@/context/AuthContext';
-import axios from 'axios';
-import { supabase } from '@/utils/supabase';
+import React, { useEffect, useState } from "react";
+import NavBar from "@/components/NavBar";
+import BookingSteps from "@/components/booking/BookingSteps";
+import BookingSummaryCard from "@/components/booking/BookingSummaryCard";
+import { PetSelectionList } from "@/components/booking/PetSelectionCard";
+import { useAuth } from "@/context/AuthContext";
+import axios from "axios";
+import { supabase } from "@/utils/supabase";
 
 export default function BookingPage() {
   const { user, loading: authLoading } = useAuth();
@@ -31,9 +31,9 @@ export default function BookingPage() {
   useEffect(() => {
     if (sitterId) {
       supabase
-        .from('pet_sitter')
-        .select('trade_name')
-        .eq('user_id', sitterId)
+        .from("pet_sitter")
+        .select("trade_name")
+        .eq("user_id", sitterId)
         .single()
         .then(({ data }) => setSitter(data));
     }
@@ -43,20 +43,21 @@ export default function BookingPage() {
     if (authLoading) return;
     if (!user || !user.id) {
       setLoading(false);
-      setError('กรุณาเข้าสู่ระบบ');
+      setError("กรุณาเข้าสู่ระบบ");
       return;
     }
 
     setLoading(true);
     setError(null);
 
-    axios.get(`/api/pets?ownerId=${user.id}`)
+    axios
+      .get(`/api/pets?ownerId=${user.id}`)
       .then((res) => {
         setPets(res.data);
         setLoading(false);
       })
       .catch((err) => {
-        setError(err.response?.data?.error || 'Error loading pets');
+        setError(err.response?.data?.error || "Error loading pets");
         setLoading(false);
       });
   }, [user, authLoading]);
@@ -65,19 +66,21 @@ export default function BookingPage() {
   useEffect(() => {
     const calcPrice = async () => {
       let sum = 0;
-      const selectedPets = pets.filter((pet) => selectedPetIds.includes(pet.pet_id));
+      const selectedPets = pets.filter((pet) =>
+        selectedPetIds.includes(pet.pet_id)
+      );
       for (const pet of selectedPets) {
         if (!pet.type || !pet.weight) continue;
-        const res = await fetch('/api/calculate-price', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const res = await fetch("/api/calculate-price", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             type: pet.type?.toLowerCase() || pet.type,
             weight: pet.weight,
             startDate: new Date().toISOString().slice(0, 10),
             endDate: new Date().toISOString().slice(0, 10),
-            specialDayFlags: []
-          })
+            specialDayFlags: [],
+          }),
         });
         const data = await res.json();
         if (data.totalPrice) sum += data.totalPrice;
@@ -91,58 +94,77 @@ export default function BookingPage() {
     }
   }, [selectedPetIds, pets]);
 
-
   // state เก็บ bookingDetails ที่ใช้แสดง summary
   const [bookingDetails, setBookingDetails] = useState(null);
 
   // โหลด bookingDetails จาก localStorage ตอนแรก
   useEffect(() => {
-    const stored = localStorage.getItem('bookingDetails');
+    const stored = localStorage.getItem("bookingDetails");
     if (stored) setBookingDetails(JSON.parse(stored));
   }, []);
 
   // อัปเดต bookingDetails และเซฟลง localStorage เมื่อ selectedPetIds, pets, total หรือ sitter เปลี่ยน
   useEffect(() => {
-    const stored = localStorage.getItem('bookingDetails');
-    const selectedPets = pets.filter(pet => selectedPetIds.includes(pet.pet_id));
+    const stored = localStorage.getItem("bookingDetails");
+    const selectedPets = pets.filter((pet) =>
+      selectedPetIds.includes(pet.pet_id)
+    );
 
     const newBookingDetails = {
-      ...stored ? JSON.parse(stored) : {},
+      ...(stored ? JSON.parse(stored) : {}),
       pets: selectedPets,
-      pet: selectedPets.map(p => p.pet_name || p.name || '').join(', '),
+      pet: selectedPets.map((p) => p.pet_name || p.name || "").join(", "),
       sitterTradeName: sitter?.trade_name,
     };
 
-    const hasRequiredBookingTimes = newBookingDetails.start_time && newBookingDetails.end_time && newBookingDetails.duration_hour;
+    const hasRequiredBookingTimes =
+      newBookingDetails.start_time &&
+      newBookingDetails.end_time &&
+      newBookingDetails.duration_hour;
 
-    if (newBookingDetails.pets && newBookingDetails.pets.length > 0 && hasRequiredBookingTimes) {
+    if (
+      newBookingDetails.pets &&
+      newBookingDetails.pets.length > 0 &&
+      hasRequiredBookingTimes
+    ) {
       (async () => {
         try {
-          const res = await fetch('/api/calculate-price', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+          const res = await fetch("/api/calculate-price", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               pets: newBookingDetails.pets,
               startDate: newBookingDetails.start_time,
               endDate: newBookingDetails.end_time,
               duration_hour: newBookingDetails.duration_hour,
-            })
+            }),
           });
           const data = await res.json();
-          const bookingWithTotal = { ...newBookingDetails, total: data.totalPrice || 0 };
+          const bookingWithTotal = {
+            ...newBookingDetails,
+            total: data.totalPrice || 0,
+          };
           setBookingDetails(bookingWithTotal);
-          localStorage.setItem('bookingDetails', JSON.stringify(bookingWithTotal));
+          localStorage.setItem(
+            "bookingDetails",
+            JSON.stringify(bookingWithTotal)
+          );
         } catch (err) {
-          console.error("Error calculating price:", err);
           const bookingWithTotal = { ...newBookingDetails, total: 0 };
           setBookingDetails(bookingWithTotal);
-          localStorage.setItem('bookingDetails', JSON.stringify(bookingWithTotal));
+          localStorage.setItem(
+            "bookingDetails",
+            JSON.stringify(bookingWithTotal)
+          );
         }
       })();
     } else {
       const bookingWithoutTotal = { ...newBookingDetails, total: 0 };
       setBookingDetails(bookingWithoutTotal);
-      localStorage.setItem('bookingDetails', JSON.stringify(bookingWithoutTotal));
+      localStorage.setItem(
+        "bookingDetails",
+        JSON.stringify(bookingWithoutTotal)
+      );
     }
   }, [selectedPetIds, pets, total, sitter]);
 
@@ -155,16 +177,30 @@ export default function BookingPage() {
             <div className="bg-white rounded-2xl shadow-md p-6 ">
               <BookingSteps currentStep={1} />
             </div>
-            <form id="bookingPageForm" onSubmit={(e) => {
-              e.preventDefault();
-              if (selectedPetIds.length > 0) {
-                localStorage.setItem('selectedPetIds', JSON.stringify(selectedPetIds));
-                const selectedPets = pets.filter((pet) => selectedPetIds.includes(pet.pet_id));
-                localStorage.setItem('bookingPets', JSON.stringify(selectedPets));
-                window.location.href = '/pet-sitters/booking/information';
-              }
-            }} className="bg-white rounded-2xl shadow-md p-6 flex flex-col gap-6">
-              <h2 className="text-xl  mb-2 my-2 text-gray-800">Choose your pet</h2>
+            <form
+              id="bookingPageForm"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (selectedPetIds.length > 0) {
+                  localStorage.setItem(
+                    "selectedPetIds",
+                    JSON.stringify(selectedPetIds)
+                  );
+                  const selectedPets = pets.filter((pet) =>
+                    selectedPetIds.includes(pet.pet_id)
+                  );
+                  localStorage.setItem(
+                    "bookingPets",
+                    JSON.stringify(selectedPets)
+                  );
+                  window.location.href = "/pet-sitters/booking/information";
+                }
+              }}
+              className="bg-white rounded-2xl shadow-md p-6 flex flex-col gap-6"
+            >
+              <h2 className="text-xl  mb-2 my-2 text-gray-800">
+                Choose your pet
+              </h2>
               <div className="w-full mt-2">
                 {loading ? (
                   <div className="text-gray-500">Loading pets...</div>
@@ -182,11 +218,11 @@ export default function BookingPage() {
                   />
                 )}
               </div>
-              <div className="flex justify-between mt-8 hidden md:flex">
+              <div className="justify-between mt-8 hidden md:flex">
                 <button
                   type="button"
                   className="px-6 py-2 rounded-[99px] border border-gray-300 text-gray-700 bg-[#FFF6F0] hover:bg-gray-100 transition-colors font-medium"
-                  onClick={() => window.history.back()} 
+                  onClick={() => window.history.back()}
                 >
                   Back
                 </button>
@@ -198,12 +234,15 @@ export default function BookingPage() {
                   Next
                 </button>
               </div>
-            </form> 
+            </form>
           </div>
 
           <div className="w-full lg:w-1/3">
             <div className="lg:sticky lg:top-8 z-10">
-             <BookingSummaryCard bookingDetails={bookingDetails} sitterTradeName={sitter?.trade_name} />
+              <BookingSummaryCard
+                bookingDetails={bookingDetails}
+                sitterTradeName={sitter?.trade_name}
+              />
             </div>
             <div className="flex justify-between mt-6 md:hidden gap-4">
               <button
@@ -215,7 +254,7 @@ export default function BookingPage() {
               </button>
               <button
                 type="submit"
-                form="bookingPageForm" 
+                form="bookingPageForm"
                 className="flex-1 px-6 py-3 rounded-[99px] bg-orange-500 text-white hover:bg-orange-600 transition-colors font-medium text-lg disabled:opacity-50"
                 disabled={selectedPetIds.length === 0}
               >

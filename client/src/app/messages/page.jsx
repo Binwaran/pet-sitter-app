@@ -1,32 +1,31 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { useAuth } from '@/context/AuthContext'
-import { supabase } from '@/utils/supabase'
-import ChatList from '@/components/ChatList'
-import ChatWindow from '@/components/ChatWindow'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/utils/supabase";
+import ChatList from "@/components/ChatList";
+import { useRouter } from "next/navigation";
 
 export default function MessageIndexPage() {
-  const { user } = useAuth()
-  const [chatList, setChatList] = useState([])
-  const router = useRouter()
+  const { user } = useAuth();
+  const [chatList, setChatList] = useState([]);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchChatList = async () => {
-      if (!user?.id) return
+      if (!user?.id) return;
 
       const { data, error } = await supabase
-        .from('messages')
-        .select('id, sender_id, receiver_id')
-        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .from("messages")
+        .select("id, sender_id, receiver_id")
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`);
 
-      if (error) console.error('❌ chat list error:', error)
-      else setChatList(data ?? [])
-    }
+      if (error) {
+      } else setChatList(data ?? []);
+    };
 
-    fetchChatList()
-  }, [user])
+    fetchChatList();
+  }, [user]);
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -36,7 +35,7 @@ export default function MessageIndexPage() {
           selectedUserId={null}
           chatList={chatList}
           onSelectUser={(user) => {
-            if (user?.id) router.push(`/messages/${user.id}`)
+            if (user?.id) router.push(`/messages/${user.id}`);
           }}
         />
       </div>
@@ -46,5 +45,5 @@ export default function MessageIndexPage() {
         Start a conversation!
       </div>
     </div>
-  )
+  );
 }

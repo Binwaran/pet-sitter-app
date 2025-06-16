@@ -1,11 +1,11 @@
-'use client';
-import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
-import Image from 'next/image';
-import { v4 as uuidv4 } from 'uuid';
-import { supabase } from '@/utils/supabase';
-import { markMessagesAsRead } from '@/hooks/message/useMarkMessagesAsRead'
-import BookNowButton from './BookNowButton'
+"use client";
+import { useState, useEffect } from "react";
+import { X } from "lucide-react";
+import Image from "next/image";
+import { v4 as uuidv4 } from "uuid";
+import { supabase } from "@/utils/supabase";
+import { markMessagesAsRead } from "@/hooks/message/useMarkMessagesAsRead";
+import BookNowButton from "./BookNowButton";
 
 export default function ChatWindow({
   user,
@@ -14,136 +14,137 @@ export default function ChatWindow({
   messages: initialMessages = [],
 }) {
   const [messages, setMessages] = useState(initialMessages);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [imageFile, setImageFile] = useState(null);
-  
 
   useEffect(() => {
-  if (!currentUser?.id || !user?.id) return;
+    if (!currentUser?.id || !user?.id) return;
 
-  const channelName = `chat-room:${[currentUser.id, user.id].sort().join('-')}`;
+    const channelName = `chat-room:${[currentUser.id, user.id]
+      .sort()
+      .join("-")}`;
 
-  const channel = supabase
-    .channel(channelName)
-    .on(
-      'postgres_changes',
-      {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'messages',
-      },
-      (payload) => {
-        console.log('📦 Realtime payload', payload)
-        const newMessage = payload.new;
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+        },
+        (payload) => {
+          const newMessage = payload.new;
 
-        const isCurrentChat =
-          (newMessage.sender_id === user.id && newMessage.receiver_id === currentUser.id) ||
-          (newMessage.sender_id === currentUser.id && newMessage.receiver_id === user.id);
+          const isCurrentChat =
+            (newMessage.sender_id === user.id &&
+              newMessage.receiver_id === currentUser.id) ||
+            (newMessage.sender_id === currentUser.id &&
+              newMessage.receiver_id === user.id);
 
-        if (isCurrentChat) {
-          setMessages((prev) => {
-            const exists = prev.some((msg) => msg.id === newMessage.id)
-            if (exists) return prev
-            return [...prev, {
-              id: newMessage.id,
-              senderId: newMessage.sender_id,
-              content: newMessage.content,
-              image_url: newMessage.image_url,
-            }]
-          })
+          if (isCurrentChat) {
+            setMessages((prev) => {
+              const exists = prev.some((msg) => msg.id === newMessage.id);
+              if (exists) return prev;
+              return [
+                ...prev,
+                {
+                  id: newMessage.id,
+                  senderId: newMessage.sender_id,
+                  content: newMessage.content,
+                  image_url: newMessage.image_url,
+                },
+              ];
+            });
+          }
         }
-      }
-    )
-    .subscribe();
+      )
+      .subscribe();
 
-  return () => {
-    supabase.removeChannel(channel);
-  };
-}, [user?.id, currentUser?.id]);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, currentUser?.id]);
 
   // ✅ ฟังก์ชันส่งข้อความ
   const handleSend = async () => {
-    if (!input.trim() && !imageFile) return
+    if (!input.trim() && !imageFile) return;
     if (!currentUser?.id || !user?.id) {
-      console.error('❌ currentUser หรือ user ไม่มี id');
-      return
-    }
-
-    let imageUrl = null
-
-    if (imageFile) {
-      const fileExt = imageFile.name.split('.').pop()
-      const filename = `${currentUser.id}/${Date.now()}-${uuidv4()}.${fileExt}`
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('chat-images')
-        .upload(filename, imageFile)
-
-      if (uploadError) {
-        console.error('❌ Image upload failed:', uploadError.message)
-        return
-      }
-
-      const { data: urlData } = supabase.storage
-        .from('chat-images')
-        .getPublicUrl(filename)
-
-      imageUrl = urlData?.publicUrl || null
-    }
-
-    const { error: insertError } = await supabase
-      .from('messages')
-      .insert([
-        {
-          sender_id: currentUser.id,
-          receiver_id: user.id,
-          content: input.trim(),
-          image_url: imageUrl,
-          created_at: new Date().toISOString(),
-        },
-      ])
-
-    if (insertError) {
-      console.error('❌ Failed to send message:', insertError.message)
-      return
-    }
-
-    setInput('')
-    setImageFile(null)
-  }
-
-  useEffect(() => {
-  const fetchMessages = async () => {
-    if (!currentUser?.id || !user?.id) return;
-
-    const { data, error } = await supabase
-      .from('messages')
-      .select('*')
-      .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${user.id}),and(sender_id.eq.${user.id},receiver_id.eq.${currentUser.id})`)
-      .order('created_at', { ascending: true });
-
-    if (error) {
-      console.error('❌ Failed to fetch messages:', error.message);
       return;
     }
 
-    setMessages(
-      data.map((msg) => ({
-        id: msg.id,
-        senderId: msg.sender_id,
-        content: msg.content,
-        image_url: msg.image_url,
-      }))
-    );
+    let imageUrl = null;
+
+    if (imageFile) {
+      const fileExt = imageFile.name.split(".").pop();
+      const filename = `${currentUser.id}/${Date.now()}-${uuidv4()}.${fileExt}`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("chat-images")
+        .upload(filename, imageFile);
+
+      if (uploadError) {
+        return;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from("chat-images")
+        .getPublicUrl(filename);
+
+      imageUrl = urlData?.publicUrl || null;
+    }
+
+    const { error: insertError } = await supabase.from("messages").insert([
+      {
+        sender_id: currentUser.id,
+        receiver_id: user.id,
+        content: input.trim(),
+        image_url: imageUrl,
+        created_at: new Date().toISOString(),
+      },
+    ]);
+
+    if (insertError) {
+      return;
+    }
+
+    setInput("");
+    setImageFile(null);
   };
 
-  fetchMessages();
-}, [currentUser?.id, user?.id]);
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!currentUser?.id || !user?.id) return;
 
-useEffect(() => {
-  if (!currentUser?.id || !user?.id) return;
-  markMessagesAsRead(user.id, currentUser.id)
-}, [user?.id, currentUser?.id])
+      const { data, error } = await supabase
+        .from("messages")
+        .select("*")
+        .or(
+          `and(sender_id.eq.${currentUser.id},receiver_id.eq.${user.id}),and(sender_id.eq.${user.id},receiver_id.eq.${currentUser.id})`
+        )
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        return;
+      }
+
+      setMessages(
+        data.map((msg) => ({
+          id: msg.id,
+          senderId: msg.sender_id,
+          content: msg.content,
+          image_url: msg.image_url,
+        }))
+      );
+    };
+
+    fetchMessages();
+  }, [currentUser?.id, user?.id]);
+
+  useEffect(() => {
+    if (!currentUser?.id || !user?.id) return;
+    markMessagesAsRead(user.id, currentUser.id);
+  }, [user?.id, currentUser?.id]);
 
   return (
     <div className="flex-1 flex flex-col h-full">
@@ -157,15 +158,16 @@ useEffect(() => {
             height={40}
             className="w-10 h-10 rounded-full object-cover"
           />
-          <div className="font-semibold text-2xl">{user?.name || "Unknown"}</div>
-          <BookNowButton sitterId={user?.id}/>
+          <div className="font-semibold text-2xl">
+            {user?.name || "Unknown"}
+          </div>
+          <BookNowButton sitterId={user?.id} />
         </div>
         <div>
           <button onClick={onClose}>
             <X className="w-7 h-7 text-gray-500 cursor-pointer" />
           </button>
         </div>
-
       </div>
 
       {/* Messages */}
@@ -190,8 +192,8 @@ useEffect(() => {
               key={msg.id}
               className={`px-5 py-2 max-w-sm ${
                 msg.senderId === currentUser.id
-                  ? 'self-end bg-orange-500 text-white rounded-3xl rounded-br-none'
-                  : 'self-start bg-white border text-gray-700 rounded-3xl rounded-bl-none'
+                  ? "self-end bg-orange-500 text-white rounded-3xl rounded-br-none"
+                  : "self-start bg-white border text-gray-700 rounded-3xl rounded-bl-none"
               }`}
             >
               <div>{msg.content}</div>
@@ -211,11 +213,11 @@ useEffect(() => {
       <div className="border-t border-gray-300 flex items-center px-4 py-2 gap-2">
         <label htmlFor="image" className="cursor-pointer">
           <Image
-                  src="/assets/upload-image.png"
-                  alt="pet icon"
-                  width={70}
-                  height={70}
-                />
+            src="/assets/upload-image.png"
+            alt="pet icon"
+            width={70}
+            height={70}
+          />
           <input
             type="file"
             id="image"
@@ -238,11 +240,11 @@ useEffect(() => {
           className="text-white px-4 py-2 disabled:opacity-50 cursor-pointer"
         >
           <Image
-                  src="/assets/send-button.png"
-                  alt="pet icon"
-                  width={80}
-                  height={80}
-                />
+            src="/assets/send-button.png"
+            alt="pet icon"
+            width={80}
+            height={80}
+          />
         </button>
       </div>
     </div>

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Sidebar from "@/components/profile/Sidebar";
-import ImageUpload from "@/components/profile/ImageUpload";
+import ImageUpload from "@/components/profile/PetImageUpload";
 import { uploadFile } from "@/utils/uploadHelpers";
 
 const petTypes = [
@@ -109,7 +109,7 @@ export default function EditPetPageInner() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
       let imageUrl = form.pet_image_url;
 
@@ -117,7 +117,6 @@ export default function EditPetPageInner() {
         try {
           imageUrl = await uploadFile(petImageFile, "pets");
         } catch (error) {
-          console.error("Upload error:", error.message);
           alert("Failed to upload image");
           return;
         }
@@ -183,7 +182,10 @@ export default function EditPetPageInner() {
 
           {/* Main */}
           <div className="bg-white px-4 py-6 md:p-10 md:rounded-2xl h-full w-full">
-            <form onSubmit={handleSubmit} className="flex flex-col gap-6 md:gap-15">
+            <form
+              onSubmit={handleSubmit}
+              className="flex flex-col gap-6 md:gap-15"
+            >
               {/* Header */}
               <div className="flex items-center justify-start">
                 <h1 className="text-xl md:text-2xl font-bold leading-7 md:leading-8">
@@ -314,7 +316,7 @@ export default function EditPetPageInner() {
                     />
                   </label>
                 </div>
-                
+
                 {/* About Section */}
                 <div className="w-full">
                   <label className="font-medium flex flex-col gap-1">
@@ -344,7 +346,9 @@ export default function EditPetPageInner() {
                   <button
                     type="button"
                     onClick={async () => {
-                      if (confirm("Are you sure you want to delete this pet?")) {
+                      if (
+                        confirm("Are you sure you want to delete this pet?")
+                      ) {
                         const res = await fetch(`/api/pets/${petId}`, {
                           method: "DELETE",
                         });

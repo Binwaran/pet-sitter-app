@@ -27,7 +27,6 @@ export default async function handler(req, res) {
         .single();
 
       if (error) {
-        console.error("Error fetching bank details:", error);
         return res.status(500).json({ error: error.message });
       }
 
@@ -49,11 +48,9 @@ export default async function handler(req, res) {
       // ตรวจสอบข้อมูลที่จำเป็น
       if (!bankName || !accountNumber || !accountName) {
         // เพิ่มการตรวจสอบ accountName
-        return res
-          .status(400)
-          .json({
-            error: "Bank name, account number, and account name are required",
-          });
+        return res.status(400).json({
+          error: "Bank name, account number, and account name are required",
+        });
       }
 
       // อัพเดทข้อมูลในตาราง pet_sitter
@@ -68,7 +65,6 @@ export default async function handler(req, res) {
         .eq("user_id", userId);
 
       if (error) {
-        console.error("Error updating bank account:", error);
         return res.status(500).json({ error: error.message });
       }
 
@@ -78,7 +74,6 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: "Method not allowed" });
     }
   } catch (err) {
-    console.error("Server error:", err);
     return res
       .status(500)
       .json({ error: err.message || "Internal server error" });

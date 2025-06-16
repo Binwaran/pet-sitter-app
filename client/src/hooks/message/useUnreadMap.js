@@ -1,37 +1,36 @@
-import { useEffect, useState } from 'react'
-import { supabase } from '@/utils/supabase'
+import { useEffect, useState } from "react";
+import { supabase } from "@/utils/supabase";
 
 export default function useUnreadMap(userId) {
-  const [unreadMap, setUnreadMap] = useState(new Map())
+  const [unreadMap, setUnreadMap] = useState(new Map());
 
   useEffect(() => {
-    if (!userId) return
+    if (!userId) return;
 
     const fetchUnreadMessages = async () => {
       const { data, error } = await supabase
-        .from('messages')
-        .select('sender_id, receiver_id, is_read')
-        .eq('receiver_id', userId)
-        .eq('is_read', false)
+        .from("messages")
+        .select("sender_id, receiver_id, is_read")
+        .eq("receiver_id", userId)
+        .eq("is_read", false);
 
       if (error) {
-        console.error('❌ error fetching unread messages:', error)
-        return
+        return;
       }
 
-      const map = new Map()
+      const map = new Map();
 
       data.forEach((msg) => {
-        const sender = msg.sender_id
-        const current = map.get(sender) || 0
-        map.set(sender, current + 1)
-      })
+        const sender = msg.sender_id;
+        const current = map.get(sender) || 0;
+        map.set(sender, current + 1);
+      });
 
-      setUnreadMap(map)
-    }
+      setUnreadMap(map);
+    };
 
-    fetchUnreadMessages()
-  }, [userId])
+    fetchUnreadMessages();
+  }, [userId]);
 
-  return unreadMap
+  return unreadMap;
 }

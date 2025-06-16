@@ -331,7 +331,6 @@ function useReviewData(sitterId) {
         }));
       }
     } catch (err) {
-      console.error("Error fetching reviews:", err);
       setState((prev) => ({
         ...prev,
         loading: false,
@@ -378,7 +377,6 @@ function useReviewData(sitterId) {
 
       return true;
     } catch (err) {
-      console.error("Error deleting review:", err);
       return false;
     }
   }, []);
@@ -387,7 +385,7 @@ function useReviewData(sitterId) {
     try {
       const isApproving = !review.verified;
 
-      const response = await axios.put(`/api/admin/pet-sitters/reviews`, {
+      await axios.put(`/api/admin/pet-sitters/reviews`, {
         id: review.id,
         verified: isApproving,
       });
@@ -402,10 +400,6 @@ function useReviewData(sitterId) {
 
       return true;
     } catch (err) {
-      console.error(
-        `Error ${review.verified ? "unapproving" : "approving"} review:`,
-        err
-      );
       return false;
     }
   }, []);
@@ -466,7 +460,6 @@ export default function ReviewsTab({ sitterId }) {
           throw new Error("Failed to update review status");
         }
       } catch (err) {
-        console.error("Error toggling review approval:", err);
         alert(
           `Failed to ${
             review.verified ? "remove verification" : "verify"
@@ -504,7 +497,6 @@ export default function ReviewsTab({ sitterId }) {
         isDeleting: false,
       });
     } catch (err) {
-      console.error("Error in delete confirmation:", err);
       alert(
         "Failed to delete review: " +
           (err.response?.data?.message || err.message)

@@ -61,14 +61,12 @@ const ImageItem = memo(({ file, index, onRemove, isPending = false }) => {
         }
       }
     } catch (error) {
-      console.error("Error processing image:", error, file);
       setHasError(true);
     }
 
     // Cleanup function
     return () => {
       if (objectUrl) {
-        console.log("Revoking object URL:", objectUrl);
         URL.revokeObjectURL(objectUrl);
       }
     };
@@ -76,7 +74,6 @@ const ImageItem = memo(({ file, index, onRemove, isPending = false }) => {
 
   // handler สำหรับการโหลดรูปไม่สำเร็จ
   const handleImageError = () => {
-    console.error(`Failed to load image at index ${index}:`, imageUrl);
     setHasError(true);
   };
 
@@ -142,22 +139,14 @@ const GalleryUpload = memo(
     const normalizedValue = useMemo(() => {
       if (!value) return [];
       if (Array.isArray(value)) return value;
-      console.warn("Gallery value is not an array:", value);
       return [];
     }, [value]);
-
-    // แสดง log สำหรับ debug
-    useEffect(() => {
-      console.log("Gallery values:", normalizedValue);
-    }, [normalizedValue]);
 
     const handleFileChange = useCallback(
       (e) => {
         try {
           const fileList = e.target.files;
           if (!fileList || fileList.length === 0) return;
-
-          console.log("Files selected:", fileList.length);
 
           // แปลง FileList เป็น Array
           const filesArray = Array.from(fileList);
@@ -166,9 +155,9 @@ const GalleryUpload = memo(
           const totalFiles = normalizedValue.length + filesArray.length;
           if (totalFiles > 10) {
             alert(
-              `สามารถอัพโหลดได้สูงสุด 10 ไฟล์ (เหลือพื้นที่อีก ${
+              `You can upload a maximum of 10 files (${
                 10 - normalizedValue.length
-              } ไฟล์)`
+              } slots remaining)`
             );
             const maxNewFiles = 10 - normalizedValue.length;
             if (maxNewFiles <= 0) return;
@@ -179,9 +168,6 @@ const GalleryUpload = memo(
           const filteredFiles = filesArray.filter((file) => {
             const maxSize = 2 * 1024 * 1024; // 2MB
             if (file.size > maxSize) {
-              console.warn(
-                `File ${file.name} is too large (${file.size} bytes). Max size is ${maxSize} bytes.`
-              );
               return false;
             }
             return true;
@@ -189,13 +175,13 @@ const GalleryUpload = memo(
 
           if (filteredFiles.length === 0) {
             alert(
-              "ไม่สามารถอัพโหลดไฟล์ได้ ไฟล์มีขนาดใหญ่เกินไป (สูงสุด 2MB ต่อไฟล์)"
+              "Cannot upload files. Files are too large (maximum 2MB per file)"
             );
             return;
           }
 
           if (filteredFiles.length !== filesArray.length) {
-            alert(`ไม่สามารถอัพโหลดไฟล์บางรายการได้เนื่องจากขนาดไฟล์เกิน 2MB`);
+            alert(`Some files couldn't be uploaded because they exceed 2MB`);
           }
 
           // เพิ่มไฟล์ใหม่เข้าไปในอาร์เรย์
@@ -209,8 +195,7 @@ const GalleryUpload = memo(
           // ล้าง input เพื่อให้เลือกไฟล์ซ้ำได้
           e.target.value = "";
         } catch (error) {
-          console.error("Error handling file selection:", error);
-          alert("เกิดข้อผิดพลาดในการอัพโหลดไฟล์ โปรดลองใหม่อีกครั้ง");
+          alert("An error occurred while uploading files. Please try again");
           e.target.value = "";
         }
       },

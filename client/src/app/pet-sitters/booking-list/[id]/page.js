@@ -310,8 +310,7 @@ export default function BookingDetailPage() {
 
       setBooking(res.data.data);
     } catch (error) {
-      console.error("Error fetching booking details:", error);
-      // Handle error - show error message or redirect
+      alert("Error loading booking details. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -339,7 +338,6 @@ export default function BookingDetailPage() {
         status: "waiting for service",
       }));
     } catch (error) {
-      console.error("Error confirming booking:", error);
       alert("Failed to confirm booking. Please try again.");
     } finally {
       setActionLoading(false);
@@ -368,7 +366,6 @@ export default function BookingDetailPage() {
         status: "cancelled",
       }));
     } catch (error) {
-      console.error("Error rejecting booking:", error);
       alert("Failed to reject booking. Please try again.");
     } finally {
       setIsRejectModalOpen(false);
@@ -393,7 +390,6 @@ export default function BookingDetailPage() {
         status: "in service",
       }));
     } catch (error) {
-      console.error("Error starting service:", error);
       alert("Failed to start service. Please try again.");
     } finally {
       setActionLoading(false);
@@ -417,7 +413,6 @@ export default function BookingDetailPage() {
         status: "success",
       }));
     } catch (error) {
-      console.error("Error completing service:", error);
       alert("Failed to complete service. Please try again.");
     } finally {
       setActionLoading(false);
@@ -495,11 +490,8 @@ export default function BookingDetailPage() {
   };
 
   const handleViewOwnerProfile = async () => {
-    console.log("handleViewOwnerProfile clicked");
-
     try {
       if (!booking) {
-        console.log("No booking data");
         return;
       }
 
@@ -512,17 +504,14 @@ export default function BookingDetailPage() {
         profile_image_url: booking.owner_image || "",
         birthday: booking.owner_birthday || "",
       };
-
-      console.log("Created owner info:", ownerInfo);
       setOwnerData(ownerInfo);
       setIsOwnerModalOpen(true);
     } catch (error) {
-      console.error("Error viewing owner profile:", error);
+      alert("Error loading owner profile. Please try again.");
     }
   };
 
   const handleCloseOwnerModal = () => {
-    console.log("Closing owner modal");
     setIsOwnerModalOpen(false);
   };
 
@@ -535,7 +524,7 @@ export default function BookingDetailPage() {
             <div className="fixed top-0 left-0 right-0 z-50 md:left-[240px] flex flex-col">
               <Topbar className="w-full" />
               <div className="md:hidden w-full">
-                <Sidebar className="flex flex-row md:hidden bg-white shadow-[4px_4px_24px_0px_#0000000A]"/>
+                <Sidebar className="flex flex-row md:hidden bg-white shadow-[4px_4px_24px_0px_#0000000A]" />
               </div>
             </div>
             <div className="flex-1 flex items-center justify-center mt-[123px] md:mt-[72px]">
@@ -556,7 +545,7 @@ export default function BookingDetailPage() {
             <div className="fixed top-0 left-0 right-0 z-50 md:left-[240px] flex flex-col">
               <Topbar className="w-full" />
               <div className="md:hidden w-full">
-                <Sidebar className="flex flex-row md:hidden bg-white shadow-[4px_4px_24px_0px_#0000000A]"/>
+                <Sidebar className="flex flex-row md:hidden bg-white shadow-[4px_4px_24px_0px_#0000000A]" />
               </div>
             </div>
             <div className="flex-1 flex items-center justify-center mt-[123px] md:mt-[72px]">
@@ -579,12 +568,12 @@ export default function BookingDetailPage() {
           <div className="fixed top-0 left-0 right-0 z-50 md:left-[240px] flex flex-col">
             <Topbar className="w-full" />
             <div className="md:hidden w-full">
-              <Sidebar className="flex flex-row md:hidden bg-white shadow-[4px_4px_24px_0px_#0000000A]"/>
+              <Sidebar className="flex flex-row md:hidden bg-white shadow-[4px_4px_24px_0px_#0000000A]" />
             </div>
           </div>
 
           {/* Main content */}
-          <main className="flex-1 flex flex-col w-full bg-[#F6F6F9] gap-6 px-10 pb-20 pt-10 relative mt-[123px] md:mt-[72px]">
+          <main className="flex-1 flex flex-col w-full bg-[#F6F6F9] gap-6 px-4 py-6 md:px-10 md:pb-20 md:pt-10 relative mt-[123px] md:mt-[72px]">
             {/* Header with back button and status */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 w-full">
               <div className="flex items-center gap-6">

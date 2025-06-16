@@ -52,7 +52,7 @@ export default function BankAccountPage() {
           });
         }
       } catch (error) {
-        console.error("Failed to fetch bank details:", error);
+        toast.error("Unable to load bank details. Please try again later.");
       }
     };
 
@@ -181,10 +181,7 @@ export default function BankAccountPage() {
         router.push("/pet-sitters/payout");
       }, 1000); // 1 second delay before redirect
     } catch (error) {
-      console.error("Error updating bank account:", error);
       setUploadError("An error occurred while saving. Please try again.");
-
-      // Show error toast notification
       toast.error("Error updating bank account. Please try again.", {
         position: "top-center",
         duration: 5000,
@@ -215,7 +212,7 @@ export default function BankAccountPage() {
             </div>
           </div>
           <main className="flex-1 flex flex-col items-center w-full relative mt-[123px] md:mt-[72px] bg-[#F6F6F9]">
-            <div className="w-full px-10 pt-10 pb-20 flex flex-col gap-6">
+            <div className="w-full gap-6 px-4 py-6 md:px-10 md:pb-20 md:pt-10 flex flex-col">
               <div className="flex flex-row gap-6 items-center justify-between">
                 <div className="flex flex-1 flex-row items-center gap-3">
                   <svg

@@ -6,10 +6,9 @@ import NavBarDesktop from "./navbar/NavBarDesktop";
 import { useAuth } from "@/context/AuthContext";
 import useUnreadMessages from "@/hooks/message/useUnreadMessages";
 
-
 const NavBar = () => {
   const { user, loading, logout } = useAuth();
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hasNewNotification, setHasNewNotification] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -22,7 +21,6 @@ const NavBar = () => {
   useEffect(() => {
     // ถ้า user มีค่า แสดงว่า login แล้ว
     setIsLoggedIn(!!user);
-    console.log("Updated isLoggedIn state:", !!user);
   }, [user]);
 
   const toggleDropdown = () => setIsDropdownOpen((v) => !v);
@@ -35,13 +33,12 @@ const NavBar = () => {
   };
 
   useEffect(() => {
-    if (!user) return
-    fetch('/api/unread-notifications', { credentials: 'include' })
+    if (!user) return;
+    fetch("/api/unread-notifications", { credentials: "include" })
       .then((res) => res.json())
       .then((data) => setHasNewNotification(data.unread > 0))
-      .catch((err) => console.error('notification error', err))
-  }, [user])
-
+      .catch((err) => {});
+  }, [user]);
 
   return (
     <>

@@ -243,9 +243,7 @@ export default function MapSitter({
       if (response.data && response.data.display_name) {
         return response.data.display_name;
       }
-    } catch (err) {
-      console.error("Error reverse geocoding:", err);
-    }
+    } catch (err) {}
 
     return null;
   }, []);
@@ -258,7 +256,6 @@ export default function MapSitter({
     lastSearchRef.current = formattedAddress;
 
     setLoading(true);
-    console.log("Searching for address:", formattedAddress);
 
     // ทำให้การค้นหาแม่นยำขึ้นโดยให้น้ำหนักกับส่วนต่างๆ ของที่อยู่
     const searchAddress = async () => {
@@ -304,7 +301,6 @@ export default function MapSitter({
       } catch (err) {
         if (!isActive) return;
 
-        console.error("Error geocoding address:", err);
         setError("Error searching for coordinates.");
         setLoading(false);
       }
@@ -352,7 +348,6 @@ export default function MapSitter({
           }
         }
       } catch (err) {
-        console.error("Error fetching initial data:", err);
         setError("Unable to load initial data.");
       } finally {
         setLoading(false);
@@ -447,4 +442,4 @@ export default function MapSitter({
     </div>
   );
 }
-MapSitter.displayName = "MapSitter"; // ตั้งชื่อให้กับ component เพื่อช่วยในการ debug
+MapSitter.displayName = "MapSitter";

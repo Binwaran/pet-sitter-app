@@ -189,7 +189,6 @@ const usePetSitters = () => {
       });
       setSitters(sortedData);
     } catch (err) {
-      console.error("Error fetching pet sitters:", err);
       setSitters([]);
     } finally {
       setLoading(false);

@@ -39,7 +39,6 @@ export default async function handler(req, res) {
 
       userData = { user: { id: userId } };
     } catch (jwtError) {
-      console.error("JWT verification error:", jwtError);
       return res.status(401).json({ message: "Invalid token" });
     }
 
@@ -54,7 +53,6 @@ export default async function handler(req, res) {
       .single();
 
     if (checkError) {
-      console.error("Error checking booking:", checkError);
       return res.status(500).json({ message: "Failed to verify booking" });
     }
 
@@ -92,7 +90,6 @@ export default async function handler(req, res) {
       .select();
 
     if (updateError) {
-      console.error("Error updating booking status:", updateError);
       return res.status(500).json({ message: "Failed to complete service" });
     }
 
@@ -102,7 +99,6 @@ export default async function handler(req, res) {
       data: updateData[0],
     });
   } catch (error) {
-    console.error("Server error:", error);
     return res.status(500).json({ message: "Server error" });
   }
 }

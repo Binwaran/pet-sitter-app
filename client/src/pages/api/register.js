@@ -27,7 +27,9 @@ export default async function handler(req, res) {
         .single();
 
       if (existingPhone) {
-        return res.status(400).json({ error: "Phone number is already registered." });
+        return res
+          .status(400)
+          .json({ error: "Phone number is already registered." });
       }
 
       if (checkError && checkError.code !== "PGRST116") {
@@ -53,8 +55,9 @@ export default async function handler(req, res) {
 
       return res.status(201).json({ message: "User registered successfully!" });
     } catch (error) {
-      console.error("Error saving user in Supabase:", error);
-      return res.status(500).json({ error: error.message || "Internal Server Error" });
+      return res
+        .status(500)
+        .json({ error: error.message || "Internal Server Error" });
     }
   } else {
     return res.status(405).json({ error: "Method not allowed" });

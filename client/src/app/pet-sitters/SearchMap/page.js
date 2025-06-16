@@ -1,55 +1,53 @@
-'use client'
-import { useState, useEffect } from 'react'
-import FilterSidebar from '@/components/pet-sitters/FilterSidebar'
-import MapWrapper from '@/components/MapWrapper'
-import SearchHeader from '@/components/pet-sitters/SearchHeader'
-
+"use client";
+import { useState, useEffect } from "react";
+import FilterSidebar from "@/components/pet-sitters/FilterSidebar";
+import MapWrapper from "@/components/MapWrapper";
+import SearchHeader from "@/components/pet-sitters/SearchHeader";
 
 const SearchMapPage = () => {
   const [filters, setFilters] = useState({
-    keyword: '',
+    keyword: "",
     petTypes: [],
-    rating: '',
-    experience: ''
-  })
+    rating: "",
+    experience: "",
+  });
 
-  const [isMobile, setIsMobile] = useState(false)
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-    handleResize()
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
+      setIsMobile(window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const handleChange = (e) => {
-    setFilters({ ...filters, [e.target.name]: e.target.value })
-  }
+    setFilters({ ...filters, [e.target.name]: e.target.value });
+  };
 
   const handleCheckbox = (e) => {
-    const { value, checked } = e.target
+    const { value, checked } = e.target;
     setFilters((prev) => {
       const pet_type = checked
         ? [...prev.pet_type, value]
-        : prev.pet_type.filter((type) => type !== value)
-      return { ...prev, pet_type }
-    })
-  }
+        : prev.pet_type.filter((type) => type !== value);
+      return { ...prev, pet_type };
+    });
+  };
 
   const handleSearch = () => {
-    console.log('Search clicked with filters:', filters)
     // คุณสามารถ fetch หรือส่ง filters ไปยัง MapWrapper ได้ที่นี่ถ้าต้องการ
-  }
+  };
 
   const handleClear = () => {
-    setFilters({ keyword: '', pet_type: [], rating: '', experience: '' })
-  }
+    setFilters({ keyword: "", pet_type: [], rating: "", experience: "" });
+  };
 
   return (
     <>
-      <div className='hidden md:flex justify-center items-center bg-gray-50 py-4'>
+      <div className="hidden md:flex justify-center items-center bg-gray-50 py-4">
         <SearchHeader />
       </div>
 
@@ -71,7 +69,7 @@ const SearchMapPage = () => {
         </div>
       </div>
     </>
-  )
-}
+  );
+};
 
-export default SearchMapPage
+export default SearchMapPage;

@@ -15,9 +15,6 @@ export default async function handler(req, res) {
 
       // ถ้าไม่ใช่การเรียกจาก form submit ให้ตอบกลับโดยไม่อัพเดตข้อมูลจริง
       if (!fromFormSubmit) {
-        console.log(
-          "Received update-coordinates request but ignored (not from form submit)"
-        );
         return res.status(200).json({
           success: true,
           message: "Preview mode - no database update",
@@ -28,8 +25,6 @@ export default async function handler(req, res) {
         });
       }
 
-      console.log("Updating coordinates:", { user_id, lat, lng });
-
       // อัพเดตค่า lat, lng โดยตรงด้วย Supabase
       const { data, error } = await supabase
         .from("pet_sitter")
@@ -38,7 +33,6 @@ export default async function handler(req, res) {
         .select();
 
       if (error) {
-        console.error("Supabase update error:", error);
         return res.status(500).json({
           success: false,
           message: "Failed to update coordinates",
@@ -52,10 +46,8 @@ export default async function handler(req, res) {
         data,
       };
 
-      console.log("Coordinates updated successfully:", data);
       return res.status(200).json(response);
     } catch (error) {
-      console.error("Error updating coordinates:", error);
       return res.status(500).json({
         success: false,
         message: "Failed to update coordinates",

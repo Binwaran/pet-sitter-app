@@ -103,7 +103,13 @@ const PROFILE_FIELDS = [
 const SPECIAL_FIELDS = ["pet_type", "gallery_image_url", "profile_image_url"];
 
 // User data fields ที่อยู่ในตาราง users
-const USER_FIELDS = ["full_name", "email", "phone_number", "profile_image_url", "date_of_birth"];
+const USER_FIELDS = [
+  "full_name",
+  "email",
+  "phone_number",
+  "profile_image_url",
+  "date_of_birth",
+];
 
 // Validate URL helper function
 const isValidImageUrl = (url) => {
@@ -120,14 +126,6 @@ const ProfileTab = memo(({ sitter }) => {
   const hasNewStructure = useMemo(() => {
     return isPending && (pendingData.user_data || pendingData.pet_sitter_data);
   }, [isPending, pendingData]);
-
-  // Debug log
-  useEffect(() => {
-    if (isPending) {
-      console.log("Pending data structure:", pendingData);
-      console.log("Using new structure:", hasNewStructure);
-    }
-  }, [isPending, pendingData, hasNewStructure]);
 
   // Handle gallery scroll touch events
   useEffect(() => {
@@ -344,11 +342,6 @@ const ProfileTab = memo(({ sitter }) => {
       longitude = sitter.pet_sitter.lng;
     }
 
-    console.log(
-      `Rendering map for pet sitter ID ${sitter.pet_sitter.id} at coordinates:`,
-      { latitude, longitude }
-    );
-
     // สร้าง initialPosition ถ้ามีพิกัด
     const initialPosition =
       latitude && longitude
@@ -455,7 +448,13 @@ const ProfileTab = memo(({ sitter }) => {
                 hasChanged={hasFieldChanged("phone_number")}
               />
 
-              <InfoField label="Date of Birth" value={getDisplayValue("date_of_birth") || sitter.users.birthday} hasChanged={hasFieldChanged("date_of_birth")} />
+              <InfoField
+                label="Date of Birth"
+                value={
+                  getDisplayValue("date_of_birth") || sitter.users.birthday
+                }
+                hasChanged={hasFieldChanged("date_of_birth")}
+              />
 
               <InfoField
                 label="Introduction"

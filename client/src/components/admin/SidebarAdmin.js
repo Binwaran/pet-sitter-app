@@ -142,7 +142,6 @@ const Sidebar = memo(({ className = "" }) => {
       // รีโหลดเพจเพื่อรีเซ็ตสถานะทั้งหมด
       window.location.href = "/";
     } catch (error) {
-      console.error("Logout error:", error);
       alert("Logout failed. Please try again.");
     }
   };

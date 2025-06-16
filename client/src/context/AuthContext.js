@@ -17,17 +17,12 @@ export function AuthProvider({ children }) {
   const fetchUser = async () => {
     setLoading(true);
     try {
-      // เพิ่ม logging เพื่อดีบัก
-      console.log("Fetching user data...");
-
       const res = await fetch("/api/me", {
         credentials: "include", // สำคัญมาก! ต้องส่ง cookies ไปด้วย
         headers: {
           Accept: "application/json",
         },
       });
-
-      console.log("Response status:", res.status);
 
       if (res.ok) {
         const userData = await res.json();
@@ -44,10 +39,7 @@ export function AuthProvider({ children }) {
   // เพิ่มฟังก์ชัน updateUserData สำหรับอัพเดทข้อมูล user โดยตรง
   const updateUserData = (newUserData) => {
     if (newUserData && typeof newUserData === "object") {
-      console.log("Updating user data in context:", newUserData);
       setUser(newUserData);
-    } else {
-      console.error("Invalid user data format for update:", newUserData);
     }
   };
 
@@ -61,7 +53,6 @@ export function AuthProvider({ children }) {
         body: JSON.stringify({ email, password }),
       });
       if (res.ok) {
-        console.log("Login successful, fetching user info...");
         await fetchUser(); // ดึงข้อมูล user ใหม่
         return { success: true };
       } else {
@@ -69,7 +60,6 @@ export function AuthProvider({ children }) {
         return { success: false, message: data.message || "Login failed" };
       }
     } catch (error) {
-      console.error("Login error:", error);
       return { success: false, message: "An error occurred during login" };
     }
   };

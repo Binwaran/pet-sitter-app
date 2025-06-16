@@ -65,7 +65,6 @@ const NavBarDesktop = ({
         error: null,
       });
     } catch (error) {
-      console.error("Error fetching user data:", error);
       setUserData((prev) => ({
         ...prev,
         loading: false,

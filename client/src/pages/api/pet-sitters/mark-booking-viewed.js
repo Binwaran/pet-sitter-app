@@ -28,11 +28,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Booking ID is required" });
     }
 
-    console.log("Attempting to mark booking as viewed:", {
-      user_id: userId,
-      booking_id: bookingId,
-    });
-
     // ตรวจสอบว่ามีบันทึกอยู่แล้วหรือไม่
     const { data: existingRecord, error: checkError } = await supabase
       .from("viewed_bookings")
@@ -42,7 +37,6 @@ export default async function handler(req, res) {
       .maybeSingle();
 
     if (checkError && !checkError.message.includes("No rows found")) {
-      console.error("Error checking existing record:", checkError);
       return res.status(500).json({ error: checkError.message });
     }
 
@@ -60,7 +54,6 @@ export default async function handler(req, res) {
       });
 
       if (error) {
-        console.error("RPC error:", error);
         return res.status(500).json({
           error: error.message,
           hint: "Server function error. Please check database function and permissions.",
@@ -69,14 +62,12 @@ export default async function handler(req, res) {
 
       return res.status(200).json({ success: true });
     } catch (insertErr) {
-      console.error("Unexpected insert error:", insertErr);
       return res.status(500).json({
         error: "Database operation failed",
         message: insertErr.message,
       });
     }
   } catch (err) {
-    console.error("Server error:", err);
     return res.status(500).json({
       error: "Internal server error",
       message: err.message,

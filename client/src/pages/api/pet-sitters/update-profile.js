@@ -10,7 +10,6 @@ export default async function handler(req, res) {
   try {
     // ดึง token จาก cookie
     const token = req.cookies.token;
-    console.log("Token exists:", !!token);
 
     if (!token) {
       return res.status(401).json({ error: "Unauthorized: No token provided" });
@@ -19,7 +18,6 @@ export default async function handler(req, res) {
     // ตรวจสอบ token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.id || decoded.user_id || decoded.sub;
-    console.log("User ID from token:", userId);
 
     if (!userId) {
       return res.status(401).json({ error: "Invalid token: No user ID" });
@@ -27,8 +25,6 @@ export default async function handler(req, res) {
 
     // สำหรับ GET request - ดึงข้อมูล pet sitter และ users
     if (req.method === "GET") {
-      console.log("Processing GET request for user ID:", userId);
-
       // 1. ดึงข้อมูลจากตาราง users ก่อน
       const { data: userData, error: userError } = await supabase
         .from("users")
@@ -37,7 +33,6 @@ export default async function handler(req, res) {
         .single();
 
       if (userError) {
-        console.error("Error fetching user data:", userError);
         return res.status(500).json({ error: userError.message });
       }
 
@@ -89,13 +84,11 @@ export default async function handler(req, res) {
           petSitter.pending_gallery_image_url.length > 0,
       };
 
-      console.log("Profile data retrieved successfully");
       return res.status(200).json({ data: combinedData });
     }
 
     // สำหรับ POST request (จาก client) - อัปเดตข้อมูล
     if (req.method === "POST") {
-      console.log("Processing POST request for user ID:", userId);
       const updateData = req.body;
       const isFormSubmit = req.headers["x-form-submit"] === "true";
 
@@ -122,7 +115,6 @@ export default async function handler(req, res) {
         .single();
 
       if (profileError && profileError.code !== "PGRST116") {
-        console.error("Error finding profile:", profileError);
         return res.status(500).json({ error: profileError.message });
       }
 
@@ -160,7 +152,6 @@ export default async function handler(req, res) {
           .single();
 
         if (createError) {
-          console.error("Error creating profile:", createError);
           return res.status(500).json({ error: createError.message });
         }
 
@@ -184,8 +175,6 @@ export default async function handler(req, res) {
           updateData.lat !== existingProfile.lat) ||
         (updateData.lng !== undefined &&
           updateData.lng !== existingProfile.lng);
-
-      console.log("Location changed:", isLocationChanged);
 
       // ถ้ามีการเปลี่ยนแปลงพิกัด ให้เก็บในข้อมูลที่รออนุมัติ
       if (
@@ -224,9 +213,6 @@ export default async function handler(req, res) {
         isGalleryChanged = true;
       }
 
-      console.log("Profile image changed:", isProfileImageChanged);
-      console.log("Gallery changed:", isGalleryChanged);
-
       // สร้างข้อมูลที่จะอัปเดต
       const updateFields = {
         status: "waiting for approval",
@@ -251,7 +237,6 @@ export default async function handler(req, res) {
         .single();
 
       if (updateError) {
-        console.error("Update error:", updateError);
         return res.status(500).json({ error: updateError.message });
       }
 
@@ -282,7 +267,6 @@ export default async function handler(req, res) {
       });
     }
   } catch (err) {
-    console.error("Server error:", err);
     return res
       .status(500)
       .json({ error: err.message || "Internal server error" });

@@ -54,7 +54,6 @@ export default async function handler(req, res) {
       .order("created_at", { ascending: false });
 
     if (bookingsError) {
-      console.error("Error fetching bookings:", bookingsError);
       return res.status(500).json({ message: "Failed to fetch transactions" });
     }
 
@@ -91,8 +90,6 @@ export default async function handler(req, res) {
       .eq("user_id", userId) // ใช้ userId แทน sitterId
       .single();
 
-      console.log("Bank data from DB:", bankData);
-
     let bankInfo = null;
     if (
       !bankError &&
@@ -104,7 +101,6 @@ export default async function handler(req, res) {
         bankName: bankData.bank_name,
         accountNumber: bankData.acc_no, // Change from account_number to account_no
       };
-      console.log("Bank info being returned:", bankInfo);
     }
 
     // แปลงข้อมูลเพื่อส่งกลับ
@@ -124,7 +120,6 @@ export default async function handler(req, res) {
       bankInfo,
     });
   } catch (error) {
-    console.error("Server error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
