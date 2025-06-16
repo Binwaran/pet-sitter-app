@@ -1,5 +1,7 @@
+'use client';
 import Image from "next/image";
 import Edit from "/public/assets/icon-edit.svg";
+import { useRouter } from "next/navigation";
 
 // เพิ่ม STATUS_MAP สำหรับกำหนดสีและข้อความตามสถานะ
 const STATUS_MAP = {
@@ -36,6 +38,17 @@ const STATUS_MAP = {
 };
 
 export default function BookingCard({ booking, onClick, onReview }) {
+  const router = useRouter();
+
+  const handleSendMessage = ( )=> {
+    const sitterId = booking.sitter_id || booking?.sitter_user_id;
+    if (sitterId) {
+      router.push(`/messages/${sitterId}`);
+    } else {
+      console.error("Sitter ID not found in booking data.");
+    }
+  }
+
   const {
     pet_name,
     service_name,
@@ -71,7 +84,12 @@ export default function BookingCard({ booking, onClick, onReview }) {
             Waiting Pet Sitter for confirm booking
           </span>
           <div className="flex flex-row gap-4">
-            <button className="flex items-center justify-center gap-2 bg-[#FF7037] py-3 px-6 rounded-full hover:bg-[#FF986F] cursor-pointer min-w-30">
+            <button className="flex items-center justify-center gap-2 bg-[#FF7037] py-3 px-6 rounded-full hover:bg-[#FF986F] cursor-pointer min-w-30"
+              onClick={(e) => {
+                e.stopPropagation(); // 👈 กันไม่ให้ไปกระตุ้น onClick การ์ด
+                  handleSendMessage();
+                }}
+                >
               <span className="font-bold leading-[150%] text-center text-white">
                 Send Message
               </span>
@@ -97,7 +115,11 @@ export default function BookingCard({ booking, onClick, onReview }) {
             Your pet is already in Pet Sitter care!
           </span>
           <div className="flex flex-row items-center gap-4">
-            <button className="flex items-center justify-center gap-2 bg-[#FF7037] py-3 px-6 rounded-full hover:bg-[#FF986F] cursor-pointer min-w-30">
+            <button className="flex items-center justify-center gap-2 bg-[#FF7037] py-3 px-6 rounded-full hover:bg-[#FF986F] cursor-pointer min-w-30"
+                onClick={(e) => {
+                e.stopPropagation();
+                handleSendMessage();
+              }}>
               <span className="font-bold leading-[150%] text-center text-white">
                 Send Message
               </span>

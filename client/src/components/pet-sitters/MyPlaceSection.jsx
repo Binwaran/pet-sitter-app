@@ -43,7 +43,7 @@ export default function MyPlaceSection({ sitter }) {
   }, [sitter]);
 
   return (
-    <section className="mb-10">
+    <section id="my-map-section" className="mb-10">
       <h2 className="text-3xl font-semibold mb-1">My Place</h2>
       <p className="text-gray-700 mb-4 whitespace-pre-wrap text-lg sm:mb-10 leading-relaxed">
         {sitter.my_place}

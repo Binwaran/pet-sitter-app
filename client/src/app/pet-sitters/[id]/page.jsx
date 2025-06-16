@@ -82,7 +82,9 @@ const PetSitterDetails = () => {
             </section>
 
             {/* My Place */}
-            <MyPlaceSection sitter={sitter} />
+            <div className="relative z-0">
+              <MyPlaceSection sitter={sitter} />
+            </div>
           </div>
           <div className="w-full h-[2000px] my-15 py-10 ">
             <ReviewSection sitterId={sitter.user_id} averageRating={sitter.average_rating} />
@@ -113,18 +115,9 @@ const PetSitterDetails = () => {
             </section>
 
             {/* My Place */}
-            <section className="mb-10">
-              <h2 className="text-3xl font-semibold mb-1">My Place</h2>
-              <p className="text-gray-700 mb-4 whitespace-pre-wrap text-lg sm:mb-10 leading-relaxed">{sitter.my_place}</p>
-              {sitter.lat && sitter.lng && (
-                <iframe
-                  className="rounded-lg w-full h-64"
-                  src={`https://www.google.com/maps?q=${sitter.lat},${sitter.lng}&z=15&output=embed`}
-                  allowFullScreen
-                  loading="lazy"
-                ></iframe>
-              )}
-            </section>
+            <div className="relative z-0">
+              <MyPlaceSection sitter={sitter} />
+            </div>
           </div>
           {/* Sticky Card */}
           <div className="w-full sm:w-full lg:w-1/3 sm:sticky sm:top-24    self-start items-center sm:ml-10 sm:mr-10 mx-auto sm:m-auto">

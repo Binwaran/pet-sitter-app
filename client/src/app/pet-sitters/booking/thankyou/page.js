@@ -6,10 +6,12 @@ import Image from 'next/image';
 import NavBar from '@/components/NavBar';
 import {generateTransactionNo} from '@/utils/generateTransactionNo';
 import { supabase } from '@/utils/supabase';
+import MyplaceSection from '@/components/pet-sitters/MyPlaceSection';
 
 export default function BookingThankYouPage() {
   const [booking, setBooking] = useState(null);
   const [sitter, setSitter] = useState(null);
+  const [showMapPopup, setShowMapPopup] = useState(false);
   const router = useRouter();
 
   // Fetch and update total price if bookingDetails is present
@@ -26,12 +28,12 @@ export default function BookingThankYouPage() {
       if (parsed.sitter_id) {
         supabase
           .from('pet_sitter')
-          .select('trade_name')
+          .select('*')
           .eq('user_id', parsed.sitter_id)
           .single()
           .then(({ data, error }) => {
             if (error) {
-              console.error("Error fetching sitter trade name:", error);
+              console.error("Error fetching sitter info:", error);
               setSitter(null);
             } else {
               setSitter(data);
@@ -82,10 +84,38 @@ export default function BookingThankYouPage() {
                 <div className="text-xs text-gray-400">Pet Sitter:</div>
                 <div className="text-sm text-gray-800 font-medium">{sitterName}</div>
               </div>
-              <a href="#" className="flex items-center text-orange-500 text-sm font-medium hover:underline">
-                <Image src="/assets/icon=map-marker.png" alt="map" width={18} height={18} className="mr-1" style={{ filter: 'invert(48%) sepia(99%) saturate(749%) hue-rotate(359deg) brightness(101%) contrast(101%)' }} />
+              <button
+                onClick={() => setShowMapPopup(true)}
+                className="flex items-center text-orange-500 text-sm font-medium hover:underline cursor-pointer"
+              >
+                <Image
+                  src="/assets/icon=map-marker.png"
+                  alt="map"
+                  width={18}
+                  height={18}
+                  className="mr-1"
+                  style={{
+                    filter:
+                      "invert(48%) sepia(99%) saturate(749%) hue-rotate(359deg) brightness(101%) contrast(101%)",
+                  }}
+                />
                 View Map
-              </a>
+              </button>
+              {showMapPopup && sitter && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                  <div className="relative w-full max-w-3xl mx-auto bg-white rounded-xl shadow-lg p-6">
+                    <button
+                      onClick={() => setShowMapPopup(false)}
+                      className="absolute top-2 right-3 text-gray-500 hover:text-gray-700 text-xl font-bold"
+                      aria-label="Close"
+                    >
+                      ×
+                    </button>
+
+                    <MyplaceSection sitter={sitter} />
+                  </div>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-6 mb-2">
               <div className="flex flex-col">
