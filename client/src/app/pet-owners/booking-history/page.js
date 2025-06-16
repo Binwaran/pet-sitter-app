@@ -1,10 +1,30 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Sidebar from "@/components/profile/Sidebar";
 import BookingCard from "@/components/profile/BookingCard";
-import BookingDetailModal from "@/components/profile/BookingDetailModal"; // ✅ import modal
+import BookingDetailModal from "@/components/profile/BookingDetailModal";
+
+function mapStatus(status) {
+  if (
+    status === "waiting for confirm" ||
+    status === "pending" ||
+    status === "waiting for service"
+  ) {
+    return "Waiting for confirm";
+  }
+  if (status === "in service") {
+    return "In service";
+  }
+  if (status === "success") {
+    return "Success";
+  }
+  if (status === "cancelled") {
+    return "Cancelled";
+  }
+  return status;
+}
 
 export default function BookingHistoryPage() {
   const { user, loading: authLoading } = useAuth();
@@ -12,7 +32,8 @@ export default function BookingHistoryPage() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedBooking, setSelectedBooking] = useState(null); // ✅ state modal
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("All");
 
   function getStatusDate(booking) {
     const status = booking.status;
@@ -48,7 +69,6 @@ export default function BookingHistoryPage() {
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
-      // เก็บ path ปัจจุบันไว้ใน sessionStorage
       if (typeof window !== "undefined") {
         sessionStorage.setItem("redirectPath", window.location.pathname);
       }
@@ -56,23 +76,19 @@ export default function BookingHistoryPage() {
       return;
     }
     if (user.role !== "owner") {
-      router.replace("/"); // เปลี่ยนเส้นทางไปยังหน้าอื่นถ้าไม่ใช่ owner
-      return;
-    }
-    if (!user.id) {
-      setError("ไม่พบ owner_id ในบัญชีนี้");
-      setLoading(false);
+      router.replace("/");
       return;
     }
 
     const fetchBookings = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/booking?owner_id=${user.id}`);
+        const res = await fetch("/api/booking/booking-list-owner");
         if (!res.ok) throw new Error("Failed to fetch bookings");
-        const data = await res.json();
+        const { data } = await res.json();
         const mapped = data.map((booking) => ({
           ...booking,
+          status: mapStatus(booking.status), // <--- เพิ่มตรงนี้
           statusDate: getStatusDate(booking),
         }));
         setBookings(mapped);
@@ -86,6 +102,12 @@ export default function BookingHistoryPage() {
 
     fetchBookings();
   }, [user, authLoading, router]);
+
+  // Filter bookings by status
+  const filteredBookings = useMemo(() => {
+    if (statusFilter === "All") return bookings;
+    return bookings.filter((b) => b.status === statusFilter);
+  }, [bookings, statusFilter]);
 
   if (authLoading || loading)
     return (
@@ -114,25 +136,45 @@ export default function BookingHistoryPage() {
             <div className="bg-white flex flex-col px-4 py-6 md:p-10 md:rounded-2xl gap-6 md:gap-15 w-full">
               <h1 className="text-2xl font-bold">Booking History</h1>
               {bookings.length === 0 ? (
+    <div className="bg-gray-100 min-h-screen">
+      <div className="px-20 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6">
+          <Sidebar />
+          <div className="self-start">
+            <div className="bg-white p-6 rounded-2xl shadow-md">
+              <h1 className="text-2xl font-bold mb-14">Booking History</h1>
+              {/* Filter by status */}
+              <div className="mb-6">
+                <label className="mr-2 font-medium">Filter by status:</label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="border rounded px-3 py-1"
+                >
+                  <option value="All">All</option>
+                  <option value="Waiting for confirm">Waiting for confirm</option>
+                  <option value="In service">In service</option>
+                  <option value="Success">Success</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </div>
+              {filteredBookings.length === 0 ? (
                 <p className="text-gray-500">No bookings found.</p>
               ) : (
-                bookings.map((booking, index) => {
-                  console.log("Booking:", booking); // ✅ ถูกต้อง
-                  return (
-                    <BookingCard
-                      key={booking.booking_id || index}
-                      booking={booking}
-                      onClick={() => setSelectedBooking(booking)}
-                    />
-                  );
-                })
+                filteredBookings.map((booking, index) => (
+                  <BookingCard
+                    key={booking.booking_id || index}
+                    booking={booking}
+                    onClick={() => setSelectedBooking(booking)}
+                  />
+                ))
               )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* ✅ Booking Detail Modal */}
+      {/* Booking Detail Modal */}
       {selectedBooking && (
         <BookingDetailModal
           booking={selectedBooking}
