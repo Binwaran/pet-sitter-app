@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import Image from "next/image";
 import Edit from "/public/assets/icon-edit.svg";
 import { useRouter } from "next/navigation";
@@ -40,14 +40,13 @@ const STATUS_MAP = {
 export default function BookingCard({ booking, onClick, onReview }) {
   const router = useRouter();
 
-  const handleSendMessage = ( )=> {
+  const handleSendMessage = () => {
     const sitterId = booking.sitter_id || booking?.sitter_user_id;
     if (sitterId) {
       router.push(`/messages/${sitterId}`);
     } else {
-      console.error("Sitter ID not found in booking data.");
     }
-  }
+  };
 
   const {
     pet_name,
@@ -84,12 +83,13 @@ export default function BookingCard({ booking, onClick, onReview }) {
             Waiting Pet Sitter for confirm booking
           </span>
           <div className="flex flex-row gap-4">
-            <button className="flex items-center justify-center gap-2 bg-[#FF7037] py-3 px-6 rounded-full hover:bg-[#FF986F] cursor-pointer min-w-30"
+            <button
+              className="flex items-center justify-center gap-2 bg-[#FF7037] py-3 px-6 rounded-full hover:bg-[#FF986F] cursor-pointer min-w-30"
               onClick={(e) => {
                 e.stopPropagation(); // 👈 กันไม่ให้ไปกระตุ้น onClick การ์ด
-                  handleSendMessage();
-                }}
-                >
+                handleSendMessage();
+              }}
+            >
               <span className="font-bold leading-[150%] text-center text-white">
                 Send Message
               </span>
@@ -115,11 +115,13 @@ export default function BookingCard({ booking, onClick, onReview }) {
             Your pet is already in Pet Sitter care!
           </span>
           <div className="flex flex-row items-center gap-4">
-            <button className="flex items-center justify-center gap-2 bg-[#FF7037] py-3 px-6 rounded-full hover:bg-[#FF986F] cursor-pointer min-w-30"
-                onClick={(e) => {
+            <button
+              className="flex items-center justify-center gap-2 bg-[#FF7037] py-3 px-6 rounded-full hover:bg-[#FF986F] cursor-pointer min-w-30"
+              onClick={(e) => {
                 e.stopPropagation();
                 handleSendMessage();
-              }}>
+              }}
+            >
               <span className="font-bold leading-[150%] text-center text-white">
                 Send Message
               </span>
@@ -162,7 +164,7 @@ export default function BookingCard({ booking, onClick, onReview }) {
             ) : (
               <button
                 className="flex items-center justify-center gap-2 bg-[#FF7037] py-3 px-6 rounded-full hover:bg-[#FF986F] cursor-pointer min-w-30"
-                onClick={e => {
+                onClick={(e) => {
                   e.stopPropagation();
                   onReview?.(booking);
                 }}
@@ -182,7 +184,11 @@ export default function BookingCard({ booking, onClick, onReview }) {
 
   return (
     <div
-      className={`border-1 ${statusInfo.border} rounded-2xl bg-white flex flex-col gap-4 p-4 overflow-hidden transition hover:shadow-lg ${onClick ? "cursor-pointer" : ""}`}
+      className={`border-1 ${
+        statusInfo.border
+      } rounded-2xl bg-white flex flex-col gap-4 p-4 overflow-hidden transition hover:shadow-lg ${
+        onClick ? "cursor-pointer" : ""
+      }`}
       onClick={() => onClick?.(booking.booking_id)}
     >
       <div className="flex flex-col gap-4">
@@ -253,7 +259,7 @@ export default function BookingCard({ booking, onClick, onReview }) {
             </div>
 
             {/* Divider */}
-          <div className="hidden md:block w-px h-9 bg-[#DCDFED]"></div>
+            <div className="hidden md:block w-px h-9 bg-[#DCDFED]"></div>
 
             <div className="flex flex-col md:w-full">
               <span className="text-[#7B7E8F] font-medium text-sm leading-6">
