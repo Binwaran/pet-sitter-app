@@ -16,6 +16,8 @@ const SitterCard = ({ sitter, pet_sitter, isSelected, onClick }) => {
         onClick();
       }
       router.push(`/pet-sitters/${data.user_id}`);
+    } else {
+      console.warn("Cannot navigate: Sitter data or ID is missing for this card.");
     }
   };
 
