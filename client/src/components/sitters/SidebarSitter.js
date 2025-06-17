@@ -4,6 +4,7 @@ import { useEffect, useRef, useCallback, useMemo, memo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
+import { toast } from "sonner";
 
 // Import assets
 import {
@@ -42,9 +43,7 @@ const CheckUnreadBookings = memo(() => {
       if (res.data && typeof res.data.hasUnread === "boolean") {
         setHasUnread(res.data.hasUnread);
       }
-    } catch (error) {
-      console.error("Error checking unread bookings:", error);
-    }
+    } catch (error) {}
   }, []);
 
   useEffect(() => {
@@ -244,7 +243,7 @@ const Sidebar = memo(({ className = "" }) => {
       await logout();
       window.location.href = "/";
     } catch (error) {
-      alert("Logout failed. Please try again.");
+      toast.error("Logout failed. Please try again.");
     }
   };
 

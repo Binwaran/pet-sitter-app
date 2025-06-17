@@ -11,6 +11,8 @@ import {
   CalendarIcon,
   LogoutIcon,
 } from "@/components/icons";
+import { useNavigation } from "@/hooks/message/useNavigation";
+import { useRouter, usePathname } from "next/navigation";
 
 const NavBarMobile = ({
   user,
@@ -23,6 +25,9 @@ const NavBarMobile = ({
   className,
 }) => {
   const role = user?.role;
+  const router = useRouter();
+  const { saveReferrer } = useNavigation();
+  const pathname = usePathname();
 
   return (
     <nav
@@ -53,9 +58,15 @@ const NavBarMobile = ({
 
             {/* Messages */}
             <div className="relative">
-              <Link href="/messages">
+              <button
+                onClick={() => {
+                  saveReferrer(pathname);
+                  router.push("/messages");
+                }}
+                className="cursor-pointer"
+              >
                 <MessageIcon color="#7B7E8F" width={24} height={24} />
-              </Link>
+              </button>
               {hasNewMessage && (
                 <span className="absolute top-0 right-0 w-2 h-2 bg-orange-500 rounded-full" />
               )}
