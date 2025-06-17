@@ -149,7 +149,7 @@ export default function PetSitterMap() {
                   },
                 }}
               >
-                <Popup>{loc?.name || loc?.trade_name || 'ไม่ระบุชื่อร้าน'}</Popup>
+                <Popup offset={[0, -50]}>{loc?.name || loc?.trade_name || 'ไม่ระบุชื่อร้าน'}</Popup>
               </Marker>
             ) : null
           ))}
