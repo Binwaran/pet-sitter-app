@@ -23,6 +23,35 @@ export default function ChatWindow({
   const router = useRouter();
   const fileInputRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const messageAudioRef = useRef(null);
+  const typingAudioRef = useRef(null);
+
+  // 🆕 เพิ่มฟังก์ชันเล่นเสียง
+  const playMessageSound = () => {
+    try {
+      if (messageAudioRef.current) {
+        messageAudioRef.current.currentTime = 0;
+        messageAudioRef.current.play().catch(() => {
+          // Ignore autoplay policy errors
+        });
+      }
+    } catch (error) {
+      // Ignore audio errors
+    }
+  };
+
+  const playTypingSound = () => {
+    try {
+      if (typingAudioRef.current) {
+        typingAudioRef.current.currentTime = 0;
+        typingAudioRef.current.play().catch(() => {
+          // Ignore autoplay policy errors
+        });
+      }
+    } catch (error) {
+      // Ignore audio errors
+    }
+  };
 
   const handleClose = () => {
     if (onClose) {
@@ -60,6 +89,12 @@ export default function ChatWindow({
             setMessages((prev) => {
               const exists = prev.some((msg) => msg.id === newMessage.id);
               if (exists) return prev;
+
+              // 🆕 เล่นเสียงเมื่อได้รับข้อความใหม่ (ไม่ใช่ข้อความของตัวเอง)
+              if (newMessage.sender_id !== currentUser.id) {
+                playMessageSound();
+              }
+
               return [
                 ...prev,
                 {
@@ -76,12 +111,12 @@ export default function ChatWindow({
       .on("broadcast", { event: "typing" }, (payload) => {
         const { user_id, typing } = payload.payload;
 
-        // ถ้าเป็นคนอื่นพิมพ์ (ไม่ใช่เรา)
         if (user_id !== currentUser.id && user_id === user.id) {
           setOtherUserTyping(typing);
 
-          // หยุด typing หลัง 3 วินาที
+          // 🆕 เล่นเสียงเมื่อมีคนเริ่มพิมพ์
           if (typing) {
+            playTypingSound();
             setTimeout(() => {
               setOtherUserTyping(false);
             }, 3000);
@@ -228,6 +263,15 @@ export default function ChatWindow({
 
   return (
     <div className="flex-1 flex flex-col h-full">
+      {/* 🆕 Audio elements - ซ่อนไว้ */}
+      <audio ref={messageAudioRef} preload="auto" style={{ display: "none" }}>
+        <source src="/assets/sounds/message.mp3" type="audio/mpeg" />
+      </audio>
+
+      <audio ref={typingAudioRef} preload="auto" style={{ display: "none" }}>
+        <source src="/assets/sounds/typing.mp3" type="audio/mpeg" />
+      </audio>
+
       {/* Header */}
       <div className="flex gap-2 sm:gap-4 px-2.5 md:px-10 py-3 md:py-6 items-center md:justify-between bg-[#F6F6F9] w-full">
         <div className="flex items-center gap-2 sm:gap-4 w-full">
