@@ -3,15 +3,18 @@
 import { memo, useEffect, useState, useMemo, useCallback } from "react";
 import Image from "next/image";
 import axios from "axios";
-import { useRouter } from "next/navigation"; // เพิ่ม import useRouter
+import { useRouter, usePathname } from "next/navigation";
 import avatar from "/public/assets/profile/profileimg.svg";
 import message from "/public/assets/sidebar/message.svg";
 import useUnreadMessages from "@/hooks/message/useUnreadMessages";
 import UnreadMessageBadge from "@/components/common/UnreadMessageBadge";
+import { useNavigation } from "@/hooks/message/useNavigation";
 
 // ใช้ memo เพื่อป้องกันการ re-render ที่ไม่จำเป็น
 const Topbar = memo(({ className }) => {
-  const router = useRouter(); // สร้าง router instance
+  const router = useRouter();
+  const pathname = usePathname();
+  const { saveReferrer } = useNavigation();
 
   // รวม state เข้าด้วยกันเพื่อลดการ render
   const [state, setState] = useState({
@@ -109,7 +112,10 @@ const Topbar = memo(({ className }) => {
       </div>
       <div className="flex items-center gap-3">
         <button
-          onClick={() => router.push("/messages")}
+          onClick={() => {
+            saveReferrer(pathname);
+            router.push("/messages");
+          }}
           className="relative w-10 h-10 rounded-full bg-[#F6F6F9] hover:bg-[#EDEDF2] flex items-center justify-center cursor-pointer transition-colors"
           aria-label="Messages"
         >

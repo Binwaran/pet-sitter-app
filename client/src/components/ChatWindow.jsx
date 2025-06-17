@@ -1,21 +1,64 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { X } from "lucide-react";
 import Image from "next/image";
 import { v4 as uuidv4 } from "uuid";
 import { supabase } from "@/utils/supabase";
 import { markMessagesAsRead } from "@/hooks/message/useMarkMessagesAsRead";
 import BookNowButton from "./BookNowButton";
+import { useRouter } from "next/navigation";
 
 export default function ChatWindow({
   user,
-  onClose = () => {},
+  onClose,
   currentUser,
   messages: initialMessages = [],
 }) {
   const [messages, setMessages] = useState(initialMessages);
   const [input, setInput] = useState("");
   const [imageFile, setImageFile] = useState(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const [otherUserTyping, setOtherUserTyping] = useState(false);
+
+  const router = useRouter();
+  const fileInputRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
+  const messageAudioRef = useRef(null);
+  const typingAudioRef = useRef(null);
+
+  // 🆕 เพิ่มฟังก์ชันเล่นเสียง
+  const playMessageSound = () => {
+    try {
+      if (messageAudioRef.current) {
+        messageAudioRef.current.currentTime = 0;
+        messageAudioRef.current.play().catch(() => {
+          // Ignore autoplay policy errors
+        });
+      }
+    } catch (error) {
+      // Ignore audio errors
+    }
+  };
+
+  const playTypingSound = () => {
+    try {
+      if (typingAudioRef.current) {
+        typingAudioRef.current.currentTime = 0;
+        typingAudioRef.current.play().catch(() => {
+          // Ignore autoplay policy errors
+        });
+      }
+    } catch (error) {
+      // Ignore audio errors
+    }
+  };
+
+  const handleClose = () => {
+    if (onClose) {
+      onClose(); // ถ้ามี onClose ให้เรียกก่อน
+    }
+    router.push("/messages");
+  };
 
   useEffect(() => {
     if (!currentUser?.id || !user?.id) return;
@@ -46,6 +89,12 @@ export default function ChatWindow({
             setMessages((prev) => {
               const exists = prev.some((msg) => msg.id === newMessage.id);
               if (exists) return prev;
+
+              // 🆕 เล่นเสียงเมื่อได้รับข้อความใหม่ (ไม่ใช่ข้อความของตัวเอง)
+              if (newMessage.sender_id !== currentUser.id) {
+                playMessageSound();
+              }
+
               return [
                 ...prev,
                 {
@@ -59,12 +108,69 @@ export default function ChatWindow({
           }
         }
       )
+      .on("broadcast", { event: "typing" }, (payload) => {
+        const { user_id, typing } = payload.payload;
+
+        if (user_id !== currentUser.id && user_id === user.id) {
+          setOtherUserTyping(typing);
+
+          // 🆕 เล่นเสียงเมื่อมีคนเริ่มพิมพ์
+          if (typing) {
+            playTypingSound();
+            setTimeout(() => {
+              setOtherUserTyping(false);
+            }, 3000);
+          }
+        }
+      })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
   }, [user?.id, currentUser?.id]);
+
+  // 🆕 ฟังก์ชันส่ง typing status
+  const sendTypingStatus = async (typing) => {
+    if (!currentUser?.id || !user?.id) return;
+
+    const channelName = `chat-room:${[currentUser.id, user.id]
+      .sort()
+      .join("-")}`;
+
+    const channel = supabase.channel(channelName);
+
+    await channel.send({
+      type: "broadcast",
+      event: "typing",
+      payload: {
+        user_id: currentUser.id,
+        typing: typing,
+      },
+    });
+  };
+
+  // 🆕 Handle typing input
+  const handleInputChange = (e) => {
+    setInput(e.target.value);
+
+    // ส่ง typing = true
+    if (!isTyping) {
+      setIsTyping(true);
+      sendTypingStatus(true);
+    }
+
+    // Clear timeout เก่า
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Set timeout ใหม่ (หยุด typing หลัง 1 วินาที)
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false);
+      sendTypingStatus(false);
+    }, 1000);
+  };
 
   // ✅ ฟังก์ชันส่งข้อความ
   const handleSend = async () => {
@@ -108,6 +214,15 @@ export default function ChatWindow({
       return;
     }
 
+    // 🆕 หยุด typing เมื่อส่งข้อความ
+    if (isTyping) {
+      setIsTyping(false);
+      sendTypingStatus(false);
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    }
+
     setInput("");
     setImageFile(null);
   };
@@ -148,104 +263,199 @@ export default function ChatWindow({
 
   return (
     <div className="flex-1 flex flex-col h-full">
+      {/* 🆕 Audio elements - ซ่อนไว้ */}
+      <audio ref={messageAudioRef} preload="auto" style={{ display: "none" }}>
+        <source src="/assets/sounds/message.mp3" type="audio/mpeg" />
+      </audio>
+
+      <audio ref={typingAudioRef} preload="auto" style={{ display: "none" }}>
+        <source src="/assets/sounds/typing.mp3" type="audio/mpeg" />
+      </audio>
+
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 bg-gray-100">
-        <div className="flex items-center gap-4">
+      <div className="flex gap-2 sm:gap-4 px-2.5 md:px-10 py-3 md:py-6 items-center md:justify-between bg-[#F6F6F9] w-full">
+        <div className="flex items-center gap-2 sm:gap-4 w-full">
           <Image
             src={user?.profile_image_url || "/assets/avatar.png"}
             alt="Avatar"
-            width={40}
-            height={40}
-            className="w-10 h-10 rounded-full object-cover"
+            width={48}
+            height={48}
+            className="w-8 h-8 md:w-12 md:h-12 rounded-full object-cover flex-shrink-0"
           />
-          <div className="font-semibold text-2xl">
+          <div className="font-bold text-lg md:text-2xl leading-8 whitespace-break-spaces">
             {user?.name || "Unknown"}
           </div>
+          {/* 🆕 แสดง typing indicator */}
+          {otherUserTyping && (
+            <div className="text-sm text-gray-500 italic">is typing...</div>
+          )}
           <BookNowButton sitterId={user?.id} />
         </div>
-        <div>
-          <button onClick={onClose}>
-            <X className="w-7 h-7 text-gray-500 cursor-pointer" />
+        <div className="flex items-center w-fit justify-end gap-2 sm:gap-4">
+          <button onClick={handleClose}>
+            <X className="w-6 h-6 md:w-8 md:h-8 text-[#7B7E8F] cursor-pointer" />
           </button>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 p-6 overflow-y-auto flex flex-col gap-4 min-h-0">
+      <div className="flex-1 px-3 py-6 md:p-6 overflow-y-auto flex flex-col overflow-x-hidden gap-4 min-h-0 w-full">
         {messages.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center text-gray-400 min-h-0">
-            <div className="text-center">
-              <div className="flex flex-col items-center justify-center text-5xl mb-4">
+          <div className="flex-1 flex items-center justify-center w-full min-h-0">
+            <div className="text-center flex flex-col items-center justify-center gap-6">
+              <div className="flex flex-col items-center justify-center">
                 <Image
-                  src="/assets/Vector (1).png"
+                  src="/assets/pinkpaw.svg"
                   alt="pet icon"
-                  width={100}
-                  height={100}
+                  width={82}
+                  height={84}
                 />
               </div>
-              <p className="text-center text-gray-400">Start a conversation!</p>
+              <p className="text-center text-[#AEB1C3] text-lg leading-6.5 font-medium">
+                Start a conversation!
+              </p>
             </div>
           </div>
         ) : (
-          messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`px-5 py-2 max-w-sm ${
-                msg.senderId === currentUser.id
-                  ? "self-end bg-orange-500 text-white rounded-3xl rounded-br-none"
-                  : "self-start bg-white border text-gray-700 rounded-3xl rounded-bl-none"
-              }`}
-            >
-              <div>{msg.content}</div>
-              {msg.image_url && (
-                <img
-                  src={msg.image_url}
-                  alt="attachment"
-                  className="mt-2 max-w-xs rounded-3xl"
-                />
-              )}
-            </div>
-          ))
+          <>
+            {/* 🔧 แสดงข้อความทั้งหมด (ไม่มี typing indicator ข้างใน) */}
+            {messages.map((msg) => {
+              const isMe = msg.senderId === currentUser.id;
+              const isImageOnly =
+                msg.image_url && (!msg.content || msg.content.trim() === "");
+              return (
+                <div
+                  key={msg.id}
+                  className={
+                    isImageOnly
+                      ? `${isMe ? "self-end" : "self-start"} `
+                      : `px-3 py-2 md:px-6 md:py-4 max-w-xs text-sm md:text-base leading-7 font-medium ${
+                          isMe
+                            ? "self-end bg-[#E44A0C] text-white rounded-2xl rounded-br-none md:rounded-3xl md:rounded-br-none"
+                            : "self-start bg-white border border-[#DCDFED] text-[#31333C] rounded-2xl rounded-bl-none md:rounded-3xl md:rounded-bl-none"
+                        }`
+                  }
+                >
+                  {/* ถ้าเป็นข้อความ text หรือ text+image */}
+                  {!isImageOnly && (
+                    <div className="break-words max-h-60 md:max-h-80 max-w-60 md:max-w-80">
+                      {msg.content}
+                    </div>
+                  )}
+                  {/* ถ้าเป็นรูปภาพ (หรือ text+image) */}
+                  {msg.image_url && (
+                    <img
+                      src={msg.image_url}
+                      alt="attachment"
+                      className="max-h-60 md:max-h-80 max-w-60 md:max-w-80 rounded-lg object-cover"
+                    />
+                  )}
+                </div>
+              );
+            })}
+
+            {/* 🆕 Typing indicator แยกออกมา - แสดงหลังข้อความสุดท้าย */}
+            {otherUserTyping && (
+              <div className="self-start px-3 py-2 md:px-6 md:py-4 bg-white border border-[#DCDFED] text-[#31333C] rounded-2xl rounded-bl-none md:rounded-3xl md:rounded-bl-none">
+                <div className="flex items-center gap-1">
+                  <div className="flex gap-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.1s" }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.2s" }}
+                    ></div>
+                  </div>
+                  <span className="text-sm text-gray-500 ml-2">typing...</span>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
       {/* Input */}
-      <div className="border-t border-gray-300 flex items-center px-4 py-2 gap-2">
-        <label htmlFor="image" className="cursor-pointer">
-          <Image
-            src="/assets/upload-image.png"
-            alt="pet icon"
-            width={70}
-            height={70}
-          />
+      <div className="border-t border-[#DCDFED] flex items-center px-5 md:px-10 py-3 md:py-6 gap-2 md:gap-6 relative">
+        <div className="flex flex-row items-center gap-2 md:gap-6 flex-1">
+          <div className="bg-[#F6F7FC] rounded-full p-1.5 md:p-3.5 gap-1.5 flex items-center justify-center active:scale-95 transition-transform duration-100 hover:bg-[#DCDFED]/50">
+            <label htmlFor="image" className="cursor-pointer">
+              <Image
+                src="/assets/picture.svg"
+                alt="pet icon"
+                width={24}
+                height={24}
+                className="w-4 h-4 md:w-6 md:h-6"
+              />
+              <input
+                type="file"
+                id="image"
+                className="hidden"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  setImageFile(file);
+                }}
+              />
+            </label>
+          </div>
           <input
-            type="file"
-            id="image"
-            className="hidden"
-            accept="image/*"
-            onChange={(e) => setImageFile(e.target.files[0])}
+            id="message-input"
+            name="message-input"
+            type="text"
+            value={input}
+            onChange={handleInputChange}
+            placeholder="Message here..."
+            className="flex-1 gap-2 md:gap-6 outline-none disabled:bg-gray-100 leading-7 font-medium placeholder:text-[#3A3B46] text-[#3A3B46] text-sm md:text-base"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
+            autoComplete="off"
           />
-        </label>
+        </div>
 
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Message here..."
-          className="flex-1 px-4 py-2 outline-none disabled:bg-gray-100"
-        />
-
-        <button
-          onClick={handleSend}
-          className="text-white px-4 py-2 disabled:opacity-50 cursor-pointer"
-        >
-          <Image
-            src="/assets/send-button.png"
-            alt="pet icon"
-            width={80}
-            height={80}
-          />
-        </button>
+        {imageFile && (
+          <div className="flex flex-col items-center justify-center py-3 md:py-6 absolute left-0 bottom-13 md:bottom-25 w-full bg-gray-950/50">
+            <div className="relative">
+              <img
+                src={URL.createObjectURL(imageFile)}
+                alt="preview"
+                className="max-w-[120px] max-h-[120px] md:max-w-[160px] md:max-h-[160px] rounded-lg object-cover"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setImageFile(null);
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                }}
+                className="absolute top-1 right-1 bg-white/50 bg-opacity-80 rounded-full p-0.5 md:p-1 shadow hover:bg-gray-950/50 text-gray-950/50 hover:text-white"
+                title="Remove"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+        <div className="bg-[#FF7037] rounded-full p-1 md:p-3 flex items-center justify-center gap-2 shadow-[2px_2px_12px_0px_#4032851F] active:scale-95 transition-transform duration-100 hover:bg-[#FF986F]">
+          <button
+            onClick={handleSend}
+            className="text-white disabled:opacity-50 cursor-pointer"
+          >
+            <Image
+              src="/assets/paperplane.svg"
+              alt="pet icon"
+              width={24}
+              height={24}
+              className="w-4 h-4 md:w-6 md:h-6"
+            />
+          </button>
+        </div>
       </div>
     </div>
   );

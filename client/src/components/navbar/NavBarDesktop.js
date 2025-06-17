@@ -12,6 +12,8 @@ import {
   CalendarIcon,
   LogoutIcon,
 } from "@/components/icons";
+import { useNavigation } from "@/hooks/message/useNavigation";
+import { useRouter, usePathname } from "next/navigation";
 
 const NavBarDesktop = ({
   user: initialUser,
@@ -30,6 +32,9 @@ const NavBarDesktop = ({
     profile_image_url: initialUser?.profile_img_url || null,
     error: null,
   });
+  const router = useRouter();
+  const { saveReferrer } = useNavigation();
+  const pathname = usePathname();
 
   // สร้างฟังก์ชันดึงข้อมูลด้วย useCallback เพื่อป้องกันการสร้างฟังก์ชันใหม่ที่ไม่จำเป็น
   const fetchUserData = useCallback(async () => {
@@ -126,14 +131,20 @@ const NavBarDesktop = ({
               </Link>
 
               {/* Messages */}
-              <Link href="/messages">
+              <button
+                onClick={() => {
+                  saveReferrer(pathname);
+                  router.push("/messages");
+                }}
+                className="relative"
+              >
                 <div className="relative w-12 h-12 rounded-full bg-[#F6F6F9] flex items-center justify-center">
                   <MessageIcon color="#AEB1C3" width={24} height={24} />
                   {hasNewMessage && (
                     <span className="absolute top-[2px] right-0 translate-x-[-1px] w-2 h-2 bg-orange-500 rounded-full" />
                   )}
                 </div>
-              </Link>
+              </button>
 
               {/* Profile Dropdown */}
               <div className="relative">

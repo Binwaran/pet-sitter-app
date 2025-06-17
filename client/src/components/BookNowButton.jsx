@@ -1,8 +1,8 @@
-'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
-import BookingModal from './BookingModal';
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import BookingModal from "./BookingModal";
 
 export default function BookNowButton({ sitterId }) {
   const { user, loading } = useAuth();
@@ -14,7 +14,7 @@ export default function BookNowButton({ sitterId }) {
     if (user) {
       setShowBooking(true);
     } else {
-      router.push('/login');
+      router.push("/login");
     }
   };
 
@@ -22,9 +22,9 @@ export default function BookNowButton({ sitterId }) {
     <>
       <button
         onClick={handleClick}
-        className="ml-4 bg-orange-600 text-white text-sm sm:text-base font-medium py-2 px-4 rounded-full hover:bg-orange-200 hover:text-orange-600 transition cursor-pointer"
+        className="bg-[#FF7037] px-2 py-1.5 md:py-3 md:px-6 rounded-full hover:bg-[#FF986F] active:scale-95 transition-transform duration-100 cursor-pointer whitespace-nowrap"
       >
-        Book Now
+        <p className="text-white text-sm lg:text-base font-bold">Book Now</p>
       </button>
 
       {showBooking && (
