@@ -17,8 +17,12 @@ export default function ChatWindow({
   const [messages, setMessages] = useState(initialMessages);
   const [input, setInput] = useState("");
   const [imageFile, setImageFile] = useState(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const [otherUserTyping, setOtherUserTyping] = useState(false);
+
   const router = useRouter();
   const fileInputRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
 
   const handleClose = () => {
     if (onClose) {
@@ -69,12 +73,69 @@ export default function ChatWindow({
           }
         }
       )
+      .on("broadcast", { event: "typing" }, (payload) => {
+        const { user_id, typing } = payload.payload;
+
+        // ถ้าเป็นคนอื่นพิมพ์ (ไม่ใช่เรา)
+        if (user_id !== currentUser.id && user_id === user.id) {
+          setOtherUserTyping(typing);
+
+          // หยุด typing หลัง 3 วินาที
+          if (typing) {
+            setTimeout(() => {
+              setOtherUserTyping(false);
+            }, 3000);
+          }
+        }
+      })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
   }, [user?.id, currentUser?.id]);
+
+  // 🆕 ฟังก์ชันส่ง typing status
+  const sendTypingStatus = async (typing) => {
+    if (!currentUser?.id || !user?.id) return;
+
+    const channelName = `chat-room:${[currentUser.id, user.id]
+      .sort()
+      .join("-")}`;
+
+    const channel = supabase.channel(channelName);
+
+    await channel.send({
+      type: "broadcast",
+      event: "typing",
+      payload: {
+        user_id: currentUser.id,
+        typing: typing,
+      },
+    });
+  };
+
+  // 🆕 Handle typing input
+  const handleInputChange = (e) => {
+    setInput(e.target.value);
+
+    // ส่ง typing = true
+    if (!isTyping) {
+      setIsTyping(true);
+      sendTypingStatus(true);
+    }
+
+    // Clear timeout เก่า
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Set timeout ใหม่ (หยุด typing หลัง 1 วินาที)
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false);
+      sendTypingStatus(false);
+    }, 1000);
+  };
 
   // ✅ ฟังก์ชันส่งข้อความ
   const handleSend = async () => {
@@ -116,6 +177,15 @@ export default function ChatWindow({
 
     if (insertError) {
       return;
+    }
+
+    // 🆕 หยุด typing เมื่อส่งข้อความ
+    if (isTyping) {
+      setIsTyping(false);
+      sendTypingStatus(false);
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
     }
 
     setInput("");
@@ -171,6 +241,10 @@ export default function ChatWindow({
           <div className="font-bold text-lg md:text-2xl leading-8 whitespace-break-spaces">
             {user?.name || "Unknown"}
           </div>
+          {/* 🆕 แสดง typing indicator */}
+          {otherUserTyping && (
+            <div className="text-sm text-gray-500 italic">is typing...</div>
+          )}
           <BookNowButton sitterId={user?.id} />
         </div>
         <div className="flex items-center w-fit justify-end gap-2 sm:gap-4">
@@ -199,40 +273,63 @@ export default function ChatWindow({
             </div>
           </div>
         ) : (
-          messages.map((msg) => {
-            const isMe = msg.senderId === currentUser.id;
-            const isImageOnly =
-              msg.image_url && (!msg.content || msg.content.trim() === "");
-            return (
-              <div
-                key={msg.id}
-                className={
-                  isImageOnly
-                    ? `${isMe ? "self-end" : "self-start"} `
-                    : `px-3 py-2 md:px-6 md:py-4 max-w-xs text-sm md:text-base leading-7 font-medium ${
-                        isMe
-                          ? "self-end bg-[#E44A0C] text-white rounded-2xl rounded-br-none md:rounded-3xl md:rounded-br-none"
-                          : "self-start bg-white border border-[#DCDFED] text-[#31333C] rounded-2xl rounded-bl-none md:rounded-3xl md:rounded-bl-none"
-                      }`
-                }
-              >
-                {/* ถ้าเป็นข้อความ text หรือ text+image */}
-                {!isImageOnly && (
-                  <div className="break-words max-h-60 md:max-h-80 max-w-60 md:max-w-80">
-                    {msg.content}
+          <>
+            {/* 🔧 แสดงข้อความทั้งหมด (ไม่มี typing indicator ข้างใน) */}
+            {messages.map((msg) => {
+              const isMe = msg.senderId === currentUser.id;
+              const isImageOnly =
+                msg.image_url && (!msg.content || msg.content.trim() === "");
+              return (
+                <div
+                  key={msg.id}
+                  className={
+                    isImageOnly
+                      ? `${isMe ? "self-end" : "self-start"} `
+                      : `px-3 py-2 md:px-6 md:py-4 max-w-xs text-sm md:text-base leading-7 font-medium ${
+                          isMe
+                            ? "self-end bg-[#E44A0C] text-white rounded-2xl rounded-br-none md:rounded-3xl md:rounded-br-none"
+                            : "self-start bg-white border border-[#DCDFED] text-[#31333C] rounded-2xl rounded-bl-none md:rounded-3xl md:rounded-bl-none"
+                        }`
+                  }
+                >
+                  {/* ถ้าเป็นข้อความ text หรือ text+image */}
+                  {!isImageOnly && (
+                    <div className="break-words max-h-60 md:max-h-80 max-w-60 md:max-w-80">
+                      {msg.content}
+                    </div>
+                  )}
+                  {/* ถ้าเป็นรูปภาพ (หรือ text+image) */}
+                  {msg.image_url && (
+                    <img
+                      src={msg.image_url}
+                      alt="attachment"
+                      className="max-h-60 md:max-h-80 max-w-60 md:max-w-80 rounded-lg object-cover"
+                    />
+                  )}
+                </div>
+              );
+            })}
+
+            {/* 🆕 Typing indicator แยกออกมา - แสดงหลังข้อความสุดท้าย */}
+            {otherUserTyping && (
+              <div className="self-start px-3 py-2 md:px-6 md:py-4 bg-white border border-[#DCDFED] text-[#31333C] rounded-2xl rounded-bl-none md:rounded-3xl md:rounded-bl-none">
+                <div className="flex items-center gap-1">
+                  <div className="flex gap-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.1s" }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.2s" }}
+                    ></div>
                   </div>
-                )}
-                {/* ถ้าเป็นรูปภาพ (หรือ text+image) */}
-                {msg.image_url && (
-                  <img
-                    src={msg.image_url}
-                    alt="attachment"
-                    className="max-h-60 md:max-h-80 max-w-60 md:max-w-80 rounded-lg object-cover"
-                  />
-                )}
+                  <span className="text-sm text-gray-500 ml-2">typing...</span>
+                </div>
               </div>
-            );
-          })
+            )}
+          </>
         )}
       </div>
 
@@ -266,7 +363,7 @@ export default function ChatWindow({
             name="message-input"
             type="text"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleInputChange}
             placeholder="Message here..."
             className="flex-1 gap-2 md:gap-6 outline-none disabled:bg-gray-100 leading-7 font-medium placeholder:text-[#3A3B46] text-[#3A3B46] text-sm md:text-base"
             onKeyDown={(e) => {
