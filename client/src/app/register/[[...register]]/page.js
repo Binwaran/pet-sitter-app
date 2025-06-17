@@ -137,9 +137,31 @@ const RegisterPage = () => {
           alert("Registration successful!");
           router.push("/login");
         } else {
-          setErrors((prev) => ({ ...prev, general: data.error }));
+          // รีเซ็ต errors
+          const newErrors = {
+            email: "",
+            phone: "",
+            general: "",
+          };
+
+          if (data.error?.fields) {
+            // จัดการ error แยกตาม field
+            data.error.fields.forEach((field, index) => {
+              newErrors[field] = data.error.message[index];
+            });
+          } else {
+            // กรณี error ทั่วไป
+            newErrors.general = data.error?.message || "Registration failed";
+          }
+
+          // อัพเดท state ด้วย errors ทั้งหมด
+          setErrors((prev) => ({
+            ...prev,
+            ...newErrors,
+          }));
         }
       } catch (error) {
+        console.error("Registration error:", error);
         setErrors((prev) => ({
           ...prev,
           general: "An unexpected error occurred.",

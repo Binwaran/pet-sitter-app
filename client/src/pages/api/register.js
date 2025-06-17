@@ -10,30 +10,33 @@ export default async function handler(req, res) {
     }
 
     try {
-      const { data: existingUser, error: checkError } = await supabase
+      // เช็ค email ซ้ำ
+      const { data: existingEmail } = await supabase
         .from("users")
-        .select("*")
+        .select("email")
         .eq("email", email)
         .single();
 
-      if (existingUser) {
-        return res.status(400).json({ error: "Email is already registered." });
-      }
-
+      // เช็ค phone ซ้ำ
       const { data: existingPhone } = await supabase
         .from("users")
-        .select("*")
+        .select("phone")
         .eq("phone", phone)
         .single();
 
-      if (existingPhone) {
-        return res
-          .status(400)
-          .json({ error: "Phone number is already registered." });
-      }
+      const errors = [];
+      if (existingEmail) errors.push("email");
+      if (existingPhone) errors.push("phone");
 
-      if (checkError && checkError.code !== "PGRST116") {
-        throw checkError;
+      if (errors.length > 0) {
+        return res.status(400).json({
+          error: {
+            fields: errors,
+            message: errors.map((field) =>
+              `${field === "email" ? "Email" : "Phone number"} is already registered`
+            ),
+          },
+        });
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
