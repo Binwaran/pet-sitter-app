@@ -19,14 +19,35 @@ export default function ChatWindow({
   const [imageFile, setImageFile] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
   const [otherUserTyping, setOtherUserTyping] = useState(false);
+  // 🆕 เพิ่ม state เพื่อติดตามว่าโหลดข้อความครั้งแรกแล้วหรือยัง
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const router = useRouter();
   const fileInputRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const messageAudioRef = useRef(null);
   const typingAudioRef = useRef(null);
+  const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
-  // 🆕 เพิ่มฟังก์ชันเล่นเสียง
+  // 🔧 เปลี่ยนเป็น instant scroll สำหรับโหลดครั้งแรก
+  const scrollToBottomInstant = () => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop =
+        messagesContainerRef.current.scrollHeight;
+    }
+  };
+
+  // 🔧 เฉพาะเมื่อโหลดข้อความครั้งแรกเท่านั้น
+  useEffect(() => {
+    if (isInitialLoad && messages.length > 0) {
+      scrollToBottomInstant();
+      setIsInitialLoad(false);
+    }
+  }, [messages, isInitialLoad]);
+
+  // 🗑️ ลบ auto-scroll สำหรับ typing indicator ออก
+
   const playMessageSound = () => {
     try {
       if (messageAudioRef.current) {
@@ -55,7 +76,7 @@ export default function ChatWindow({
 
   const handleClose = () => {
     if (onClose) {
-      onClose(); // ถ้ามี onClose ให้เรียกก่อน
+      onClose();
     }
     router.push("/messages");
   };
@@ -90,7 +111,6 @@ export default function ChatWindow({
               const exists = prev.some((msg) => msg.id === newMessage.id);
               if (exists) return prev;
 
-              // 🆕 เล่นเสียงเมื่อได้รับข้อความใหม่ (ไม่ใช่ข้อความของตัวเอง)
               if (newMessage.sender_id !== currentUser.id) {
                 playMessageSound();
               }
@@ -114,7 +134,6 @@ export default function ChatWindow({
         if (user_id !== currentUser.id && user_id === user.id) {
           setOtherUserTyping(typing);
 
-          // 🆕 เล่นเสียงเมื่อมีคนเริ่มพิมพ์
           if (typing) {
             playTypingSound();
             setTimeout(() => {
@@ -130,7 +149,6 @@ export default function ChatWindow({
     };
   }, [user?.id, currentUser?.id]);
 
-  // 🆕 ฟังก์ชันส่ง typing status
   const sendTypingStatus = async (typing) => {
     if (!currentUser?.id || !user?.id) return;
 
@@ -150,29 +168,24 @@ export default function ChatWindow({
     });
   };
 
-  // 🆕 Handle typing input
   const handleInputChange = (e) => {
     setInput(e.target.value);
 
-    // ส่ง typing = true
     if (!isTyping) {
       setIsTyping(true);
       sendTypingStatus(true);
     }
 
-    // Clear timeout เก่า
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
 
-    // Set timeout ใหม่ (หยุด typing หลัง 1 วินาที)
     typingTimeoutRef.current = setTimeout(() => {
       setIsTyping(false);
       sendTypingStatus(false);
     }, 1000);
   };
 
-  // ✅ ฟังก์ชันส่งข้อความ
   const handleSend = async () => {
     if (!input.trim() && !imageFile) return;
     if (!currentUser?.id || !user?.id) {
@@ -214,7 +227,6 @@ export default function ChatWindow({
       return;
     }
 
-    // 🆕 หยุด typing เมื่อส่งข้อความ
     if (isTyping) {
       setIsTyping(false);
       sendTypingStatus(false);
@@ -263,7 +275,7 @@ export default function ChatWindow({
 
   return (
     <div className="flex-1 flex flex-col h-full">
-      {/* 🆕 Audio elements - ซ่อนไว้ */}
+      {/* Audio elements */}
       <audio ref={messageAudioRef} preload="auto" style={{ display: "none" }}>
         <source src="/assets/sounds/message.mp3" type="audio/mpeg" />
       </audio>
@@ -285,7 +297,6 @@ export default function ChatWindow({
           <div className="font-bold text-lg md:text-2xl leading-8 whitespace-break-spaces">
             {user?.name || "Unknown"}
           </div>
-          {/* 🆕 แสดง typing indicator */}
           {otherUserTyping && (
             <div className="text-sm text-gray-500 italic">is typing...</div>
           )}
@@ -299,7 +310,10 @@ export default function ChatWindow({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 px-3 py-6 md:p-6 overflow-y-auto flex flex-col overflow-x-hidden gap-4 min-h-0 w-full">
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 px-3 py-6 md:p-6 overflow-y-auto flex flex-col overflow-x-hidden gap-4 min-h-0 w-full"
+      >
         {messages.length === 0 ? (
           <div className="flex-1 flex items-center justify-center w-full min-h-0">
             <div className="text-center flex flex-col items-center justify-center gap-6">
@@ -318,7 +332,6 @@ export default function ChatWindow({
           </div>
         ) : (
           <>
-            {/* 🔧 แสดงข้อความทั้งหมด (ไม่มี typing indicator ข้างใน) */}
             {messages.map((msg) => {
               const isMe = msg.senderId === currentUser.id;
               const isImageOnly =
@@ -336,13 +349,11 @@ export default function ChatWindow({
                         }`
                   }
                 >
-                  {/* ถ้าเป็นข้อความ text หรือ text+image */}
                   {!isImageOnly && (
                     <div className="break-words max-h-60 md:max-h-80 max-w-60 md:max-w-80">
                       {msg.content}
                     </div>
                   )}
-                  {/* ถ้าเป็นรูปภาพ (หรือ text+image) */}
                   {msg.image_url && (
                     <img
                       src={msg.image_url}
@@ -354,7 +365,6 @@ export default function ChatWindow({
               );
             })}
 
-            {/* 🆕 Typing indicator แยกออกมา - แสดงหลังข้อความสุดท้าย */}
             {otherUserTyping && (
               <div className="self-start px-3 py-2 md:px-6 md:py-4 bg-white border border-[#DCDFED] text-[#31333C] rounded-2xl rounded-bl-none md:rounded-3xl md:rounded-bl-none">
                 <div className="flex items-center gap-1">
