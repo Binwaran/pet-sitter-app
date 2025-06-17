@@ -53,6 +53,7 @@ export default function PetSitterMap() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const swiperRef = useRef(null);
+  const mapRef = useRef(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -64,11 +65,17 @@ export default function PetSitterMap() {
         const sittersWithUser = data.map((sitter) => ({
           ...sitter,
           users: sitter.users || {
-            profile_image_url: "/assets/placeholder-profile.jpg",
-            name: "ไม่ระบุชื่อ",
-          },
+            profile_image_url: '/assets/placeholder-profile.jpg',
+            name: 'ไม่ระบุชื่อ'
+          }
         }));
-        setSitters(sittersWithUser);
+        // กรองเฉพาะ sitter ที่มี lat/lng เป็น number เท่านั้น
+        const filteredSitters = sittersWithUser.filter(sitter => typeof sitter.lat === 'number' && typeof sitter.lng === 'number');
+        setSitters(filteredSitters);
+        // ตั้ง selectedSitter ให้เป็นตัวแรกที่มี lat/lng ถ้ายังไม่มี
+        if (!selectedSitter && filteredSitters.length > 0) {
+          setSelectedSitter(filteredSitters[0]);
+        }
       } catch (err) {
         setError(err);
       } finally {
@@ -112,40 +119,41 @@ export default function PetSitterMap() {
   }
 
   return (
-    <>
-      <div className="flex flex-col items-center min-h-screen px-4 md:px-20  gap-5 bg-gray-50">
-        <div className="relative w-full max-w-[1280px] h-[580px] mx-auto border border-gray-300 rounded-md overflow-hidden">
-          <MapContainer
-            center={[13.7563, 100.5018]}
-            zoom={12}
-            scrollWheelZoom={true}
-            className="w-full h-full z-0"
-          >
-            <TileLayer
-              attribution="&copy; OpenStreetMap contributors"
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            <Locate />
-            {Array.isArray(sitters) &&
-              sitters.map((loc, index) => (
-                <Marker
-                  key={loc.id || loc.user_id || index}
-                  position={[loc.lat, loc.lng]}
-                  icon={
-                    selectedSitter?.id === loc.id ? selectedIcon : defaultIcon
-                  }
-                  eventHandlers={{
-                    click: () => {
-                      setSelectedSitter(loc);
-                    },
-                  }}
-                >
-                  <Popup>
-                    {loc?.name || loc?.trade_name || "ไม่ระบุชื่อร้าน"}
-                  </Popup>
-                </Marker>
-              ))}
-          </MapContainer>
+<>                 
+    <div className="flex flex-col items-center min-h-screen px-4 md:px-20  gap-5 bg-gray-50">
+      <div className="relative w-full max-w-[1280px] h-[580px] mx-auto border border-gray-300 rounded-md overflow-hidden">
+        <MapContainer
+          center={[13.7563, 100.5018]}
+          zoom={12}
+          scrollWheelZoom={true}
+          className="w-full h-full z-0"
+          whenCreated={mapInstance => { mapRef.current = mapInstance; }}
+        >
+          <TileLayer
+            attribution='&copy; OpenStreetMap contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <Locate />
+          {Array.isArray(sitters) && sitters.map((loc, index) => (
+            (loc && typeof loc.lat === 'number' && typeof loc.lng === 'number') ? (
+              <Marker
+                key={loc.id || loc.user_id || index}
+                position={[loc.lat, loc.lng]}
+                icon={selectedSitter?.id === loc.id ? selectedIcon : defaultIcon}
+                eventHandlers={{
+                  click: () => {
+                    setSelectedSitter(loc);
+                    if (mapRef.current) {
+                      mapRef.current.setView([loc.lat, loc.lng], 15, { animate: true });
+                    }
+                  },
+                }}
+              >
+                <Popup>{loc?.name || loc?.trade_name || 'ไม่ระบุชื่อร้าน'}</Popup>
+              </Marker>
+            ) : null
+          ))}
+        </MapContainer>
 
           <div className="absolute bottom-0 left-0 w-full z-10 py-0">
             <Swiper

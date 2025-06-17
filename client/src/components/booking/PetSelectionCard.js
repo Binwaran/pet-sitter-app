@@ -24,7 +24,7 @@ const PetSelectionCard = ({ pet, isSelected, onSelect }) => {
     return (
       <div
         className="w-60 h-64 bg-orange-50 border-2 border-orange-300 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-orange-100 transition-colors shadow-none"
-        onClick={() => router.push("/add-pet")}
+        onClick={() => router.push('/pet-owners/edit-pet/new')}
       >
         <FontAwesomeIcon
           icon={faPlus}
