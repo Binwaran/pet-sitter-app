@@ -47,11 +47,11 @@ const SearchMapPage = () => {
 
   return (
     <>
-      <div className="hidden md:flex justify-center items-center bg-gray-50 py-4">
+      <div className="hidden md:flex justify-center items-center bg-gray-50 pt-10 px-20">
         <SearchHeader />
       </div>
 
-      <div className="flex flex-col md:flex-row min-h-screen px-4 md:px-20 py-5 gap-5 md:gap-10 bg-gray-50 justify-center">
+      <div className="flex flex-col md:flex-row min-h-screen px-4 md:px-20 pt-5 pb-20 gap-5 md:gap-10 bg-gray-50 justify-center">
         {/* Sidebar sticky (desktop only) */}
         <div className="block md:sticky md:top-28 md:self-start md:w-1/4">
           <FilterSidebar
