@@ -120,8 +120,8 @@ export default function PetSitterMap() {
 
   return (
 <>                 
-    <div className="flex flex-col items-center min-h-screen px-4 md:px-20  gap-5 bg-gray-50">
-      <div className="relative w-full max-w-[1280px] h-[580px] mx-auto border border-gray-300 rounded-md overflow-hidden">
+    <div className="flex flex-col items-center min-h-screen gap-5 bg-gray-50">
+      <div className="relative w-full max-w-[1280px] h-[840px] mx-auto border border-gray-300 rounded-md overflow-hidden">
         <MapContainer
           center={[13.7563, 100.5018]}
           zoom={12}
@@ -155,7 +155,7 @@ export default function PetSitterMap() {
           ))}
         </MapContainer>
 
-          <div className="absolute bottom-0 left-0 w-full z-10 py-0">
+          <div className="absolute -bottom-5 sm:bottom-0 left-0 w-full z-10 py-0">
             <Swiper
               onSwiper={(swiper) => {
                 swiperRef.current = swiper;

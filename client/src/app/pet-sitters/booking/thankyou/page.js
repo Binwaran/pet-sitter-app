@@ -200,7 +200,7 @@ export default function BookingThankYouPage() {
         {/* Buttons for Mobile and Desktop View */}
         <div className="relative z-10 flex flex-col sm:flex-row w-full max-w-sm gap-4 px-4 sm:px-0">
           <button
-            className="flex-1 py-3 rounded-[99px] bg-white border border-orange-500 text-orange-500 font-semibold hover:bg-orange-50 transition hover:text-white hover:bg-orange-500 text-lg"
+            className="flex-1 py-3 rounded-[99px] bg-white border border-orange-500 text-orange-500 font-semibold transition hover:text-white hover:bg-orange-500 text-lg"
             onClick={() => setShowDetail(true)}
           >
             Booking Detail

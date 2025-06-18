@@ -11,7 +11,7 @@ const SearchHeader = () => {
 
   return (
     <div className="flex flex-col items-center justify-between sm:flex-col md:flex-col lg:flex-row rounded-md w-full">
-      <h1 className="text-xl font-semibold text-gray-800 text-center sm:text-left w-full sm:w-auto m-auto md:ml-20">
+      <h1 className="text-xl font-semibold text-gray-800 text-center sm:text-left w-full sm:w-auto">
         Search For Pet Sitter
       </h1>
 

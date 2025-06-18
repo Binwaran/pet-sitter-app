@@ -55,7 +55,7 @@ const SitterCard = ({ sitter, pet_sitter, isSelected, onClick }) => {
       onClick={handleCardClick}
     >
       {/* รูปภาพร้าน */}
-      <div className="relative w-full h-48 md:w-40 md:h-32 rounded-md overflow-hidden bg-gray-100">
+      <div className="hidden md:block relative w-full h-48 md:w-40 md:h-32 rounded-md overflow-hidden bg-gray-100">
         <Image
           src={displayImageUrl}
           alt={`ภาพร้านของ ${
@@ -65,6 +65,7 @@ const SitterCard = ({ sitter, pet_sitter, isSelected, onClick }) => {
           style={{ objectFit: "cover" }}
           sizes="(max-width: 768px) 100vw, 160px"
           priority
+          className="object-cover rounded-md"
         />
       </div>
 
