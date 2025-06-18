@@ -71,7 +71,6 @@ export default function BookingInformationPage() {
 
   return (
     <>
-    <NavBar />
     <div className="flex flex-col min-h-screen bg-[#F9FAFB] p-4 md:p-6 lg:p-8 relative">
       <div className="container mx-auto flex flex-col lg:flex-row gap-6">
         <div className="flex-1 flex flex-col gap-6">
