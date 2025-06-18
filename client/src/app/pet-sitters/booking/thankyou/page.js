@@ -14,9 +14,11 @@ export default function BookingThankYouPage() {
   const [sitter, setSitter] = useState(null);
   const [showMapPopup, setShowMapPopup] = useState(false);
   const [showDetail, setShowDetail] = useState(false); // เพิ่ม state สำหรับ modal
+  const [checked, setChecked] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
+    if (checked) return;
     const stored = localStorage.getItem("bookingDetails");
     if (stored) {
       const parsed = JSON.parse(stored);
@@ -40,14 +42,15 @@ export default function BookingThankYouPage() {
           });
       }
     } else {
-      router.push("/");
+      setChecked(true);
+      router.replace("/"); // ใช้ replace แทน push ป้องกัน loop
     }
-  }, [router]);
+  }, [router, checked]);
 
   if (!booking) return null;
 
   const data = booking;
-  const sitterName = data.sitterTradeName || sitter?.trade_name || "Pet Sitter";
+  const sitterName = data.trade_name || sitter?.trade_name || "Pet Sitter";
   const durationHour = data.duration_hour || data.duration || "-";
   function formatTimeHM(isoString) {
     if (!isoString) return "";
@@ -72,16 +75,14 @@ export default function BookingThankYouPage() {
     date: data.date,
     time: timeRange,
     duration: `${durationHour} Hours`,
-    pets: Array.isArray(data.pets) ? data.pets.map(p => p.pet_name) : data.pets,
+    pets: Array.isArray(data.pets) ? data.pets.map(p => p.pet_id) : data.pets, // ส่ง pet_id
     pet_name: Array.isArray(data.pets) ? data.pets.map(p => p.pet_name).join(", ") : data.pets,
     total_price: parseFloat(data.total).toLocaleString(undefined, { minimumFractionDigits: 2 }),
   };
 
   return (
     <>
-      <NavBar />
       {/* Container หลักที่ครอบทั้งหน้าจอ และมี Background Elements อยู่ด้านหลังสุด */}
-      <NavBar />
       <div className="relative min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
         {/* BG Elements - ตอนนี้จะแสดงผลทั้งบน Mobile และ Desktop */}
         <Image
@@ -218,12 +219,12 @@ export default function BookingThankYouPage() {
           </button>
         </div>
         {/* Booking Detail Modal */}
-        {showDetail && (
+        {/* {showDetail && (
           <BookingDetailModal
             booking={bookingDetail}
             onClose={() => setShowDetail(false)}
           />
-        )}
+        )} */}
       </div>
     </>
   );

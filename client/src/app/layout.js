@@ -19,10 +19,6 @@ export default function RootLayout({ children }) {
     "/register/sitter",
     "/register/owner",
     "/pet-sitters/profile",
-    "/pet-sitters/booking",
-    "/pet-sitters/booking/information",
-    "/pet-sitters/booking/payment",
-    "/pet-sitters/booking/thankyou",
     "/pet-sitters/calendar",
     "/pet-sitters/payout",
     "/pet-sitters/booking-list",
@@ -49,7 +45,12 @@ export default function RootLayout({ children }) {
       (route.includes("[id]") && pathname.startsWith(route.replace("[id]", "")))
   );
 
-  const hideFooter = pathname.startsWith("/pet-owners/");
+  const hideFooter =
+    pathname.startsWith("/pet-owners/") ||
+    pathname === "/pet-sitters/booking" ||
+    pathname === "/pet-sitters/booking/information" ||
+    pathname === "/pet-sitters/booking/payment" ||
+    pathname === "/pet-sitters/booking/thankyou";
 
   return (
   <html lang="en">
