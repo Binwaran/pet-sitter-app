@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, ChevronDown } from "lucide-react";
 import Image from "next/image";
 import { v4 as uuidv4 } from "uuid";
 import { supabase } from "@/utils/supabase";
@@ -19,7 +19,9 @@ export default function ChatWindow({
   const [imageFile, setImageFile] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
   const [otherUserTyping, setOtherUserTyping] = useState(false);
-  // 🆕 เพิ่ม state เพื่อติดตามว่าโหลดข้อความครั้งแรกแล้วหรือยัง
+  const [isUserScrolling, setIsUserScrolling] = useState(false);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const router = useRouter();
@@ -30,7 +32,6 @@ export default function ChatWindow({
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
 
-  // 🔧 เปลี่ยนเป็น instant scroll สำหรับโหลดครั้งแรก
   const scrollToBottomInstant = () => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop =
@@ -38,15 +39,12 @@ export default function ChatWindow({
     }
   };
 
-  // 🔧 เฉพาะเมื่อโหลดข้อความครั้งแรกเท่านั้น
   useEffect(() => {
     if (isInitialLoad && messages.length > 0) {
       scrollToBottomInstant();
       setIsInitialLoad(false);
     }
   }, [messages, isInitialLoad]);
-
-  // 🗑️ ลบ auto-scroll สำหรับ typing indicator ออก
 
   const playMessageSound = () => {
     try {
@@ -273,8 +271,47 @@ export default function ChatWindow({
     markMessagesAsRead(user.id, currentUser.id);
   }, [user?.id, currentUser?.id]);
 
+  // Smart scroll detection
+  const handleScroll = () => {
+    if (messagesContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+      
+      setIsUserScrolling(!isNearBottom);
+      setShowScrollToBottom(!isNearBottom);
+      
+      // Reset unread count when user scrolls to bottom
+      if (isNearBottom && unreadCount > 0) {
+        setUnreadCount(0);
+      }
+    }
+  };
+
+  // Smooth scroll to bottom
+  const scrollToBottomSmooth = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // Smart auto-scroll logic
+  useEffect(() => {
+    if (!isUserScrolling) {
+      // Only auto-scroll if user is near bottom
+      scrollToBottomSmooth();
+    } else {
+      // Increment unread count for new messages
+      setUnreadCount(prev => prev + 1);
+    }
+  }, [messages]);
+
+  // Handle typing indicator
+  useEffect(() => {
+    if (otherUserTyping && !isUserScrolling) {
+      scrollToBottomSmooth();
+    }
+  }, [otherUserTyping]);
+
   return (
-    <div className="flex-1 flex flex-col h-full">
+    <div className="flex-1 flex flex-col h-full relative">
       {/* Audio elements */}
       <audio ref={messageAudioRef} preload="auto" style={{ display: "none" }}>
         <source src="/assets/sounds/message.mp3" type="audio/mpeg" />
@@ -312,6 +349,7 @@ export default function ChatWindow({
       {/* Messages */}
       <div
         ref={messagesContainerRef}
+        onScroll={handleScroll}
         className="flex-1 px-3 py-6 md:p-6 overflow-y-auto flex flex-col overflow-x-hidden gap-4 min-h-0 w-full"
       >
         {messages.length === 0 ? (
@@ -365,7 +403,8 @@ export default function ChatWindow({
               );
             })}
 
-            {otherUserTyping && (
+            {/* Typing indicator in chat (only when not scrolling) */}
+            {otherUserTyping && !isUserScrolling && (
               <div className="self-start px-3 py-2 md:px-6 md:py-4 bg-white border border-[#DCDFED] text-[#31333C] rounded-2xl rounded-bl-none md:rounded-3xl md:rounded-bl-none">
                 <div className="flex items-center gap-1">
                   <div className="flex gap-1">
@@ -385,12 +424,55 @@ export default function ChatWindow({
             )}
           </>
         )}
+        <div ref={messagesEndRef} />
       </div>
+
+      {/* Scroll to bottom button */}
+      {showScrollToBottom && (
+        <div className="absolute bottom-20 md:bottom-30 right-5 z-10">
+          <button
+            onClick={() => {
+              scrollToBottomSmooth();
+              setIsUserScrolling(false);
+              setShowScrollToBottom(false);
+              setUnreadCount(0);
+            }}
+            className="bg-[#FF7037] text-white p-1.5 md:p-3 rounded-full shadow-lg hover:bg-[#FF986F] transition-colors relative"
+          >
+            <ChevronDown size={20} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                {unreadCount}
+              </span>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* Typing indicator above input (when user is scrolling) */}
+      {otherUserTyping && isUserScrolling && (
+        <div className="px-5 md:px-10 py-2 bg-transparent absolute bottom-16 md:bottom-28 w-full">
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <div className="flex gap-1">
+              <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
+              <div
+                className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
+                style={{ animationDelay: "0.1s" }}
+              ></div>
+              <div
+                className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
+                style={{ animationDelay: "0.2s" }}
+              ></div>
+            </div>
+            <span>{user?.name || "Someone"} is typing...</span>
+          </div>
+        </div>
+      )}
 
       {/* Input */}
       <div className="border-t border-[#DCDFED] flex items-center px-5 md:px-10 py-3 md:py-6 gap-2 md:gap-6 relative">
         <div className="flex flex-row items-center gap-2 md:gap-6 flex-1">
-          <div className="bg-[#F6F7FC] rounded-full p-1.5 md:p-3.5 gap-1.5 flex items-center justify-center active:scale-95 transition-transform duration-100 hover:bg-[#DCDFED]/50">
+          <div className="bg-[#F6F7FC] rounded-full p-2.5 md:p-3.5 gap-1.5 flex items-center justify-center active:scale-95 transition-transform duration-100 hover:bg-[#DCDFED]/50">
             <label htmlFor="image" className="cursor-pointer">
               <Image
                 src="/assets/picture.svg"
@@ -452,7 +534,7 @@ export default function ChatWindow({
             </div>
           </div>
         )}
-        <div className="bg-[#FF7037] rounded-full p-1 md:p-3 flex items-center justify-center gap-2 shadow-[2px_2px_12px_0px_#4032851F] active:scale-95 transition-transform duration-100 hover:bg-[#FF986F]">
+        <div className="bg-[#FF7037] rounded-full p-2 md:p-3 flex items-center justify-center gap-2 shadow-[2px_2px_12px_0px_#4032851F] active:scale-95 transition-transform duration-100 hover:bg-[#FF986F]">
           <button
             onClick={handleSend}
             className="text-white disabled:opacity-50 cursor-pointer"
