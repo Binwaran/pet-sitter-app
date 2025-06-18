@@ -37,7 +37,7 @@ const STATUS_MAP = {
   },
 };
 
-export default function BookingCard({ booking, onClick, onReview }) {
+export default function BookingCard({ booking, onClick, onReview, onShowReview }) {
   const router = useRouter();
 
   const handleSendMessage = () => {
@@ -156,7 +156,13 @@ export default function BookingCard({ booking, onClick, onReview }) {
               </span>
             </button>
             {reviewed ? (
-              <button className="flex items-center gap-2 bg-[#FFF1EC] py-3 px-6 rounded-full cursor-pointer min-w-30">
+              <button
+                className="flex items-center gap-2 bg-[#FFF1EC] py-3 px-6 rounded-full cursor-pointer min-w-30"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onShowReview?.(booking); // เพิ่มบรรทัดนี้
+                }}
+              >
                 <span className="font-bold leading-[150%] text-center text-[#FF7037] hover:text-[#FF986F]">
                   Your Review
                 </span>

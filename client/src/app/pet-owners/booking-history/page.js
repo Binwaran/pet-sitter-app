@@ -6,6 +6,7 @@ import Sidebar from "@/components/profile/Sidebar";
 import BookingCard from "@/components/profile/BookingCard";
 import BookingDetailModal from "@/components/profile/BookingDetailModal";
 import ReviewModal from "@/components/reviews/reviews";
+import ReviewDetailModal from "@/components/reviews/reviews-detail";
 
 function mapStatus(status) {
   if (
@@ -56,6 +57,8 @@ export default function BookingHistoryPage() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [openReview, setOpenReview] = useState(false);
   const [reviewBooking, setReviewBooking] = useState(null);
+  const [openReviewDetail, setOpenReviewDetail] = useState(false);
+  const [reviewDetail, setReviewDetail] = useState(null);
 
   function getStatusDate(booking) {
     const status = booking.status;
@@ -109,6 +112,24 @@ export default function BookingHistoryPage() {
         if (!res.ok) throw new Error("Failed to fetch bookings");
         const { data } = await res.json();
 
+        // ดึง booking_id ที่ status success
+        const successBookingIds = data
+          .filter(b => mapStatus(b.status) === "Success")
+          .map(b => b.booking_id);
+
+        // เรียก API เช็ครีวิวทั้งหมดในครั้งเดียว
+        let reviewedMap = {};
+        if (successBookingIds.length > 0) {
+          const reviewRes = await fetch("/api/reviews/check-many", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ booking_ids: successBookingIds }),
+          });
+          const { reviewed } = await reviewRes.json();
+          // reviewed: { [booking_id]: true/false }
+          reviewedMap = reviewed || {};
+        }
+
         // map field สำหรับ BookingCard
         const bookingsWithFields = data.map((booking) => {
           const date = booking.date || formatDate(booking.start_time || booking.created_at);
@@ -135,8 +156,9 @@ export default function BookingHistoryPage() {
             time,
             duration,
             pet,
-            sitter_id: booking.sitter_id || booking.sitter_user_id, // เพิ่มบรรทัดนี้
-            owner_id: booking.owner_id || user?.id, // เพิ่มบรรทัดนี้
+            sitter_id: booking.sitter_id || booking.sitter_user_id,
+            owner_id: booking.owner_id || user?.id,
+            reviewed: reviewedMap[booking.booking_id] || false, // เพิ่มตรงนี้
           };
         });
 
@@ -157,6 +179,34 @@ export default function BookingHistoryPage() {
     if (statusFilter === "All") return bookings;
     return bookings.filter((b) => b.status === statusFilter);
   }, [bookings, statusFilter]);
+
+  // ฟังก์ชันโหลดรีวิว
+  const handleShowReview = async (booking) => {
+    // ดึงรีวิวจาก API
+    const res = await fetch(`/api/reviews?booking_id=${booking.booking_id}`);
+    if (res.ok) {
+      const { data } = await res.json();
+
+      // ดึงโปรไฟล์ owner จาก API
+      let ownerName = "You";
+      let ownerAvatar = "/assets/default-avatar.png";
+      if (data.reviewer_id) {
+        const profileRes = await fetch(`/api/profile?user_id=${data.reviewer_id}`);
+        if (profileRes.ok) {
+          const profile = await profileRes.json();
+          ownerName = profile.name || ownerName;
+          ownerAvatar = profile.profile_image_url || ownerAvatar;
+        }
+      }
+
+      setReviewDetail({
+        ...data,
+        owner_name: ownerName,
+        owner_avatar: ownerAvatar,
+      });
+      setOpenReviewDetail(true);
+    }
+  };
 
   if (authLoading || loading)
     return (
@@ -213,6 +263,7 @@ export default function BookingHistoryPage() {
                         setReviewBooking(b);
                         setOpenReview(true);
                       }}
+                      onShowReview={handleShowReview} // เพิ่ม prop นี้
                     />
                   </div>
                 ))
@@ -239,6 +290,13 @@ export default function BookingHistoryPage() {
           setOpenReview(false);
           // อัปเดต bookings หรือแจ้งเตือนสำเร็จ
         }}
+      />
+
+      {/* Review Detail Modal */}
+      <ReviewDetailModal
+        open={openReviewDetail}
+        onClose={() => setOpenReviewDetail(false)}
+        review={reviewDetail}
       />
     </div>
   );
