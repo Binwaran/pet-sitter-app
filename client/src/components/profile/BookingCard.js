@@ -44,10 +44,10 @@ export default function BookingCard({ booking, onClick, onReview }) {
     const sitterId = booking.sitter_id || booking?.sitter_user_id;
     if (sitterId) {
       router.push(`/messages/${sitterId}`);
-    } else {
     }
   };
 
+  // ลบ default mock ออกทั้งหมด
   const {
     pet_name,
     service_name,
@@ -55,13 +55,13 @@ export default function BookingCard({ booking, onClick, onReview }) {
     status,
     statusDate,
     booking_id,
-    image = "/assets/pet-sitter.jpg",
-    title = service_name || "Service",
-    sitter_name = "John Doe",
-    date = "1 Jan 2025",
-    time = "09:00 - 12:00",
-    duration = "3 hours",
-    pet = pet_name || "My Pet",
+    image,
+    title = service_name,
+    sitter_name,
+    date,
+    time,
+    duration,
+    pet = pet_name,
     successDate = statusDate?.value,
     successTime = "12:00",
     reviewed = false,
@@ -196,7 +196,7 @@ export default function BookingCard({ booking, onClick, onReview }) {
         <div className="flex flex-col md:flex-row justify-between item-center pb-4 gap-2 border-b border-[#DCDFED]">
           <div className="flex flex-row gap-4 items-center">
             <Image
-              src={image}
+              src={image || "/assets/pet-sitter.jpg"}
               alt="Pet sitter"
               width={36}
               height={36}
@@ -265,7 +265,7 @@ export default function BookingCard({ booking, onClick, onReview }) {
               <span className="text-[#7B7E8F] font-medium text-sm leading-6">
                 Pet:
               </span>
-              <div className="text-[#3A3B46] leading-7 font-medium">{pet}</div>
+              <div className="text-[#3A3B46] leading-7 font-medium">{pet || "-"}</div>
             </div>
           </div>
         </div>

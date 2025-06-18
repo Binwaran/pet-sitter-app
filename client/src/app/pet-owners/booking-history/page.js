@@ -27,6 +27,25 @@ function mapStatus(status) {
   return status;
 }
 
+// เพิ่มฟังก์ชันช่วย format
+function formatDate(dateStr) {
+  if (!dateStr) return "-";
+  const d = new Date(dateStr);
+  return d.toLocaleDateString();
+}
+function formatTime(timeStr) {
+  if (!timeStr) return "";
+  const d = new Date(timeStr);
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+}
+function calcDuration(start, end) {
+  if (!start || !end) return "-";
+  const s = new Date(start);
+  const e = new Date(end);
+  const diff = (e - s) / (1000 * 60 * 60);
+  return `${diff} hours`;
+}
+
 export default function BookingHistoryPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -89,12 +108,39 @@ export default function BookingHistoryPage() {
         const res = await fetch("/api/booking/booking-list-owner");
         if (!res.ok) throw new Error("Failed to fetch bookings");
         const { data } = await res.json();
-        const mapped = data.map((booking) => ({
-          ...booking,
-          status: mapStatus(booking.status), // <--- เพิ่มตรงนี้
-          statusDate: getStatusDate(booking),
-        }));
-        setBookings(mapped);
+
+        // map field สำหรับ BookingCard
+        const bookingsWithFields = data.map((booking) => {
+          const date = booking.date || formatDate(booking.start_time || booking.created_at);
+          const time =
+            booking.start_time && booking.end_time
+              ? `${formatTime(booking.start_time)} - ${formatTime(booking.end_time)}`
+              : booking.time || "-";
+          const duration =
+            booking.duration ||
+            calcDuration(booking.start_time, booking.end_time) ||
+            "-";
+          const pet =
+            Array.isArray(booking.pets) && booking.pets.length > 0
+              ? booking.pets.map((p) => p.name).join(", ")
+              : "-";
+
+          return {
+            ...booking,
+            status: mapStatus(booking.status),
+            statusDate: getStatusDate(booking),
+            sitter_name: booking.sitter_trade_name,
+            image: booking.sitter_profile_image,
+            date,
+            time,
+            duration,
+            pet,
+            sitter_id: booking.sitter_id || booking.sitter_user_id, // เพิ่มบรรทัดนี้
+            owner_id: booking.owner_id || user?.id, // เพิ่มบรรทัดนี้
+          };
+        });
+
+        setBookings(bookingsWithFields);
       } catch (err) {
         setError("เกิดข้อผิดพลาดในการโหลดข้อมูล booking");
         setBookings([]);
@@ -163,7 +209,7 @@ export default function BookingHistoryPage() {
                     <BookingCard
                       booking={booking}
                       onClick={() => setSelectedBooking(booking)}
-                      onReview={(b) => {
+                      onReview={b => {
                         setReviewBooking(b);
                         setOpenReview(true);
                       }}
