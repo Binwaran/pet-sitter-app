@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 
 export default function BookingDetailModal({ booking, onClose }) {
   const [isClient, setIsClient] = useState(false);
+  const [petNames, setPetNames] = useState([]);
 
   // ✅ รอให้ mounted ฝั่ง client ก่อนค่อยใช้ document
   useEffect(() => {
@@ -23,6 +24,27 @@ export default function BookingDetailModal({ booking, onClose }) {
       document.body.style.paddingRight = ""; // คืนค่า padding เมื่อปิด modal
     };
   }, [isClient]);
+
+  // ดึงชื่อสัตว์เลี้ยงจาก pet_id (รองรับทั้งกรณีเดียวและหลายตัว)
+  useEffect(() => {
+    const fetchPetNames = async () => {
+      if (!booking || !booking.pets) return;
+      let ids = booking.pets;
+      if (!Array.isArray(ids)) ids = [ids];
+      const names = [];
+      for (const id of ids) {
+        try {
+          const res = await fetch(`/api/pets/${id}`);
+          if (res.ok) {
+            const pet = await res.json();
+            names.push(pet.pet_name);
+          }
+        } catch {}
+      }
+      setPetNames(names);
+    };
+    fetchPetNames();
+  }, [booking]);
 
   if (!booking || !isClient) return null;
 
@@ -86,15 +108,15 @@ export default function BookingDetailModal({ booking, onClose }) {
         <div className="mb-4">
           <h2 className="text-sm font-semibold text-gray-400 mb-1">Pet:</h2>
           <p>
-            {Array.isArray(booking.pets)
-              ? booking.pets.join(", ")
+            {petNames.length > 0
+              ? petNames.join(", ")
               : booking.pet_name || "N/A"}
           </p>
         </div>
 
         <div className="flex justify-between font-semibold text-lg border-t pt-4 border-gray-200">
           <span>Total</span>
-          <span>{booking.total_price} THB</span>
+          <span>{Number(booking.total_price).toFixed(2)} THB</span>
         </div>
       </div>
     </div>

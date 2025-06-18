@@ -91,6 +91,74 @@ export default function BookingHistoryPage() {
     }
   }
 
+  // 1. ย้ายฟังก์ชัน fetchBookings ออกมานอก useEffect
+  const fetchBookings = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/booking/booking-list-owner");
+      if (!res.ok) throw new Error("Failed to fetch bookings");
+      const { data } = await res.json();
+
+      // ดึง booking_id ที่ status success
+      const successBookingIds = data
+        .filter(b => mapStatus(b.status) === "Success")
+        .map(b => b.booking_id);
+
+      // เรียก API เช็ครีวิวทั้งหมดในครั้งเดียว
+      let reviewedMap = {};
+      if (successBookingIds.length > 0) {
+        const reviewRes = await fetch("/api/reviews/check-many", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ booking_ids: successBookingIds }),
+        });
+        const { reviewed } = await reviewRes.json();
+        // reviewed: { [booking_id]: true/false }
+        reviewedMap = reviewed || {};
+      }
+
+      // map field สำหรับ BookingCard
+      const bookingsWithFields = data.map((booking) => {
+        const date = booking.date || formatDate(booking.start_time || booking.created_at);
+        const time =
+          booking.start_time && booking.end_time
+            ? `${formatTime(booking.start_time)} - ${formatTime(booking.end_time)}`
+            : booking.time || "-";
+        const duration =
+          booking.duration ||
+          calcDuration(booking.start_time, booking.end_time) ||
+          "-";
+        const pet =
+          Array.isArray(booking.pets) && booking.pets.length > 0
+            ? booking.pets.map((p) => p.name).join(", ")
+            : "-";
+
+        return {
+          ...booking,
+          status: mapStatus(booking.status),
+          statusDate: getStatusDate(booking),
+          sitter_name: booking.sitter_trade_name,
+          image: booking.sitter_profile_image,
+          date,
+          time,
+          duration,
+          pet,
+          sitter_id: booking.sitter_id || booking.sitter_user_id,
+          owner_id: booking.owner_id || user?.id,
+          reviewed: reviewedMap[booking.booking_id] || false, // เพิ่มตรงนี้
+        };
+      });
+
+      setBookings(bookingsWithFields);
+    } catch (err) {
+      setError("เกิดข้อผิดพลาดในการโหลดข้อมูล booking");
+      setBookings([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 2. useEffect เรียก fetchBookings ครั้งแรก
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
@@ -104,73 +172,6 @@ export default function BookingHistoryPage() {
       router.replace("/");
       return;
     }
-
-    const fetchBookings = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch("/api/booking/booking-list-owner");
-        if (!res.ok) throw new Error("Failed to fetch bookings");
-        const { data } = await res.json();
-
-        // ดึง booking_id ที่ status success
-        const successBookingIds = data
-          .filter(b => mapStatus(b.status) === "Success")
-          .map(b => b.booking_id);
-
-        // เรียก API เช็ครีวิวทั้งหมดในครั้งเดียว
-        let reviewedMap = {};
-        if (successBookingIds.length > 0) {
-          const reviewRes = await fetch("/api/reviews/check-many", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ booking_ids: successBookingIds }),
-          });
-          const { reviewed } = await reviewRes.json();
-          // reviewed: { [booking_id]: true/false }
-          reviewedMap = reviewed || {};
-        }
-
-        // map field สำหรับ BookingCard
-        const bookingsWithFields = data.map((booking) => {
-          const date = booking.date || formatDate(booking.start_time || booking.created_at);
-          const time =
-            booking.start_time && booking.end_time
-              ? `${formatTime(booking.start_time)} - ${formatTime(booking.end_time)}`
-              : booking.time || "-";
-          const duration =
-            booking.duration ||
-            calcDuration(booking.start_time, booking.end_time) ||
-            "-";
-          const pet =
-            Array.isArray(booking.pets) && booking.pets.length > 0
-              ? booking.pets.map((p) => p.name).join(", ")
-              : "-";
-
-          return {
-            ...booking,
-            status: mapStatus(booking.status),
-            statusDate: getStatusDate(booking),
-            sitter_name: booking.sitter_trade_name,
-            image: booking.sitter_profile_image,
-            date,
-            time,
-            duration,
-            pet,
-            sitter_id: booking.sitter_id || booking.sitter_user_id,
-            owner_id: booking.owner_id || user?.id,
-            reviewed: reviewedMap[booking.booking_id] || false, // เพิ่มตรงนี้
-          };
-        });
-
-        setBookings(bookingsWithFields);
-      } catch (err) {
-        setError("เกิดข้อผิดพลาดในการโหลดข้อมูล booking");
-        setBookings([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchBookings();
   }, [user, authLoading, router]);
 
@@ -288,7 +289,7 @@ export default function BookingHistoryPage() {
         booking={reviewBooking}
         onSuccess={() => {
           setOpenReview(false);
-          // อัปเดต bookings หรือแจ้งเตือนสำเร็จ
+          fetchBookings(); // << เพิ่มบรรทัดนี้
         }}
       />
 
