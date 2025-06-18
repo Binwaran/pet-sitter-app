@@ -7,12 +7,6 @@ import NavBar from "@/components/NavBar";
 import { generateTransactionNo } from "@/utils/generateTransactionNo";
 import { supabase } from "@/utils/supabase";
 import MyplaceSection from "@/components/pet-sitters/MyPlaceSection";
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import NavBar from '@/components/NavBar';
-import { generateTransactionNo } from '@/utils/generateTransactionNo';
-import { supabase } from '@/utils/supabase';
 import BookingDetailModal from '@/components/profile/BookingDetailModal';
 
 export default function BookingThankYouPage() {
