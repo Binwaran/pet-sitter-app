@@ -4,6 +4,7 @@ import districts from "../../app/data/districts.json";
 
 const DistrictDropdown = ({
   provinceCode,
+  id,
   value,
   onChange,
   className = "",
@@ -11,8 +12,11 @@ const DistrictDropdown = ({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
+  // ดึงค่า provinceCode ทั้งกรณีเป็น object และ primitive
+  const actualProvinceCode = provinceCode?.value || provinceCode;
+
   const filteredDistricts = districts.filter(
-    (district) => district.provinceCode === parseInt(provinceCode)
+    (district) => district.provinceCode === parseInt(actualProvinceCode)
   );
 
   // ปิด dropdown เมื่อคลิกนอก component
@@ -26,18 +30,29 @@ const DistrictDropdown = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const selectedDistrict = filteredDistricts.find(
-    (district) => district.districtCode === value
-  );
+  // แก้ไขวิธีดึงค่า selectedDistrict
+  const selectedDistrict =
+    value && typeof value === "object"
+      ? filteredDistricts.find(
+          (district) => String(district.districtCode) === String(value.value)
+        )
+      : filteredDistricts.find(
+          (district) => String(district.districtCode) === String(value)
+        );
 
   return (
     <div ref={dropdownRef} className="relative w-full">
-      <div
+      <button
+        id={id}
+        type="button"
         tabIndex={0}
         role="button"
-        onClick={() => setIsOpen((prev) => !prev)}
-        className={`flex items-center justify-between px-4 py-3 border border-[#DCDFED] rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] ${
-          !provinceCode ? "opacity-50 pointer-events-none" : ""
+        onClick={(e) => {
+          e.preventDefault(); // ป้องกันการ submit
+          setIsOpen((prev) => !prev);
+        }}
+        className={`flex items-center justify-between w-full pl-3 pr-4 py-3 border border-[#DCDFED] rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] ${
+          !actualProvinceCode ? "opacity-50 pointer-events-none" : ""
         } ${className}`}
       >
         <span
@@ -48,20 +63,22 @@ const DistrictDropdown = ({
             : "Select District"}
         </span>
         <span className="text-xs text-[#9AA1B9]">⏷</span>
-      </div>
-      {isOpen && provinceCode && (
+      </button>
+      {isOpen && actualProvinceCode && (
         <ul className="absolute z-10 mt-2 w-full bg-white border border-[#EAECF0] rounded-lg shadow-md max-h-[280px] overflow-auto">
-          {filteredDistricts.length === 0 && (
-            <li className="px-4 py-2 text-[#7B7E8F]">No districts</li>
-          )}
           {filteredDistricts.map((district) => (
             <li
               key={district.districtCode}
-              onClick={() => {
-                onChange(district.districtCode);
+              onClick={(event) => {
+                event.preventDefault();
+                onChange({
+                  value: district.districtCode,
+                  label: district.districtNameEn,
+                });
                 setIsOpen(false);
               }}
               className={`px-4 py-2 cursor-pointer hover:bg-[#F9FAFB] ${
+                value?.value === district.districtCode ||
                 value === district.districtCode
                   ? "bg-[#FEF3ED] text-[#FEA267] font-semibold"
                   : ""

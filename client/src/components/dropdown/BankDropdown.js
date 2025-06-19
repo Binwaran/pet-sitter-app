@@ -15,6 +15,7 @@ import SCB from "/public/assets/bank/SCB.png";
 import TrueMoney from "/public/assets/bank/TrueMoney.png";
 import TTB from "/public/assets/bank/TTB.png";
 import UOB from "/public/assets/bank/UOB.png";
+import LandMark from "/public/assets/bank/landmarkblack.svg"; // ใช้สำหรับแสดงในกรณีไม่มีธนาคารที่เลือก
 
 const bankOptions = [
   { name: "Prompt Pay", icon: PromptPay },
@@ -35,14 +36,31 @@ const bankOptions = [
   },
 ];
 
-const BankDropdown = () => {
-  const [bank, setBank] = useState(null);
+// แก้ไข component ให้รับ props
+const BankDropdown = ({
+  selectedBank = null,
+  onSelect = () => {},
+  hasError = false,
+}) => {
+  // หาข้อมูลธนาคารที่ถูกเลือกไว้ก่อนหน้านี้ (ถ้ามี)
+  const findSelectedBank = () => {
+    if (!selectedBank) return null;
+    return bankOptions.find((bank) => bank.name === selectedBank) || null;
+  };
+
+  const [bank, setBank] = useState(findSelectedBank());
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
+
+  // อัพเดตสถานะเมื่อ selectedBank เปลี่ยน
+  useEffect(() => {
+    setBank(findSelectedBank());
+  }, [selectedBank]);
 
   const handleSelect = (bank) => {
     setBank(bank);
     setIsOpen(false);
+    onSelect(bank); // เรียก callback function ที่ส่งมาจาก parent component
   };
 
   // ปิด dropdown ถ้าคลิกนอก component
@@ -62,7 +80,12 @@ const BankDropdown = () => {
         tabIndex={0}
         role="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between px-4 py-3 border border-[#DCDFED] rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)]"
+        className={`flex items-center justify-between flex-row pl-3 pr-4 py-3 gap-10 h-12 border rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-none 
+        ${
+          hasError
+            ? "border-red-500" // แสดงเฉพาะขอบสีแดง
+            : "border-[#DCDFED] focus:border-[var(--primary-orange-color-500)]"
+        }`}
       >
         {bank ? (
           <div className="flex items-center gap-2 text-[#344054]">
@@ -70,7 +93,10 @@ const BankDropdown = () => {
             {bank.name}
           </div>
         ) : (
-          <span className="text-[#7B7E8F]"></span>
+          <span className="text-[#7B7E8F] flex flex-row gap-2">
+            <Image src={LandMark} alt="Select bank" width={20} height={20} />
+            Select Bank
+          </span>
         )}
         <span className="text-xs text-[#9AA1B9]">⏷</span>
       </div>

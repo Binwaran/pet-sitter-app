@@ -10,28 +10,33 @@ export default async function handler(req, res) {
     }
 
     try {
-      const { data: existingUser, error: checkError } = await supabase
+      // เช็ค email ซ้ำ
+      const { data: existingEmail } = await supabase
         .from("users")
-        .select("*")
+        .select("email")
         .eq("email", email)
         .single();
 
-      if (existingUser) {
-        return res.status(400).json({ error: "Email is already registered." });
-      }
-
+      // เช็ค phone ซ้ำ
       const { data: existingPhone } = await supabase
         .from("users")
-        .select("*")
+        .select("phone")
         .eq("phone", phone)
         .single();
 
-      if (existingPhone) {
-        return res.status(400).json({ error: "Phone number is already registered." });
-      }
+      const errors = [];
+      if (existingEmail) errors.push("email");
+      if (existingPhone) errors.push("phone");
 
-      if (checkError && checkError.code !== "PGRST116") {
-        throw checkError;
+      if (errors.length > 0) {
+        return res.status(400).json({
+          error: {
+            fields: errors,
+            message: errors.map((field) =>
+              `${field === "email" ? "Email" : "Phone number"} is already registered`
+            ),
+          },
+        });
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -43,7 +48,7 @@ export default async function handler(req, res) {
             email,
             phone,
             password: hashedPassword,
-            role: "owner",
+            role: req.body.role || "owner", // ใช้ role ที่ส่งมาจาก frontend
           },
         ]);
 
@@ -53,8 +58,9 @@ export default async function handler(req, res) {
 
       return res.status(201).json({ message: "User registered successfully!" });
     } catch (error) {
-      console.error("Error saving user in Supabase:", error);
-      return res.status(500).json({ error: error.message || "Internal Server Error" });
+      return res
+        .status(500)
+        .json({ error: error.message || "Internal Server Error" });
     }
   } else {
     return res.status(405).json({ error: "Method not allowed" });

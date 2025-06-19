@@ -21,9 +21,9 @@ import better from "/public/assets/home/better.svg";
 
 export default function Home() {
   return (
-    <section className="w-full flex-col items-center pt-20">
+    <section className="w-full flex-col items-center pt-12 lg:pt-20">
       <header className="max-w-[1440px] mx-auto w-full md:flex flex-col items-center justify-center md:h-[441px] h-[565] gap-5 relative">
-        <div>
+        <div className="z-10">
           <p className="lg:text-[88px] sm:text-[68px] text-[48px] lg:leading-[96px] md:leading-[76px] leading-[56px] font-[900] text-center break-words max-w-[90vw] mx-auto text-shadow-lg text-shadow-gray-700/30">
             Pet Sitter
             <span className="text-[var(--primary-orange-color-500)]">,</span>
@@ -36,23 +36,27 @@ export default function Home() {
             Find your perfect pet sitter with us.
           </p>
         </div>
-        <div className="flex gap-4 mt-[50px] md:mt-0 relative h-[255px] md:h-auto overflow-hidden md:w-full md:justify-between md:absolute md:left-0 md:pt-0 pt-[50px] -z-10">
-          <div className=" w-[255px] lg:w-[428px] aspect-square absolute right-[calc(50%+8px)] top-0 md:static">
+        <div className="flex gap-4 mt-[50px] md:mt-0 relative h-[255px] md:h-auto overflow-hidden md:w-full md:justify-between md:absolute md:left-0 md:pt-0 pt-[50px] z-0">
+          <div className="w-[241px] lg:w-[428px] aspect-square absolute -left-13.5 md:right-[calc(50%+8px)] bottom-0 md:top-0 md:static">
             <Image
               src={elementhome1}
               alt="element-home-1"
-              sizes="100%"
               width={428}
+              height={446}
+              loading="eager"
               className="object-cover"
+              style={{ height: "auto" }} // เพิ่มบรรทัดนี้เพื่อรักษา aspect ratio
             />
           </div>
-          <div className="w-[255px] lg:w-[428px] aspect-square absolute left-[calc(50%+8px)] top-0 md:static">
+          <div className="w-[246px] lg:w-[428px] aspect-square absolute -right-13.5 md:left-[calc(50%+8px)] bottom-0 md:top-0 md:static">
             <Image
               src={elementhome2}
               alt="element-home-2"
-              sizes="100%"
               width={428}
+              height={446}
+              loading="lazy"
               className="object-cover"
+              style={{ height: "auto" }} // เพิ่มบรรทัดนี้เพื่อรักษา aspect ratio
             />
           </div>
         </div>
@@ -82,8 +86,9 @@ export default function Home() {
                   Boarding
                 </p>
                 <p className="md:text-[18px] text-[16px] font-medium text-[var(--primary-gray-color-400)] text-wrap">
-                  Your pets stay overnight in your sitter&apos;s home. They&apos;ll be
-                  treated like part of the family in a comfortable environment.
+                  Your pets stay overnight in your sitter&apos;s home.
+                  They&apos;ll be treated like part of the family in a
+                  comfortable environment.
                 </p>
               </div>
             </div>
@@ -140,7 +145,13 @@ export default function Home() {
             </div>
           </div>
           <div className="flex justify-center">
-            <Image src={elementhome3} alt="element-home" width={455} />
+            <Image
+              src={elementhome3}
+              alt="element-home"
+              width={455}
+              height={601}
+              style={{ height: "auto" }} // เพิ่มบรรทัดนี้เพื่อรักษา aspect ratio
+            />
           </div>
         </div>
 
@@ -222,7 +233,9 @@ export default function Home() {
               src={elementhome4}
               alt="element-home"
               width={337}
+              loading="lazy"
               className="rounded-l-2xl"
+              style={{ height: "auto" }} // เพิ่มบรรทัดนี้
             />
           </div>
           <div className="absolute -z-0 md:w-[327px] w-[200px] top-0 right-0 sm:flex hidden">
@@ -230,7 +243,9 @@ export default function Home() {
               src={elementhome5}
               alt="element-home"
               width={327}
+              loading="lazy"
               className="rounded-2xl"
+              style={{ height: "auto" }} // เพิ่มบรรทัดนี้
             />
           </div>
           <div className="absolute -z-0 w-[188px] top-0 right-0 sm:hidden">
@@ -238,7 +253,9 @@ export default function Home() {
               src={elementhome6}
               alt="element-home"
               width={327}
+              loading="lazy"
               className="rounded-2xl"
+              style={{ height: "auto" }} // เพิ่มบรรทัดนี้
             />
           </div>
           <div className="w-full max-w-[457px] text-center z-10 md:p-0 p-4 md:pt-0 pt-16">

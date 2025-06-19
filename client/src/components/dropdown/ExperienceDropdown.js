@@ -8,7 +8,7 @@ const experienceOptions = [
   { label: "5+ Years", value: "5+" },
 ];
 
-const ExperienceDropdown = ({ value, onChange, className = "" }) => {
+const ExperienceDropdown = ({ id, value, onChange, className = "" }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -30,12 +30,14 @@ const ExperienceDropdown = ({ value, onChange, className = "" }) => {
   return (
     <div className="relative w-full" ref={dropdownRef}>
       <button
+        id={id}
+        tabIndex={0}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full min-w-[144px] flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] text-left ${className}`}
+        className={`w-full min-w-[144px] flex items-center justify-between gap-2 pl-3 pr-4 py-3 rounded-lg cursor-pointer bg-white focus:outline-none focus:ring-1 focus:ring-[var(--primary-orange-color-500)] text-left ${className}`}
       >
         {experienceOptions.find((opt) => opt.value === value)?.label || (
-          <span className="text-[#7B7E8F]">0-2 Years</span>
+          <span className="text-[#7B7E8F] text-[16px] font-normal">0-2 Years</span>
         )}
         <span className="text-xs text-[#9AA1B9]">⏷</span>
       </button>
@@ -46,7 +48,7 @@ const ExperienceDropdown = ({ value, onChange, className = "" }) => {
             <li
               key={idx}
               onClick={() => handleSelect(option.value)}
-              className="px-4 py-2 cursor-pointer hover:bg-[#F9FAFB] text-[#344054]"
+              className="px-4 py-2 cursor-pointer hover:bg-[#F9FAFB] text-[#344054] text-[16px] font-normal"
             >
               {option.label}
             </li>

@@ -1,0 +1,194 @@
+/* 🔥 ลบแค่เส้นขอบนอกสุด */
+.fc-scrollgrid {
+  border: none !important;
+}
+
+/* ป้องกันไม่ให้หัวตารางมี border บน-ล่าง */
+.fc-scrollgrid-section-header,
+.fc-scrollgrid-section-body {
+  border: none !important;
+}
+
+/* ปรับหัวตารางวันให้เหมือน Figma */
+.fc-col-header-cell-cushion {
+  display: flex !important;
+  flex-direction: column;
+  align-items: start !important;
+  justify-content: center !important;
+  text-transform: uppercase;
+  padding: 12px !important;
+}
+
+/* ✅ ชื่อวัน เช่น SUN */
+.fc-col-header-cell-cushion div:first-child {
+  font-size: 14px; /* text-sm */
+  font-weight: 500;
+  color: #7b7e8f; /* gray-600 */
+  text-transform: uppercase;
+  line-height: 24px;
+}
+
+/* ✅ ตัวเลขวัน เช่น 23 */
+.fc-col-header-cell-cushion div:last-child {
+  font-size: 20px; /* text-2xl */
+  font-weight: 700;
+  color: #3a3b46; /* gray-900 */
+  line-height: 28px;
+  letter-spacing: 0%;
+}
+
+.fc-timegrid-slot {
+  height: 72px !important;
+}
+
+.fc-event {
+  background-color: unset !important;
+  border: unset !important;
+  color: unset !important;
+}
+
+/* ปรับความกว้างขั้นต่ำของตาราง */
+.fc .fc-timegrid-col.fc-day {
+  min-width: 120px !important; /* กำหนดความกว้างขั้นต่ำของคอลัมน์วัน */
+}
+
+/* ทำให้ตารางมีความกว้างคงที่ ไม่ย่อตามหน้าจอ */
+.fc .fc-timegrid-cols table {
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+
+/* กำหนดความกว้างคงที่สำหรับคอลัมน์เวลา */
+.fc .fc-timegrid-axis {
+  width: 60px !important;
+  min-width: 60px !important;
+  border-bottom: none !important;
+  border-right: none !important;
+  height: 76px !important;
+}
+
+/* เพิ่มสไตล์สำหรับ container */
+.calendar-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ป้องกันปัญหา event ที่ซ้อนทับกัน */
+.fc .fc-timegrid-event-harness {
+  z-index: 1;
+}
+
+/* แก้ไขปัญหาแถบเลื่อนที่เกิดขึ้นโดยไม่จำเป็น */
+.fc .fc-scroller {
+  overflow: visible !important;
+}
+
+/* ให้ container หลักของ timegrid มี overflow-x เป็น visible */
+.fc .fc-timegrid {
+  overflow-x: visible !important;
+}
+
+/* ทำให้แค่ตัวเลขวันของวันปัจจุบันเป็นสีส้ม */
+.fc .fc-day-today .fc-col-header-cell-cushion div:last-child {
+  color: #ff7037 !important;
+}
+
+/* วันที่ผ่านมาแล้วทั้งหมด - ส่วนหัวตาราง (th) */
+.fc .fc-day-past.fc-col-header-cell {
+  background-color: #f6f6f9 !important;
+}
+
+/* วันที่ผ่านมาแล้วทั้งหมด - เซลล์เนื้อหา (td) */
+.fc .fc-day-past {
+  background-color: #f6f6f9 !important;
+}
+
+.fc-scrollgrid-shrink-cushion {
+  padding: 0 !important;
+  font-size: 12px !important;
+  width: 36px !important;
+  height: 20px !important;
+  font-weight: 500 !important;
+  line-height: 20px !important;
+  text-align: center !important;
+  color: #7b7e8f !important;
+}
+
+.fc-scrollgrid-shrink {
+  display: flex !important;
+  align-items: start !important;
+  justify-content: start !important;
+  border: none !important;
+  width: 60px !important;
+}
+
+.fc td:last-child {
+  border-right: none !important;
+}
+
+.fc th:last-child {
+  border-right: none !important;
+}
+
+.fc td + td {
+  border-left: none !important;
+}
+
+.fc th + th {
+  border-left: none !important;
+}
+
+.fc .fc-day-today {
+  background-color: #ffffff !important;
+}
+
+.fc-timegrid-event {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+}
+
+/* ปรับแต่ง event content ให้เต็มพื้นที่ */
+.fc-event-main {
+  padding: 0 !important;
+  width: 100% !important;
+  border: none !important;
+  border-color: transparent !important;
+  background-color: transparent !important;
+  color: transparent !important;
+}
+
+/* กำหนดให้ event ที่อยู่ใน event-container เต็มความกว้าง */
+.fc .fc-timegrid-col-events {
+  position: relative;
+  z-index: 2;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: transparent !important;
+  border-color: transparent !important;
+}
+
+.fc-timegrid-event-harness-inset {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: transparent !important;
+  border-color: transparent !important;
+}
+
+.fc-timegrid-col-bg {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: transparent !important;
+  border-color: transparent !important;
+}

@@ -1,58 +1,264 @@
 "use client";
 import Image from "next/image";
-import sitterlogo from "/public/assets/sitter-logo.svg";
-import profile from "/public/assets/profile/profile.svg";
-import tab from "/public/assets/profile/tab.svg";
-import calendar from "/public/assets/profile/calendar.svg";
-import card from "/public/assets/profile/card.svg";
-import logout from "/public/assets/profile/logout.svg";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback, useMemo, memo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import axios from "axios";
+import { toast } from "sonner";
 
-const menu = [
+// Import assets
+import {
+  ProfileIcon,
+  TabIcon,
+  CalendarIcon,
+  CardIcon,
+  LogoutIcon,
+} from "@/components/icons";
+import sitterlogo from "/public/assets/sitter-logo.svg";
+
+// นำเข้า supabase client จากไฟล์ utility แทนการสร้างใหม่
+import supabase from "@/utils/supabase";
+
+// เพิ่มฟังก์ชัน CheckUnreadBookings component
+const CheckUnreadBookings = memo(() => {
+  const [hasUnread, setHasUnread] = useState(false);
+  const { user } = useAuth();
+  const lastChecked = useRef(0);
+
+  // อัพเดทวิธีการเช็ค unread bookings
+  const checkUnreadBookings = useCallback(async (force = false) => {
+    try {
+      // ไม่เช็คถ้ายังไม่ถึงเวลา except force=true
+      if (!force && Date.now() - lastChecked.current < 30000) {
+        return;
+      }
+
+      lastChecked.current = Date.now();
+
+      // เรียกใช้ API เฉพาะสำหรับเช็คว่ามี unread bookings หรือไม่
+      const res = await axios.get("/api/pet-sitters/unread-bookings-count", {
+        withCredentials: true,
+      });
+
+      if (res.data && typeof res.data.hasUnread === "boolean") {
+        setHasUnread(res.data.hasUnread);
+      }
+    } catch (error) {}
+  }, []);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    // เช็คตอนโหลดหน้า
+    checkUnreadBookings(true);
+
+    // สร้าง channel name ที่ unique
+    const channelName = `bookings-${user.id}-${Date.now()}`;
+
+    // ตั้งค่า Realtime subscription อย่างถูกต้อง
+    const bookingChannel = supabase
+      .channel(channelName)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "booking",
+          filter: `sitter_id=eq.${user.id}`,
+        },
+        (payload) => {
+          // เมื่อมีการเปลี่ยนแปลงใน booking เช็คทันที
+          checkUnreadBookings(true);
+        }
+      )
+      .subscribe();
+
+    // ลด polling interval เป็น 2 นาที แทน 30 วินาที
+    const pollInterval = setInterval(() => checkUnreadBookings(true), 120000);
+
+    // อีเว้นต์อื่นๆ ที่ควรเช็ค unread bookings
+    window.addEventListener("focus", () => checkUnreadBookings(true));
+
+    const handleStorageChange = (e) => {
+      if (e.key === "sitterViewedBookings") {
+        checkUnreadBookings(true);
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      // Cleanup
+      clearInterval(pollInterval);
+      if (bookingChannel) {
+        supabase.removeChannel(bookingChannel);
+      }
+      window.removeEventListener("focus", checkUnreadBookings);
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, [user?.id, checkUnreadBookings]);
+
+  return hasUnread ? (
+    <span className="inline-block w-[8px] h-[8px] rounded-full bg-[#FF7037]" />
+  ) : null;
+});
+
+CheckUnreadBookings.displayName = "CheckUnreadBookings";
+
+// Menu configuration
+const MENU_ITEMS = [
   {
     label: "Pet Sitter Profile",
-    icon: profile,
+    alt: "profile",
+    icon: ProfileIcon,
     value: "profile",
   },
   {
     label: "Booking List",
-    icon: tab,
-    value: "booking",
+    alt: "booking-list",
+    icon: TabIcon,
+    value: "booking-list",
   },
   {
     label: "Calendar",
-    icon: calendar,
+    alt: "calendar",
+    icon: CalendarIcon,
     value: "calendar",
   },
   {
     label: "Payout Option",
-    icon: card,
+    alt: "payout",
+    icon: CardIcon,
     value: "payout",
   },
 ];
 
-export default function Sidebar({ className = "" }) {
+// Extracted NavButton component to reduce repetitive code
+const NavButton = memo(
+  ({
+    icon: Icon,
+    label,
+    onClick,
+    isActive,
+    isMobile,
+    showInDesktop = true,
+    className = "",
+    hasNotification = false,
+  }) => {
+    const baseClasses =
+      "flex items-center gap-3 md:gap-4 px-6 py-4 transition whitespace-nowrap cursor-pointer";
+    const mobileClasses =
+      "md:text-left justify-center md:justify-start text-center text-[18px] md:text-[16px] font-bold md:font-medium";
+    const activeClasses = isActive
+      ? "bg-[#FFF1EC] text-[#FF7037] font-bold md:font-medium"
+      : "hover:bg-[#FFF1EC] hover:text-[#FF7037] text-[#5B5D6F]";
+
+    // แก้ไขส่วนนี้ - เปลี่ยนวิธีจัดการ visibility
+    // แสดงปกติบน mobile สำหรับปุ่มทั่วไป และแสดงเฉพาะบน desktop ถ้า showInDesktop=true
+    let visibilityClasses = "";
+    if (isMobile) {
+      visibilityClasses = "md:hidden"; // แสดงเฉพาะบน mobile
+    } else if (!showInDesktop) {
+      visibilityClasses = "hidden"; // ซ่อนหมด
+    }
+
+    const sizeClasses = "md:h-[56px] h-[51px]";
+    const widthClasses = "w-full";
+    let iconColor = "#AEB1C3"; // default color
+    let iconHoverClass = "";
+
+    if (isActive) {
+      iconColor = "#FF986F";
+    } else {
+      // กำหนด class สำหรับ hover
+      iconHoverClass = "group-hover:text-[#FF986F]";
+    }
+
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={`group ${baseClasses} ${mobileClasses} ${activeClasses} ${visibilityClasses} ${sizeClasses} ${widthClasses} ${className}`}
+      >
+        <div
+          className={`${!isActive ? `text-[#AEB1C3] ${iconHoverClass}` : ""}`}
+        >
+          <Icon
+            color={isActive ? iconColor : "currentColor"}
+            width={24}
+            height={24}
+          />
+        </div>
+        <div className="flex flex-row items-center gap-1 w-full">
+          <span>{label}</span>
+          {hasNotification && (
+            <span className="inline-block w-[6px] h-[6px] rounded-full bg-[#FF7037]" />
+          )}
+        </div>
+      </button>
+    );
+  }
+);
+
+NavButton.displayName = "NavButton";
+
+// Main component
+const Sidebar = memo(({ className = "" }) => {
   const router = useRouter();
   const pathname = usePathname();
   const navRef = useRef(null);
+  const { logout, user } = useAuth();
+  const [isMobile, setIsMobile] = useState(false);
 
-  const selected = menu.find(item => pathname?.includes(item.value))?.value;
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
 
-  const handleMenuClick = (value) => {
-    router.push(`/pet-sitters/${value}`);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Memoize the selected value
+  const selected = useMemo(
+    () => MENU_ITEMS.find((item) => pathname?.includes(item.value))?.value,
+    [pathname]
+  );
+
+  // Use useCallback for event handlers to prevent recreation on each render
+  const handleMenuClick = useCallback(
+    (value) => {
+      router.push(`/pet-sitters/${value}`);
+    },
+    [router]
+  );
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      await logout();
+      window.location.href = "/";
+    } catch (error) {
+      toast.error("Logout failed. Please try again.");
+    }
   };
 
-  // เพิ่ม useEffect สำหรับ wheel horizontal scroll
+  // Setup horizontal scrolling for mobile
   useEffect(() => {
     const nav = navRef.current;
     if (!nav) return;
+
     const onWheel = (e) => {
       if (e.deltaY !== 0) {
         nav.scrollLeft += e.deltaY;
         e.preventDefault();
       }
     };
+
     nav.addEventListener("wheel", onWheel, { passive: false });
     return () => nav.removeEventListener("wheel", onWheel);
   }, []);
@@ -60,90 +266,77 @@ export default function Sidebar({ className = "" }) {
   return (
     <aside
       className={`
-      w-full md:w-[240px] max-w-full
+      w-full md:w-[240px] md:max-w-[240px]
       flex flex-row md:flex-col
       items-center md:items-stretch
-      border-t md:border-t-0 md:border-r border-[#EAECF0] bg-white relative
+      md:border-r border-[#DCDFED] bg-[#FAFAFB] 
       md:sticky md:top-0 md:h-screen
-      ${className}
-    `}
+      ${className}`}
     >
-      <div className="flex flex-col w-full h-full">
-        <div className="hidden md:flex w-full px-6 mb-6 mt-6">
+      <div className="flex flex-col w-full h-full md:py-4">
+        {/* Logo - desktop only */}
+        <div className="hidden md:flex w-full px-6 pt-6 pb-10 gap-4">
           <button
+            className="cursor-pointer"
             type="button"
             onClick={() => router.push("/")}
           >
-          <Image
-            src={sitterlogo}
-            alt="sitter-logo"
-            width={106}
-            className="mt-1"
-          />
+            <Image
+              src={sitterlogo}
+              alt="sitter-logo"
+              width={132}
+              height={40}
+              priority={true}
+            />
           </button>
         </div>
-        <nav
-          ref={navRef}
-          className={`
-          text-[16px] text-[#344054]
-          flex flex-row md:flex-col
-           md:space-y-1
-          overflow-x-auto md:overflow-x-visible
-          min-w-0 w-full
-          sticky top-0 z-20 bg-white md:static
-          hide-scrollbar
-        `}
-          style={{ maxWidth: "100vw" }}
-        >
-          {menu.map((item) => (
-    <button
-      key={item.value}
-      type="button"
-      onClick={() => handleMenuClick(item.value)}
-      className={`flex flex-row items-center px-6 py-3 text-left transition whitespace-nowrap
-        ${
-          selected === item.value
-            ? "bg-[#FEF3ED] text-[#FEA267] font-semibold"
-            : "hover:bg-[#F9FAFB]"
-        }
-        md:w-full
-      `}
-            >
-              <Image
-                src={item.icon}
-                alt={item.label}
-                width={20}
-                className="mr-2"
+
+        <div className="flex flex-col justify-between h-full">
+          {/* Navigation menu */}
+          <nav
+            ref={navRef}
+            className="text-[16px] text-[#5B5D6F] flex flex-row md:flex-col overflow-x-auto md:overflow-x-visible w-full bg-[#FAFAFB] md:static hide-scrollbar"
+            style={{ maxWidth: "100vw" }}
+          >
+            {/* แก้ไขส่วนของ MENU_ITEMS map เพื่อเพิ่มจุดแจ้งเตือนเฉพาะที่ booking-list */}
+            {MENU_ITEMS.map((item) => (
+              <NavButton
+                key={item.value}
+                icon={item.icon}
+                label={item.label}
+                onClick={() => handleMenuClick(item.value)}
+                isActive={selected === item.value}
+                hasNotification={
+                  item.value === "booking-list" && <CheckUnreadBookings />
+                }
+                isMobile={isMobile}
               />
-              {item.label}
-            </button>
-          ))}
-          {/* Logout button: แสดงใน nav เฉพาะ mobile */}
+            ))}
+
+            {/* Logout button - เฉพาะ mobile */}
+            <NavButton
+              icon={LogoutIcon}
+              label="Log Out"
+              onClick={handleLogout}
+              isMobile={true}
+            />
+          </nav>
+
+          {/* Logout button - เฉพาะ desktop */}
           <button
             type="button"
-            onClick={() => {
-              localStorage.removeItem("accessToken");
-              router.push("/");
-            }}
-            className="flex flex-row items-center px-6 py-3 text-left hover:bg-[#F9FAFB] rounded-lg transition whitespace-nowrap md:hidden"
+            onClick={handleLogout}
+            className="hidden md:flex flex-row items-center gap-4 px-6 py-3 w-full transition whitespace-nowrap border-t border-[#DCDFED] hover:bg-[#FFF1EC] md:h-[56px] text-[#5B5D6F] font-medium cursor-pointer"
           >
-            <Image src={logout} alt="logout" width={20} className="mr-2" />
+            <LogoutIcon color="#AEB1C3" width={24} height={24} />
             Log Out
           </button>
-        </nav>
-        {/* Logout button: แสดงเฉพาะ desktop และอยู่ล่างสุด */}
-        <button
-          type="button"
-          onClick={() => {
-            localStorage.removeItem("accessToken");
-            router.push("/login/sitter");
-          }}
-          className="hidden md:flex items-center px-6 py-3 text-left hover:bg-[#F9FAFB] rounded-lg transition whitespace-nowrap mt-auto w-full"
-        >
-          <Image src={logout} alt="logout" width={20} className="mr-2" />
-          Log Out
-        </button>
+        </div>
       </div>
     </aside>
   );
-}
+});
+
+Sidebar.displayName = "Sidebar";
+
+export default Sidebar;
