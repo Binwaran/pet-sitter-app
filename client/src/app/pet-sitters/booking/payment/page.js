@@ -182,7 +182,7 @@ export default function BookingPaymentPage() {
 
             {/* ปุ่ม Back/Confirm Booking ที่อยู่ใน form สำหรับ Desktop View เท่านั้น */}
             {/* hidden by default (mobile), flex on medium screens and up (desktop) */}
-            <div className="flex justify-between mt-8 hidden md:flex">
+            <div className="justify-between mt-8 hidden md:flex">
               <button
                 type="button"
                 className="px-6 py-2 rounded-[99px] border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors font-medium"
