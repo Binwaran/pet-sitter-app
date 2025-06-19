@@ -1,124 +1,68 @@
-import { useState } from "react";
-import Image from "next/image";
-import sitterlogo from "/public/assets/sitter-logo.svg";
-import bell from "/public/assets/navbar/bell.svg";
-import message from "/public/assets/navbar/message.svg";
-import menu from "/public/assets/navbar/menu.svg";
-import Link from "next/link";
+"use client";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import NavBarMobile from "./navbar/NavBarMobile";
+import NavBarDesktop from "./navbar/NavBarDesktop";
+import { useAuth } from "@/context/AuthContext";
+import useUnreadMessages from "@/hooks/message/useUnreadMessages";
 
 const NavBar = () => {
-  const [open, setOpen] = useState(false);
+  const { user, loading, logout } = useAuth();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [hasNewNotification, setHasNewNotification] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const router = useRouter();
+
+  const unreadCount = useUnreadMessages(user?.id);
+  const hasNewMessage = unreadCount > 0;
+
+  // เพิ่ม useEffect นี้เพื่ออัพเดท isLoggedIn จาก user
+  useEffect(() => {
+    // ถ้า user มีค่า แสดงว่า login แล้ว
+    setIsLoggedIn(!!user);
+  }, [user]);
+
+  const toggleDropdown = () => setIsDropdownOpen((v) => !v);
+  const toggleMobileMenu = () => setMobileOpen((v) => !v);
+
+  const handleLogout = async () => {
+    await logout();
+    alert("Logout successful");
+    router.push("/");
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    fetch("/api/unread-notifications", { credentials: "include" })
+      .then((res) => res.json())
+      .then((data) => setHasNewNotification(data.unread > 0))
+      .catch((err) => {});
+  }, [user]);
 
   return (
-    <nav className="w-full flex justify-center py-5 px-5 lg:px-0 relative z-50">
-      {/* desktop */}
-      <section className="max-w-[1440px] min-w-0 w-full sm:flex sm:justify-between sm:items-center lg:px-20 hidden">
-        <Link href={"/"}>
-          <Image src={sitterlogo} alt="sitter-logo" width={131} />
-        </Link>
-        <div className="flex md:gap-4 gap-2 items-center">
-          <Link
-            href="/register/sitter"
-            className="py-4 px-6 text-[18px] font-bold"
-            onClick={() => setOpen(false)}
-          >
-            Become a Pet Sitter
-          </Link>
-          {/* <button className="py-4 px-6 font-medium text-[18px]">
-            Become a Pet Sitter
-          </button> */}
-          {/* <button className="py-4 px-6 font-medium text-[18px]">Login</button> */}
-          <Link
-            href="/login"
-            className="py-4 px-6 text-[18px] font-bold"
-            onClick={() => setOpen(false)}
-          >
-            Login
-          </Link>
-          <Link href={"/sitters"}>
-            <button className="items-center justify-center w-[168px] h-[48px] bg-[var(--primary-orange-color-500)] text-white text-[16px] font-bold rounded-full tracking-wide">
-              Find A Pet Sitter
-            </button>
-          </Link>
-        </div>
-      </section>
-
-      {/* Mobile */}
-      <section className="sm:hidden flex justify-between items-center w-full relative">
-        <Link href={"/"}>
-          <Image src={sitterlogo} alt="sitter-logo" width={80} />
-        </Link>
-        <div className="flex gap-2 items-center">
-          <Image src={bell} alt="bell" width={24} />
-          <Link href={"/messages"}>
-            <Image src={message} alt="message" width={24} className="mr-1" />
-          </Link>
-          <button
-            className="cursor-pointer"
-            onClick={() => setOpen((v) => !v)}
-            aria-label="Toggle menu"
-            type="button"
-          >
-            <Image src={menu} alt="menu" width={24} height={24} />
-          </button>
-        </div>
-        {/* Fullscreen Overlay Menu */}
-        {open && (
-          <div className="fixed inset-0 bg-white z-[999] flex flex-col">
-            <div className="flex justify-between items-center px-5 pt-5">
-              <Link href={"/"}>
-                <Image src={sitterlogo} alt="sitter-logo" width={80} />
-              </Link>
-              {/* Hamburger menu button for close */}
-              <div className="flex gap-2 items-center">
-                <Image src={bell} alt="bell" width={24} />
-                <Link href={"/messages"}>
-                  <Image
-                    src={message}
-                    alt="message"
-                    width={24}
-                    className="mr-1"
-                  />
-                </Link>
-                <button
-                  className="cursor-pointer"
-                  onClick={() => setOpen(false)}
-                  aria-label="Close menu"
-                  type="button"
-                >
-                  <Image src={menu} alt="menu" width={24} height={24} />
-                </button>
-              </div>
-            </div>
-            <div className="flex-1 flex flex-col justify-start items-center gap-10 pt-10">
-              <Link
-                href="/register/sitter"
-                className="text-[18px] font-bold"
-                onClick={() => setOpen(false)}
-              >
-                Become a Pet Sitter
-              </Link>
-              <Link
-                href="/login"
-                className="text-[18px] font-bold"
-                onClick={() => setOpen(false)}
-              >
-                Login
-              </Link>
-              <Link
-                href="/sitters"
-                className="w-[90vw] max-w-[500px]"
-                onClick={() => setOpen(false)}
-              >
-                <button className="w-full h-[64px] bg-[var(--primary-orange-color-500)] text-white text-[18px] font-bold rounded-full tracking-wide">
-                  Find A Pet Sitter
-                </button>
-              </Link>
-            </div>
-          </div>
-        )}
-      </section>
-    </nav>
+    <>
+      <NavBarMobile
+        user={user}
+        isLoggedIn={isLoggedIn}
+        hasNewMessage={hasNewMessage}
+        hasNewNotification={hasNewNotification}
+        open={mobileOpen}
+        toggleMobileMenu={toggleMobileMenu}
+        handleLogout={handleLogout}
+        className="block md:hidden"
+      />
+      <NavBarDesktop
+        user={user}
+        isLoggedIn={isLoggedIn}
+        hasNewMessage={hasNewMessage}
+        hasNewNotification={hasNewNotification}
+        isDropdownOpen={isDropdownOpen}
+        toggleDropdown={toggleDropdown}
+        handleLogout={handleLogout}
+        className="hidden md:block"
+      />
+    </>
   );
 };
 
